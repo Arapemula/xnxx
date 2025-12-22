@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - WA Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    <style>
+      [x-cloak] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-100 h-screen flex items-center justify-center p-4"
+    x-data="auth()"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 relative overflow-hidden"
+    >
+      <div class="text-center mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Dashboard CS</h1>
+        <p class="text-sm text-gray-500" x-text="subtitleText"></p>
+      </div>
+
+      <div
+        x-show="mode === 'login'"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-x-10"
+        x-transition:enter-end="opacity-100 translate-x-0"
+      >
+        <form @submit.prevent="doLogin">
+          <div class="mb-4">
+            <label class="block text-xs font-bold text-gray-600 mb-1"
+              >Email</label
+            >
+            <input
+              type="email"
+              x-model="form.email"
+              required
+              class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div class="mb-2">
+            <label class="block text-xs font-bold text-gray-600 mb-1"
+              >Password</label
+            >
+            <input
+              type="password"
+              x-model="form.loginPassword"
+              autocomplete="current-password"
+              required
+              class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div class="text-right mb-6">
+            <button
+              type="button"
+              @click="mode = 'forgot'"
+              class="text-xs text-blue-600 hover:underline"
+            >
+              Lupa Password?
+            </button>
+          </div>
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+          >
+            <span x-text="loading ? 'Memproses...' : 'Masuk'"></span>
+          </button>
+        </form>
+        <p class="text-center text-xs text-gray-500 mt-6">
+          Belum punya akun?
+          <button
+            @click="mode = 'register'"
+            class="text-blue-600 font-bold hover:underline"
+          >
+            Daftar
+          </button>
+        </p>
+      </div>
+
+      <div
+        x-show="mode === 'register'"
+        x-cloak
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 -translate-x-10"
+        x-transition:enter-end="opacity-100 translate-x-0"
+      >
+        <form @submit.prevent="doRegister">
+          <div class="mb-4">
+            <label class="block text-xs font-bold text-gray-600 mb-1"
+              >Email</label
+            >
+            <input
+              type="email"
+              x-model="form.email"
+              required
+              class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 outline-none"
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block text-xs font-bold text-gray-600 mb-1"
+              >ID Tim / Session ID (Unik)</label
+            >
+            <input
+              type="text"
+              x-model="form.waSessionId"
+              placeholder="cth: cs_pagi"
+              required
+              class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 outline-none"
+            />
+            <p class="text-[10px] text-gray-400 mt-1">
+              Ini akan digunakan sebagai ID login WhatsApp nanti.
+            </p>
+          </div>
+          <div class="mb-6">
+            <label class="block text-xs font-bold text-gray-600 mb-1"
+              >Password</label
+            >
+            <input
+              type="password"
+              x-model="form.registerPassword"
+              autocomplete="new-password"
+              required
+              class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+          >
+            <span x-text="loading ? 'Mendaftar...' : 'Buat Akun'"></span>
+          </button>
+        </form>
+        <p class="text-center text-xs text-gray-500 mt-6">
+          Sudah punya akun?
+          <button
+            @click="mode = 'login'"
+            class="text-blue-600 font-bold hover:underline"
+          >
+            Masuk
+          </button>
+        </p>
+      </div>
+
+      <div x-show="mode === 'forgot'" x-cloak x-transition>
+        <form @submit.prevent="doForgot">
+          <p class="text-sm text-gray-600 mb-4">
+            Masukkan email Anda. Kami akan mengirimkan link untuk mereset
+            password.
+          </p>
+          <div class="mb-6">
+            <label class="block text-xs font-bold text-gray-600 mb-1"
+              >Email</label
+            >
+            <input
+              type="email"
+              x-model="form.email"
+              required
+              class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition disabled:opacity-50"
+          >
+            <span x-text="loading ? 'Mengirim...' : 'Kirim Link Reset'"></span>
+          </button>
+        </form>
+        <button
+          @click="mode = 'login'"
+          class="w-full mt-4 text-xs text-gray-500 hover:text-gray-800"
+        >
+          Kembali ke Login
+        </button>
+      </div>
+
+      <div x-show="mode === 'reset'" x-cloak x-transition>
+        <form @submit.prevent="doReset">
+          <p class="text-sm text-gray-600 mb-4 font-bold text-center">
+            Buat Password Baru
+          </p>
+          <div class="mb-6">
+            <label class="block text-xs font-bold text-gray-600 mb-1"
+              >Password Baru</label
+            >
+            <input
+              type="password"
+              x-model="form.newPassword"
+              required
+              class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-purple-600 text-white font-bold py-3 rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
+          >
+            <span x-text="loading ? 'Menyimpan...' : 'Simpan Password'"></span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      function auth() {
+        return {
+          mode: "login", // login, register, forgot, reset
+          loading: false,
+          form: {
+            email: "",
+            loginPassword: "",
+            registerPassword: "",
+            waSessionId: "",
+            newPassword: "",
+          },
+          token: null,
+
+          init() {
+            // Cek apakah ini mode Reset Password (ada token di URL)
+            const urlParams = new URLSearchParams(window.location.search);
+            this.token = urlParams.get("reset");
+            if (this.token) {
+              this.mode = "reset";
+            }
+          },
+
+          get subtitleText() {
+            if (this.mode === "login")
+              return "Silakan masuk untuk mengelola WhatsApp.";
+            if (this.mode === "register") return "Daftarkan tim baru.";
+            if (this.mode === "forgot") return "Pemulihan akun.";
+            if (this.mode === "reset") return "Keamanan akun.";
+          },
+
+          async doLogin() {
+            this.loading = true;
+            try {
+              const res = await fetch("/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  email: this.form.email,
+                  password: this.form.loginPassword,
+                }),
+              });
+              const data = await res.json();
+              if (data.status === "success") {
+                localStorage.setItem("wa_session_id", data.sessionId);
+                // Redirect ke Dashboard Utama
+                window.location.href = "/index.html";
+              } else {
+                alert(data.error);
+              }
+            } catch (e) {
+              alert("Error connecting to server");
+            }
+            this.loading = false;
+          },
+
+          async doRegister() {
+            this.loading = true;
+            try {
+              const payload = {
+                email: this.form.email,
+                password: this.form.registerPassword,
+                waSessionId: this.form.waSessionId,
+              };
+              const res = await fetch("/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              });
+              const data = await res.json();
+              if (data.status === "success") {
+                alert("Registrasi Berhasil! Silakan Login.");
+                this.mode = "login";
+                this.form.registerPassword = "";
+              } else {
+                alert(data.error);
+              }
+            } catch (e) {
+              alert("Gagal mendaftar");
+            }
+            this.loading = false;
+          },
+
+          async doForgot() {
+            this.loading = true;
+            try {
+              const res = await fetch("/auth/forgot-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: this.form.email }),
+              });
+              const data = await res.json();
+
+              if (data.status === "success") {
+                // Tampilkan link debug jika ada (untuk testing)
+                if (data.debugLink) {
+                  prompt(
+                    "Link Reset Password (Copy link ini karena email belum disetting):",
+                    data.debugLink
+                  );
+                } else {
+                  alert(data.message);
+                }
+                this.mode = "login";
+              } else {
+                alert(data.error);
+              }
+            } catch (e) {
+              alert("Gagal mengirim request");
+            }
+            this.loading = false;
+          },
+
+          async doReset() {
+            this.loading = true;
+            try {
+              const res = await fetch("/auth/reset-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  token: this.token,
+                  newPassword: this.form.newPassword,
+                }),
+              });
+              const data = await res.json();
+              if (data.status === "success") {
+                alert("Password berhasil diubah. Silakan login.");
+                window.location.href = "/login.html"; // Hapus query param
+              } else {
+                alert(data.error);
+              }
+            } catch (e) {
+              alert("Gagal reset password");
+            }
+            this.loading = false;
+          },
+        };
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,87 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+// INI BAGIAN YANG WAJIB ADA
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  pkId      Int      @id @default(autoincrement())
+  sessionId String
+  id        String
+  data      String   @db.LongText
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sessionId, id], map: "unique_session_id_key")
+  @@index([sessionId])
+}
+
+model User {
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  password         String
+  waSessionId      String    @unique // ID Tim/Sesi WA (ex: cs_pagi)
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+}
+
+model Chat {
+  id            Int       @id @default(autoincrement())
+  sessionId     String
+  remoteJid     String
+  name          String?
+  label         String    @default("General")
+  note          String?   @db.Text
+  profilePicUrl String?   @db.Text
+  messages      Message[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([sessionId, remoteJid])
+  @@index([sessionId])
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  chatId    Int
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  keyId     String?
+  fromMe    Boolean
+  text      String?  @db.LongText
+  mediaUrl  String?
+  createdAt DateTime @default(now())
+}
+
+model Sale {
+  id           Int      @id @default(autoincrement())
+  sessionId    String
+  itemName     String
+  qty          Int
+  price        Float
+  customerJid  String?
+  customerName String?
+  date         DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+model Schedule {
+  id          Int      @id @default(autoincrement())
+  sessionId   String
+  title       String
+  description String?  @db.Text
+  date        DateTime
+  customerJid String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sessionId])
+}

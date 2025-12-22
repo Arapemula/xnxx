@@ -1,0 +1,275 @@
+{
+  "cs pak erpan": {
+    "incoming": 42,
+    "outgoing": 66,
+    "aiCount": 20,
+    "mediaCount": 16,
+    "invoiceIssued": 14,
+    "invoicePaid": 9,
+    "logs": [
+      {
+        "time": "2025-12-22T08:11:51.579Z",
+        "type": "INV",
+        "msg": "Lunas",
+        "user": ""
+      },
+      {
+        "time": "2025-12-22T08:08:41.980Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-22T08:08:39.041Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-22T08:08:04.725Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-22T08:08:01.818Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-22T08:08:00.895Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-22T08:07:58.688Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-22T08:07:58.166Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-22T08:07:55.846Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-22T08:07:54.654Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-22T08:07:51.766Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-22T08:07:32.703Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-22T08:07:14.094Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-22T08:04:01.165Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-22T08:03:56.456Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-22T08:03:40.013Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-22T08:03:35.635Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-22T03:20:33.876Z",
+        "type": "INV",
+        "msg": "Lunas",
+        "user": ""
+      },
+      {
+        "time": "2025-12-22T03:18:02.484Z",
+        "type": "INV",
+        "msg": "Lunas",
+        "user": ""
+      },
+      {
+        "time": "2025-12-22T03:15:27.807Z",
+        "type": "INV",
+        "msg": "Tagihan",
+        "user": ""
+      },
+      {
+        "time": "2025-12-22T03:10:33.521Z",
+        "type": "INV",
+        "msg": "Tagihan",
+        "user": ""
+      },
+      {
+        "time": "2025-12-22T03:03:11.326Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      }
+    ]
+  },
+  "tim cpn": {
+    "incoming": 1375,
+    "outgoing": 52,
+    "aiCount": 4,
+    "mediaCount": 56,
+    "invoiceIssued": 2,
+    "invoicePaid": 2,
+    "logs": [
+      {
+        "time": "2025-12-18T09:17:13.702Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Φ"
+      },
+      {
+        "time": "2025-12-18T09:16:44.311Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alvinzha"
+      },
+      {
+        "time": "2025-12-18T09:16:22.247Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Angga Pixa"
+      },
+      {
+        "time": "2025-12-18T09:16:06.203Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Hamzah"
+      },
+      {
+        "time": "2025-12-18T09:09:29.608Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alvinzha"
+      },
+      {
+        "time": "2025-12-18T09:05:05.237Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Roy"
+      },
+      {
+        "time": "2025-12-18T09:04:07.683Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Angga Pixa"
+      },
+      {
+        "time": "2025-12-18T08:59:58.928Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alvinzha"
+      },
+      {
+        "time": "2025-12-18T08:59:01.383Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alvinzha"
+      },
+      {
+        "time": "2025-12-18T08:58:59.775Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alvinzha"
+      },
+      {
+        "time": "2025-12-18T08:58:31.771Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "steven"
+      },
+      {
+        "time": "2025-12-18T08:56:51.489Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Fd"
+      },
+      {
+        "time": "2025-12-18T08:56:39.006Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Angga Pixa"
+      },
+      {
+        "time": "2025-12-18T08:56:33.014Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alvinzha"
+      },
+      {
+        "time": "2025-12-18T08:56:30.787Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alvinzha"
+      },
+      {
+        "time": "2025-12-18T08:56:01.692Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alif Ramadhan"
+      },
+      {
+        "time": "2025-12-18T08:55:27.220Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Angga Pixa"
+      },
+      {
+        "time": "2025-12-18T08:55:19.800Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Angga Pixa"
+      },
+      {
+        "time": "2025-12-18T08:53:49.532Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Angga Pixa"
+      },
+      {
+        "time": "2025-12-18T08:52:29.782Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "steven"
+      }
+    ],
+    "newCustomers": 2
+  }
+}

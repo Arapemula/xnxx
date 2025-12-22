@@ -1,0 +1,1330 @@
+function app() {
+  console.log("Script loaded: v2 (Cache check)");
+  let chartInstance = null;
+  let hourlyChartInstance = null;
+  return {
+    // STATE
+    currentPage: "chat",
+    sessionId: localStorage.getItem("wa_session_id") || "",
+    showGroups: JSON.parse(localStorage.getItem("wa_show_groups") ?? "true"),
+    aiActive: false,
+    aiHasFile: false,
+    aiPrompt: `Kamu adalah Customer Service (CS) dari [NAMA TOKO ANDA].
+    
+Tugasmu adalah menjawab pertanyaan pelanggan dengan gaya yang:
+1. PROFESIONAL tapi SANTAI: Gunakan bahasa Indonesia yang baku namun luwes. Hindari kata-kata kaku seperti "Sesuai dengan ketentuan yang berlaku". Ganti dengan "Sesuai aturan ya Kak".
+2. RAMAH & EMPATIK: Selalu gunakan sapaan "Kak" atau "Sis/Gan" (sesuaikan). Gunakan emoji secukupnya (maksimal 1-2 per pesan) agar suasana cair.
+3. SOLUTIF: Jangan cuma menjawab "Ya/Tidak". Berikan solusi atau rekomendasi. Jika stok habis, tawarkan alternatif.
+4. TO THE POINT: Jawaban harus ringkas, jelas, dan tidak bertele-tele. Maksimal 3 paragraf pendek.
+
+PENTING:
+- Jika ditanya harga/produk, gunakan data dari konteks yang diberikan. Jangan mengarang harga.
+- Jika kamu tidak tahu jawabannya, katakan: "Bentar ya Kak, aku cek dulu ke tim gudang/admin sebentar" (jangan bilang "sebagai AI saya tidak tahu").
+- Tutup percakapan dengan kalimat yang memancing interaksi, misal: "Ada lagi yang bisa dibantu, Kak?"
+
+CONTOH GAYA BICARA:
+User: "Barangnya ready gak min?"
+Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa nih Kak biar aku cekin sekalian? 😊"`,
+    showPromptModal: false,
+    isLoggedIn: false,
+    isLoading: false,
+    qrCodeVal: null,
+    mobileMenu: false,
+    chatList: [],
+    messages: {},
+    activeChat: null,
+    inputText: "",
+    socket: null,
+    selectedFile: null,
+    stats: {
+      incoming: 0,
+      outgoing: 0,
+      aiCount: 0,
+      invoiceIssued: 0,
+      invoicePaid: 0,
+      logs: [],
+    },
+    topProducts: [],
+    topCustomers: [],
+    topQuestions: [],
+    labelDistribution: [],
+    chart: null,
+    analyticsInterval: null,
+    showInvoiceModal: false,
+    products: [],
+    cart: [],
+    selectedProductIndex: "",
+    qtyInput: 1,
+    invoiceNote: "",
+    isPaid: false,
+    shippingOptions: [], // [{label: 'JNE', price: 10000}]
+    selectedShippingIndex: "",
+    crmData: {},
+    showCRMModal: false,
+    tempLabel: "General",
+    tempNote: "",
+    showBroadcastModal: false,
+    broadcastTarget: "all",
+    manualNumbers: "",
+    broadcastMsg: "",
+    selectedMonth: "",
+
+    // SCHEDULE STATE
+    schedules: [],
+    showScheduleModal: false,
+    scheduleForm: {
+      id: null,
+      title: "",
+      date: "",
+      time: "",
+      description: "",
+      customerJid: null,
+      customerDisplay: "",
+    },
+    // CALENDAR STATE
+    calendarMonth: new Date().getMonth(),
+    calendarYear: new Date().getFullYear(),
+    calendarDays: [],
+    selectedDate: null, // State for selected date filter
+    monthNames: [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ],
+
+    // SETTINGS STATE
+    inventoryFile: null,
+    knowledgeFiles: [],
+    inventoryUrl: "",
+    scriptUrl: "",
+    inventorySource: "excel", // 'excel' or 'sheet'
+    // INVOICE STATE
+    invoiceTitle: "INVOICE",
+    invoiceAddress: "",
+    invoiceFooter: "",
+    invoiceLogo: null,
+    invoiceLogoFile: null,
+    invoiceLogoPreview: null,
+
+    init() {
+      this.socket = io();
+
+      // Initialize label distribution with zeros
+      this.calculateLabelDistribution();
+
+      // Cek Login
+      if (!this.sessionId) {
+        window.location.href = "/login.html";
+        return;
+      }
+
+      // Restore data dari localStorage jika ada
+      const savedStats = localStorage.getItem(`stats_${this.sessionId}`);
+      if (savedStats) {
+        try {
+          this.stats = JSON.parse(savedStats);
+        } catch (e) {}
+      }
+
+      if (this.sessionId) {
+        this.connectSocket();
+        this.fetchCRM();
+        this.fetchSchedules();
+        this.fetchSettings();
+      }
+      this.socket.on("message", (d) => this.handleIncomingMessage(d));
+      this.socket.on("qr", (qr) => this.renderQR(qr));
+      this.socket.on("stats_update", (newStats) => {
+        // Only update if NOT filtering by month (Realtime View)
+        if (!this.selectedMonth) {
+          this.stats = newStats;
+          this.updateChart(newStats);
+        }
+      });
+      this.socket.on("ai_status", (status) => {
+        this.aiActive = status.isActive;
+        this.aiHasFile = status.hasFile;
+        if (status.systemPrompt) this.aiPrompt = status.systemPrompt;
+        if (status.inventoryFile) this.inventoryFile = status.inventoryFile;
+        if (status.inventoryUrl) this.inventoryUrl = status.inventoryUrl;
+        if (status.inventorySource)
+          this.inventorySource = status.inventorySource;
+        if (status.knowledgeFiles)
+          this.knowledgeFiles = status.knowledgeFiles.map((f) => f.filename);
+      });
+      this.socket.on("ready", () => {
+        this.isLoggedIn = true;
+        this.qrCodeVal = null;
+        this.isLoading = false;
+        localStorage.setItem("wa_session_id", this.sessionId);
+        this.fetchCRM();
+        this.fetchChatHistory();
+        // Fetch analytics immediately saat connect
+        this.fetchAnalytics();
+      });
+      this.$watch("currentPage", (val) => {
+        if (val === "analytics") {
+          this.$nextTick(() => {
+            this.initChart();
+            this.fetchAnalytics();
+          });
+          this.analyticsInterval = setInterval(
+            () => this.fetchAnalytics(),
+            3000
+          );
+        } else {
+          if (this.analyticsInterval) clearInterval(this.analyticsInterval);
+        }
+      });
+      this.$watch("activeChat", (val) => {
+        if (val && this.crmData[val]) {
+          this.tempLabel = this.crmData[val].label || "General";
+          this.tempNote = this.crmData[val].note || "";
+        } else {
+          this.tempLabel = "General";
+          this.tempNote = "";
+        }
+      });
+    },
+
+    switchPage(page) {
+      this.currentPage = page;
+      this.mobileMenu = false;
+      if (page === "schedule") {
+        this.fetchSchedules();
+      }
+    },
+
+    async fetchAnalytics() {
+      if (!this.sessionId) {
+        console.log("[fetchAnalytics] No sessionId");
+        return;
+      }
+      try {
+        console.log(
+          `[fetchAnalytics] Fetching for sessionId: ${this.sessionId}`
+        );
+
+        const encodedSessionId = encodeURIComponent(this.sessionId);
+        let query = "";
+        if (this.selectedMonth) {
+          query = `?month=${this.selectedMonth}`;
+        }
+
+        // Fetch Stats
+        const res = await fetch(`/api/analytics/${encodedSessionId}${query}`);
+        const json = await res.json();
+        if (json.status === "success") {
+          this.stats = json.data;
+          this.topQuestions = json.data.topQuestions || [];
+          this.updateChart(json.data);
+          if (!this.selectedMonth) {
+            localStorage.setItem(
+              `stats_${this.sessionId}`,
+              JSON.stringify(json.data)
+            );
+          }
+        }
+
+        // Fetch Top Products
+        const resTop = await fetch(
+          `/api/top-products/${encodedSessionId}${query}`
+        );
+        const jsonTop = await resTop.json();
+        console.log("[fetchAnalytics] Top Products:", jsonTop);
+        if (jsonTop.status === "success") {
+          this.topProducts = jsonTop.data;
+        }
+
+        // Fetch Top Customers
+        const resCust = await fetch(
+          `/api/top-customers/${encodedSessionId}${query}`
+        );
+        const jsonCust = await resCust.json();
+        this.topCustomers = jsonCust;
+      } catch (e) {
+        console.error("[fetchAnalytics] Error:", e);
+      }
+    },
+
+    // --- CRM LOGIC ---
+    async fetchCRM() {
+      if (!this.sessionId) return;
+      try {
+        const res = await fetch(`/api/crm/${this.sessionId}`);
+        const json = await res.json();
+        if (json.status === "success") {
+          this.crmData = json.data;
+          this.calculateLabelDistribution();
+        }
+      } catch (e) {}
+    },
+    calculateLabelDistribution() {
+      const counts = {};
+      const labelMap = {
+        Lead: "Lead (Calon)",
+        Hot: "Hot Prospect 🔥",
+        Pending: "Pending Payment ⏳",
+        Lunas: "Lunas ✅",
+        VIP: "VIP 🌟",
+        Complain: "Complain ⚠️",
+        General: "General",
+      };
+
+      // Initialize known labels
+      Object.keys(labelMap).forEach((l) => (counts[l] = 0));
+
+      Object.values(this.crmData).forEach((item) => {
+        const label = item.label || "General";
+        if (counts[label] !== undefined) {
+          counts[label]++;
+        } else {
+          counts[label] = (counts[label] || 0) + 1;
+        }
+      });
+
+      this.labelDistribution = Object.entries(counts)
+        .map(([name, count]) => ({
+          name,
+          displayName: labelMap[name] || name,
+          count,
+        }))
+        .sort((a, b) => b.count - a.count);
+    },
+    getCRMLabel(jid) {
+      return this.crmData[jid] && this.crmData[jid].label
+        ? this.crmData[jid].label
+        : "General";
+    },
+    getCRMNote(jid) {
+      return this.crmData[jid] && this.crmData[jid].note
+        ? this.crmData[jid].note
+        : "";
+    },
+    getLabelColor(label) {
+      const colors = {
+        Lead: "bg-blue-100 text-blue-700",
+        Hot: "bg-orange-100 text-orange-700",
+        Pending: "bg-yellow-100 text-yellow-700",
+        Lunas: "bg-green-100 text-green-700",
+        VIP: "bg-purple-100 text-purple-700",
+        Complain: "bg-red-100 text-red-700",
+        General: "bg-gray-100 text-gray-600",
+      };
+      return colors[label] || colors["General"];
+    },
+    async saveCRM() {
+      if (!this.activeChat) return;
+      const payload = {
+        sessionId: this.sessionId,
+        jid: this.activeChat,
+        label: this.tempLabel,
+        note: this.tempNote,
+      };
+
+      try {
+        await fetch("/api/crm/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        // Update Local State
+        this.crmData[this.activeChat] = {
+          label: this.tempLabel,
+          note: this.tempNote,
+        };
+        this.calculateLabelDistribution(); // Recalculate
+        this.showCRMModal = false;
+      } catch (e) {
+        console.error("Failed to save CRM", e);
+      }
+    },
+
+    async sendBroadcast() {
+      if (!confirm("Yakin ingin mengirim broadcast?")) return;
+      const payload = {
+        sessionId: this.sessionId,
+        targetLabel: this.broadcastTarget,
+        manualNumbers: this.manualNumbers,
+        message: this.broadcastMsg,
+      };
+      try {
+        const res = await fetch("/chat/broadcast", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        alert(json.message);
+        this.showBroadcastModal = false;
+        this.broadcastMsg = "";
+      } catch (e) {
+        alert("Gagal mengirim broadcast");
+      }
+    },
+
+    // --- CHART UPDATE: BAR CHART PERBANDINGAN ---
+    initChart() {
+      const ctx = document.getElementById("messageChart");
+      if (ctx) {
+        if (chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx.getContext("2d"), {
+          type: "bar",
+          data: {
+            labels: ["Customer Baru", "Terbit Invoice", "Lunas"],
+            datasets: [
+              {
+                label: "Total Aktivitas",
+                data: [0, 0, 0],
+                backgroundColor: ["#6b7280", "#3b82f6", "#10b981"],
+                borderRadius: 6,
+                barThickness: 50,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } },
+            plugins: { legend: { display: false } },
+          },
+        });
+      }
+
+      // Hourly Chart
+      const ctxHourly = document.getElementById("hourlyChart");
+      if (ctxHourly) {
+        if (hourlyChartInstance) hourlyChartInstance.destroy();
+        hourlyChartInstance = new Chart(ctxHourly.getContext("2d"), {
+          type: "line",
+          data: {
+            labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+            datasets: [
+              {
+                label: "Chat Masuk",
+                data: Array(24).fill(0),
+                borderColor: "#3b82f6",
+                backgroundColor: "rgba(59, 130, 246, 0.1)",
+                fill: true,
+                tension: 0.4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 } },
+              x: { grid: { display: false } },
+            },
+            plugins: { legend: { display: false } },
+          },
+        });
+      }
+    },
+    updateChart(data) {
+      if (chartInstance) {
+        chartInstance.data.datasets[0].data = [
+          data.newCustomers || 0,
+          data.invoiceIssued || 0,
+          data.invoicePaid || 0,
+        ];
+        chartInstance.update();
+      }
+      if (hourlyChartInstance && data.hourlyActivity) {
+        hourlyChartInstance.data.datasets[0].data = data.hourlyActivity;
+        hourlyChartInstance.update();
+      }
+    },
+
+    async exportDashboard() {
+      if (!this.sessionId) return;
+      window.open(`/api/export-dashboard/${this.sessionId}`, "_blank");
+    },
+
+    async openInvoiceModal() {
+      if (!this.activeChat) return alert("Pilih chat customer dulu!");
+      this.cart = [];
+      this.invoiceNote = `INV/${new Date().getTime().toString().slice(-6)}`;
+      this.qtyInput = 1;
+      this.selectedProductIndex = "";
+      this.isPaid = false;
+      try {
+        const res = await fetch(`/api/products/${this.sessionId}`);
+        const json = await res.json();
+        if (json.status === "success") {
+          this.products = json.data;
+          if (this.products.length === 0) {
+            alert(
+              "Belum ada data produk! Silakan upload Excel Produk di panel kiri atas."
+            );
+            return;
+          }
+          this.showInvoiceModal = true;
+        }
+      } catch (e) {
+        alert("Gagal load produk");
+      }
+    },
+    getDisplayName(prod) {
+      const keys = Object.keys(prod);
+      const nameKey = keys.find((k) =>
+        /nama|name|produk|item|barang|product/i.test(k)
+      );
+      const priceKey = keys.find((k) =>
+        /harga|price|rp|jual|cost|nilai/i.test(k)
+      );
+
+      const cleanPrice = (val) => {
+        if (typeof val === "number") return val;
+        if (typeof val === "string")
+          return parseInt(val.replace(/\D/g, "")) || 0;
+        return 0;
+      };
+
+      if (nameKey && priceKey)
+        return `${prod[nameKey]} - ${this.formatRupiah(
+          cleanPrice(prod[priceKey])
+        )}`;
+
+      // Fallback: Try to find any string and any number
+      const stringVal = Object.values(prod).find(
+        (v) => typeof v === "string" && v.length > 2
+      );
+      const numberVal = Object.values(prod).find((v) => typeof v === "number");
+
+      if (stringVal && numberVal)
+        return `${stringVal} - ${this.formatRupiah(numberVal)}`;
+
+      return Object.values(prod).join(" - ");
+    },
+    addToCart() {
+      if (this.selectedProductIndex === "") return;
+      const prod = this.products[this.selectedProductIndex];
+      const keys = Object.keys(prod);
+      const nameKey = keys.find((k) =>
+        /nama|name|produk|item|barang|product/i.test(k)
+      );
+      const priceKey = keys.find((k) =>
+        /harga|price|rp|jual|cost|nilai/i.test(k)
+      );
+
+      let name = "Unknown Product";
+      let price = 0;
+
+      if (nameKey) name = prod[nameKey];
+      else {
+        const stringVal = Object.values(prod).find(
+          (v) => typeof v === "string" && v.length > 2
+        );
+        if (stringVal) name = stringVal;
+      }
+
+      if (priceKey) price = prod[priceKey];
+      else {
+        const numberVal = Object.values(prod).find(
+          (v) => typeof v === "number"
+        );
+        if (numberVal) price = numberVal;
+      }
+
+      // Clean price if it's a string
+      if (typeof price === "string") {
+        price = parseInt(String(price).replace(/\D/g, "")) || 0;
+      }
+
+      const qty = parseInt(this.qtyInput);
+      this.cart.push({ name, price, qty, subtotal: price * qty });
+      this.qtyInput = 1;
+      this.selectedProductIndex = "";
+    },
+    removeFromCart(idx) {
+      this.cart.splice(idx, 1);
+    },
+    get cartTotal() {
+      let total = this.cart.reduce((s, i) => s + i.subtotal, 0);
+      if (
+        this.selectedShippingIndex !== "" &&
+        this.shippingOptions[this.selectedShippingIndex]
+      ) {
+        total +=
+          Number(this.shippingOptions[this.selectedShippingIndex].price) || 0;
+      }
+      return total;
+    },
+    formatRupiah(n) {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+      }).format(n);
+    },
+
+    addShippingOption() {
+      this.shippingOptions.push({ label: "", price: 0 });
+    },
+    removeShippingOption(idx) {
+      this.shippingOptions.splice(idx, 1);
+    },
+
+    async sendInvoice() {
+      if (this.cart.length === 0) return;
+
+      let shippingData = null;
+      if (
+        this.selectedShippingIndex !== "" &&
+        this.shippingOptions[this.selectedShippingIndex]
+      ) {
+        shippingData = {
+          label: this.shippingOptions[this.selectedShippingIndex].label,
+          cost:
+            Number(this.shippingOptions[this.selectedShippingIndex].price) || 0,
+        };
+      }
+
+      const payload = {
+        sessionId: this.sessionId,
+        to: this.activeChat,
+        invoiceData: {
+          invoiceNote: this.invoiceNote,
+          customerName: this.getActiveChatObj()?.name || "Customer",
+          cart: this.cart,
+          total: this.cartTotal, // This now includes shipping
+          isPaid: this.isPaid,
+          shipping: shippingData,
+        },
+      };
+      const btn = document.getElementById("btn-send-invoice");
+      const originalText = btn.innerText;
+      btn.innerText = "Memproses...";
+      btn.disabled = true;
+      try {
+        const res = await fetch("/chat/send-invoice-pdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.status === "success") {
+          this.showInvoiceModal = false;
+          this.cart = [];
+          alert("Invoice PDF berhasil dikirim! 📄");
+          // Refresh Analytics & Top Products
+          this.fetchAnalytics();
+        } else {
+          alert("Gagal mengirim invoice.");
+        }
+      } catch (e) {
+        alert("Terjadi kesalahan sistem.");
+      } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+      }
+    },
+
+    async fetchSettings() {
+      try {
+        const res = await fetch(`/ai/settings/${this.sessionId}`);
+        const json = await res.json();
+        if (json.status === "success") {
+          if (json.data.systemPrompt) this.aiPrompt = json.data.systemPrompt;
+          this.inventoryFile = json.data.inventoryFile;
+          this.inventoryUrl = json.data.inventoryUrl || "";
+          this.inventorySource = json.data.inventorySource || "excel";
+          this.knowledgeFiles = json.data.knowledgeFiles || [];
+
+          if (json.data.invoiceSettings) {
+            this.invoiceTitle = json.data.invoiceSettings.title || "INVOICE";
+            this.invoiceAddress = json.data.invoiceSettings.address || "";
+            this.invoiceFooter = json.data.invoiceSettings.footer || "";
+            this.invoiceLogo = json.data.invoiceSettings.logo || null;
+            this.shippingOptions =
+              json.data.invoiceSettings.shippingOptions || [];
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch settings", e);
+      }
+    },
+
+    async setInventorySource(source) {
+      try {
+        const res = await fetch("/ai/set-inventory-source", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: this.sessionId, source }),
+        });
+        const json = await res.json();
+        if (json.status === "success") {
+          this.inventorySource = source;
+          // alert(`Sumber data diubah ke: ${source === 'excel' ? 'Excel Master' : 'Google Sheet'}`);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    },
+
+    handleLogoUpload(e) {
+      if (e.target.files.length > 0) {
+        this.invoiceLogoFile = e.target.files[0];
+        // Preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.invoiceLogoPreview = e.target.result;
+        };
+        reader.readAsDataURL(this.invoiceLogoFile);
+      }
+    },
+
+    async saveInvoiceSettings() {
+      const fd = new FormData();
+      fd.append("sessionId", this.sessionId);
+      fd.append("title", this.invoiceTitle);
+      fd.append("address", this.invoiceAddress);
+      fd.append("footer", this.invoiceFooter);
+      fd.append("shippingOptions", JSON.stringify(this.shippingOptions));
+      if (this.invoiceLogoFile) {
+        fd.append("logo", this.invoiceLogoFile);
+      }
+
+      try {
+        const res = await fetch("/invoice/settings", {
+          method: "POST",
+          body: fd,
+        });
+        const json = await res.json();
+        if (json.status === "success") {
+          alert("Pengaturan Invoice Disimpan!");
+          this.invoiceLogo = json.data.logo;
+          this.invoiceLogoFile = null;
+        } else {
+          alert("Gagal menyimpan settings");
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Error saving invoice settings");
+      }
+    },
+
+    async saveInventoryUrl() {
+      if (!this.inventoryUrl) return alert("Masukkan URL Google Sheet CSV!");
+      try {
+        const res = await fetch("/ai/save-inventory-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: this.sessionId,
+            inventoryUrl: this.inventoryUrl,
+          }),
+        });
+        const json = await res.json();
+        if (json.success) alert("URL Tersimpan!");
+        else alert("Gagal menyimpan URL");
+      } catch (e) {
+        console.error(e);
+        alert("Error saving URL");
+      }
+    },
+
+    async syncInventory() {
+      if (!this.inventoryUrl) return alert("Simpan URL terlebih dahulu!");
+      try {
+        const res = await fetch("/ai/sync-inventory", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: this.sessionId }),
+        });
+        const json = await res.json();
+        if (json.success)
+          alert(`Sync Berhasil! ${json.count} produk terupdate.`);
+        else alert("Gagal Sync: " + json.error);
+      } catch (e) {
+        console.error(e);
+        alert("Error syncing inventory");
+      }
+    },
+
+    uploadInventory(e) {
+      if (e.target.files.length === 0) return;
+      const fd = new FormData();
+      fd.append("sessionId", this.sessionId);
+      fd.append("file", e.target.files[0]);
+
+      // Reset input value so same file can be selected again
+      const fileInput = e.target;
+
+      fetch("/ai/upload-inventory", { method: "POST", body: fd })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.status === "success") {
+            alert("Inventory Master Berhasil Diupload!");
+            this.inventoryFile = d.filename;
+          } else {
+            alert("Gagal Upload Inventory");
+          }
+          fileInput.value = "";
+        });
+    },
+
+    uploadKnowledge(e) {
+      if (e.target.files.length === 0) return;
+      const fd = new FormData();
+      fd.append("sessionId", this.sessionId);
+      fd.append("file", e.target.files[0]);
+
+      const fileInput = e.target;
+
+      fetch("/ai/upload-knowledge", { method: "POST", body: fd })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.status === "success") {
+            alert("Knowledge Base Berhasil Ditambahkan!");
+            if (!this.knowledgeFiles.includes(d.filename)) {
+              this.knowledgeFiles.push(d.filename);
+            }
+          } else {
+            alert("Gagal Upload Knowledge Base");
+          }
+          fileInput.value = "";
+        });
+    },
+
+    deleteKnowledge(filename) {
+      if (!confirm(`Hapus file "${filename}" dari knowledge base?`)) return;
+      fetch(`/ai/knowledge/${this.sessionId}/${filename}`, { method: "DELETE" })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.status === "success") {
+            this.knowledgeFiles = this.knowledgeFiles.filter(
+              (f) => f !== filename
+            );
+          } else {
+            alert("Gagal menghapus file");
+          }
+        });
+    },
+
+    // Legacy support (redirect to inventory)
+    uploadExcel(e) {
+      this.uploadInventory(e);
+    },
+
+    toggleAI() {
+      fetch("/ai/toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: this.sessionId,
+          isActive: this.aiActive,
+        }),
+      });
+    },
+    savePrompt() {
+      fetch("/ai/save-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: this.sessionId,
+          prompt: this.aiPrompt,
+        }),
+      }).then(() => {
+        alert("Prompt disimpan!");
+        this.showPromptModal = false;
+      });
+    },
+    toggleGroupSettings() {
+      localStorage.setItem("wa_show_groups", this.showGroups);
+      if (
+        !this.showGroups &&
+        this.activeChat &&
+        this.activeChat.includes("@g.us")
+      ) {
+        this.activeChat = null;
+      }
+    },
+    startAuth() {
+      if (!this.sessionId) return;
+      this.isLoading = true;
+      this.connectSocket();
+      fetch("/session/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: this.sessionId }),
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.status === "connected") {
+            this.isLoggedIn = true;
+            this.isLoading = false;
+            localStorage.setItem("wa_session_id", this.sessionId);
+            this.fetchCRM();
+            this.fetchChatHistory();
+          }
+        });
+    },
+    connectSocket() {
+      this.socket.emit("join_session", this.sessionId);
+      fetch(`/session/status/${this.sessionId}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.status === "connected") {
+            this.isLoggedIn = true;
+            this.isLoading = false;
+            this.fetchCRM();
+            this.fetchChatHistory();
+          }
+        });
+    },
+    renderQR(qr) {
+      this.qrCodeVal = qr;
+      this.isLoading = false;
+      const c = document.getElementById("qrcode-container");
+      c.innerHTML = "";
+      new QRCode(c, { text: qr, width: 200, height: 200 });
+    },
+    logout() {
+      if (!confirm("Logout?")) return;
+      fetch("/session/stop", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: this.sessionId }),
+      });
+      localStorage.removeItem("wa_session_id");
+      location.reload();
+    },
+    handleFileSelect(e) {
+      if (e.target.files.length > 0) this.selectedFile = e.target.files[0];
+    },
+    async sendMessage() {
+      if (!this.inputText.trim() && !this.selectedFile) return;
+      const text = this.inputText;
+      const to = this.activeChat;
+      const isMedia = !!this.selectedFile;
+
+      // Optimistic UI: Tampilkan pesan sementara
+      if (!isMedia) {
+        const tempId = "temp-" + Date.now();
+        if (!this.messages[to]) this.messages[to] = [];
+        this.messages[to].push({
+          id: tempId,
+          from: to,
+          text: text,
+          fromMe: true,
+          timestamp: new Date(),
+          senderName: "Me",
+          mediaUrl: null,
+        });
+        this.scrollToBottom();
+      }
+
+      this.inputText = "";
+      try {
+        if (isMedia) {
+          const fd = new FormData();
+          fd.append("sessionId", this.sessionId);
+          fd.append("to", to);
+          fd.append("caption", text);
+          fd.append("file", this.selectedFile);
+          await fetch("/chat/send-media", { method: "POST", body: fd });
+          this.selectedFile = null;
+        } else {
+          const res = await fetch("/chat/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sessionId: this.sessionId,
+              to: to,
+              text: text,
+            }),
+          });
+          const data = await res.json();
+          if (data.error) {
+            alert("Gagal kirim: " + data.error);
+            // Remove temp message if failed? (Optional)
+          }
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Gagal kirim (Network Error)");
+      }
+    },
+    handleIncomingMessage(data) {
+      const chatId = data.from;
+      if (!this.crmData[chatId]) {
+        this.crmData[chatId] = { label: "General", note: "" };
+      }
+      if (!this.messages[chatId]) this.messages[chatId] = [];
+      if (this.messages[chatId].some((m) => m.id === data.id)) return;
+
+      // FIX: Deduplikasi pesan manual (Optimistic UI vs Real Socket Data)
+      let isReplacement = false;
+      if (data.fromMe) {
+        // Cari pesan sementara yang teksnya sama
+        const tempIdx = this.messages[chatId].findIndex(
+          (m) => m.id.toString().startsWith("temp-") && m.text === data.text
+        );
+        if (tempIdx !== -1) {
+          // Replace pesan sementara dengan data asli dari server
+          this.messages[chatId][tempIdx] = data;
+          isReplacement = true;
+        }
+      }
+
+      if (!isReplacement) {
+        this.messages[chatId].push(data);
+      }
+
+      const existingChat = this.chatList.find((c) => c.id === chatId);
+      if (existingChat) {
+        existingChat.lastMsg =
+          data.text || (data.mediaType ? `[${data.mediaType}]` : "Media");
+        existingChat.timestamp = new Date();
+        if (data.chatName) existingChat.name = data.chatName;
+        if (data.chatProfilePicUrl)
+          existingChat.profilePicUrl = data.chatProfilePicUrl;
+        if (this.activeChat !== chatId) existingChat.unread++;
+        this.chatList = this.chatList.sort((a, b) => b.timestamp - a.timestamp);
+      } else {
+        this.chatList.unshift({
+          id: chatId,
+          name: data.chatName || this.formatLabel(chatId),
+          profilePicUrl: data.chatProfilePicUrl,
+          lastMsg:
+            data.text || (data.mediaType ? `[${data.mediaType}]` : "Media"),
+          timestamp: new Date(),
+          unread: this.activeChat === chatId ? 0 : 1,
+          isGroup: data.isGroup,
+        });
+      }
+      if (this.activeChat === chatId) this.scrollToBottom();
+    },
+    getActiveChatObj() {
+      return this.chatList.find((c) => c.id === this.activeChat);
+    },
+    getInitials(name) {
+      if (!name) return "?";
+      let cleanName = name.toString().replace(/@.*/, "").replace(/\+/g, "");
+      let parts = cleanName.split(" ").filter((p) => p.length > 0);
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return cleanName.substring(0, 2).toUpperCase();
+    },
+    formatLabel(jid) {
+      if (!jid) return "";
+      let clean = jid.replace("@s.whatsapp.net", "").replace("@g.us", "");
+      if (jid.includes("@g.us")) return "Grup " + clean.substring(0, 6);
+      if (clean.startsWith("62")) return "+" + clean.slice(2);
+      return clean;
+    },
+    selectChat(chat) {
+      this.activeChat = chat.id;
+      chat.unread = 0;
+      this.mobileMenu = false;
+      this.scrollToBottom();
+      if (!this.messages[chat.id]) this.messages[chat.id] = [];
+    },
+    get activeMessages() {
+      return this.messages[this.activeChat];
+    },
+    get totalUnread() {
+      return this.chatList.reduce((acc, c) => acc + (c.unread || 0), 0);
+    },
+    scrollToBottom() {
+      this.$nextTick(() => {
+        const c = document.getElementById("chat-container");
+        if (c) c.scrollTop = c.scrollHeight;
+      });
+    },
+    formatTime(date) {
+      return new Date(date).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    },
+    async fetchChatHistory() {
+      try {
+        const res = await fetch(`/chat/history/${this.sessionId}`);
+        const json = await res.json();
+        if (json.status === "success") {
+          json.data.forEach((chat) => {
+            const existing = this.chatList.find((c) => c.id === chat.remoteJid);
+            if (!existing) {
+              this.chatList.push({
+                id: chat.remoteJid,
+                name: chat.name || chat.remoteJid,
+                unread: 0,
+                lastMsg:
+                  chat.messages.length > 0
+                    ? chat.messages[chat.messages.length - 1].text
+                    : "",
+                lastTime: chat.updatedAt,
+                isGroup: chat.remoteJid.endsWith("@g.us"),
+                profilePicUrl: null,
+              });
+            }
+
+            if (!this.messages[chat.remoteJid])
+              this.messages[chat.remoteJid] = [];
+
+            // Avoid duplicates if already loaded via socket
+            const currentIds = new Set(
+              this.messages[chat.remoteJid].map((m) => m.id)
+            );
+
+            chat.messages.forEach((m) => {
+              if (!currentIds.has(m.id)) {
+                this.messages[chat.remoteJid].push({
+                  id: m.id,
+                  text: m.text,
+                  time: m.createdAt,
+                  fromMe: m.fromMe,
+                  mediaUrl: m.mediaUrl,
+                });
+              }
+            });
+
+            this.messages[chat.remoteJid].sort(
+              (a, b) => new Date(a.time) - new Date(b.time)
+            );
+          });
+          this.chatList.sort(
+            (a, b) => new Date(b.lastTime) - new Date(a.lastTime)
+          );
+        }
+      } catch (e) {
+        console.error("Failed to load history", e);
+      }
+    },
+    async deleteMessage(id) {
+      if (!confirm("Hapus pesan ini?")) return;
+      try {
+        await fetch(`/chat/message/${id}`, { method: "DELETE" });
+        const chatMessages = this.messages[this.activeChat];
+        const idx = chatMessages.findIndex((m) => m.id === id);
+        if (idx !== -1) chatMessages.splice(idx, 1);
+      } catch (e) {
+        alert("Gagal menghapus pesan");
+      }
+    },
+    async deleteChat(chatId) {
+      if (!confirm("Hapus chat ini beserta semua pesannya?")) return;
+      try {
+        const res = await fetch(`/chat/delete/${this.sessionId}/${chatId}`, {
+          method: "DELETE",
+        });
+        const data = await res.json();
+        if (data.status === "success") {
+          this.chatList = this.chatList.filter((c) => c.id !== chatId);
+          delete this.messages[chatId];
+          if (this.activeChat === chatId) {
+            this.activeChat = null;
+          }
+        } else {
+          alert("Gagal menghapus chat");
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Gagal menghapus chat");
+      }
+    },
+
+    // --- SCHEDULE LOGIC ---
+    async fetchSchedules() {
+      if (!this.sessionId) return;
+      try {
+        const res = await fetch(`/schedule/${this.sessionId}`);
+        const json = await res.json();
+        if (json.status === "success") {
+          this.schedules = json.data;
+          this.generateCalendar(); // Refresh calendar when schedules load
+        }
+      } catch (e) {
+        console.error("Failed to fetch schedules", e);
+      }
+    },
+
+    // --- CALENDAR LOGIC ---
+    generateCalendar() {
+      const firstDay = new Date(this.calendarYear, this.calendarMonth, 1);
+      const lastDay = new Date(this.calendarYear, this.calendarMonth + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startingDay = firstDay.getDay(); // 0 = Sunday
+
+      let days = [];
+
+      // Previous month padding
+      for (let i = 0; i < startingDay; i++) {
+        days.push({ date: null });
+      }
+
+      // Current month days
+      for (let i = 1; i <= daysInMonth; i++) {
+        const dateStr = `${this.calendarYear}-${String(
+          this.calendarMonth + 1
+        ).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+        days.push({
+          date: i,
+          fullDate: dateStr,
+          hasSchedule: this.schedules.some((s) => s.date.startsWith(dateStr)),
+        });
+      }
+
+      this.calendarDays = days;
+    },
+    changeMonth(offset) {
+      this.calendarMonth += offset;
+      if (this.calendarMonth > 11) {
+        this.calendarMonth = 0;
+        this.calendarYear++;
+      } else if (this.calendarMonth < 0) {
+        this.calendarMonth = 11;
+        this.calendarYear--;
+      }
+      this.generateCalendar();
+    },
+    isToday(day) {
+      if (!day.date) return false;
+      const today = new Date();
+      return (
+        day.date === today.getDate() &&
+        this.calendarMonth === today.getMonth() &&
+        this.calendarYear === today.getFullYear()
+      );
+    },
+    selectDate(day) {
+      if (!day.date) return;
+      if (this.selectedDate === day.fullDate) {
+        this.selectedDate = null; // Deselect if clicked again
+      } else {
+        this.selectedDate = day.fullDate;
+      }
+    },
+    get filteredSchedules() {
+      if (!this.selectedDate) {
+        return this.schedules;
+      }
+      return this.schedules.filter((s) => s.date.startsWith(this.selectedDate));
+    },
+
+    openScheduleModal(schedule = null) {
+      if (schedule) {
+        // Edit Mode
+        const d = new Date(schedule.date);
+        this.scheduleForm = {
+          id: schedule.id,
+          title: schedule.title,
+          date: d.toISOString().split("T")[0],
+          time: d.toTimeString().slice(0, 5),
+          description: schedule.description || "",
+          customerJid: schedule.customerJid,
+        };
+      } else {
+        // Create Mode
+        this.scheduleForm = {
+          id: null,
+          title: "",
+          date: new Date().toISOString().split("T")[0],
+          time: "09:00",
+          description: "",
+          customerJid: this.activeChat || null,
+        };
+      }
+
+      // Calculate Display Name
+      const jid = this.scheduleForm.customerJid;
+      if (jid) {
+        const chat = this.chatList.find((c) => c.id === jid);
+        if (chat && chat.name) {
+          this.scheduleForm.customerDisplay = chat.name;
+        } else {
+          this.scheduleForm.customerDisplay = jid.replace(
+            "@s.whatsapp.net",
+            ""
+          );
+        }
+      } else {
+        this.scheduleForm.customerDisplay = "";
+      }
+
+      this.showScheduleModal = true;
+    },
+    async saveSchedule() {
+      const { id, title, date, time, description, customerJid } =
+        this.scheduleForm;
+      if (!title || !date || !time)
+        return alert("Judul, Tanggal, dan Waktu wajib diisi!");
+
+      const dateTime = new Date(`${date}T${time}`);
+      const payload = {
+        sessionId: this.sessionId,
+        title,
+        description,
+        date: dateTime,
+        customerJid,
+      };
+
+      try {
+        let url = "/schedule/create";
+        let method = "POST";
+        if (id) {
+          url = `/schedule/update/${id}`;
+          method = "PUT";
+        }
+
+        const res = await fetch(url, {
+          method: method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+
+        if (json.status === "success") {
+          this.showScheduleModal = false;
+          this.fetchSchedules();
+          alert(id ? "Jadwal diperbarui!" : "Jadwal dibuat!");
+        } else {
+          alert("Gagal menyimpan jadwal");
+        }
+      } catch (e) {
+        alert("Terjadi kesalahan");
+      }
+    },
+    async deleteSchedule(id) {
+      if (!confirm("Hapus jadwal ini?")) return;
+      try {
+        await fetch(`/schedule/delete/${id}`, { method: "DELETE" });
+        this.fetchSchedules();
+      } catch (e) {
+        alert("Gagal menghapus jadwal");
+      }
+    },
+    formatDateTime(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleString("id-ID", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    },
+    formatCustomerDisplay(jid) {
+      if (!jid) return "-";
+      const chat = this.chatList.find((c) => c.id === jid);
+      if (chat && chat.name) {
+        return chat.name;
+      }
+      return jid.replace("@s.whatsapp.net", "");
+    },
+  };
+}
