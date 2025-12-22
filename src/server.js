@@ -78,6 +78,20 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// --- INVOICE STORE ---
+const invoicesPath = path.join(__dirname, "../invoices.json");
+let invoicesStore = {};
+if (fs.existsSync(invoicesPath)) {
+  try {
+    invoicesStore = JSON.parse(fs.readFileSync(invoicesPath, "utf8"));
+  } catch (e) {
+    console.error("Failed to load invoices.json", e);
+  }
+}
+function saveInvoices() {
+  fs.writeFileSync(invoicesPath, JSON.stringify(invoicesStore, null, 2));
+}
+
 // --- MIDDLEWARES ---
 app.use(cors());
 app.use((req, res, next) => {
@@ -481,14 +495,93 @@ app.post("/chat/send-media", upload.single("file"), async (req, res) => {
   }
 });
 
+// --- API INVOICE REMINDER ---
+app.post("/chat/send-invoice-reminder", async (req, res) => {
+  const { sessionId, invoiceId } = req.body;
+  const session = sessions.get(sessionId);
+  if (!session || session.status !== "connected")
+    return res.status(400).json({ error: "Session not ready" });
+
+  const list = invoicesStore[sessionId] || [];
+  const inv = list.find((i) => i.id === invoiceId);
+  if (!inv) return res.status(404).json({ error: "Invoice not found" });
+
+  try {
+    const jid = formatPhone(inv.to);
+    const total = Number(inv.total).toLocaleString("id-ID");
+    const msg = `Halo Kak ${inv.customerName}, sekedar mengingatkan invoice *${
+      inv.invoiceNote || inv.id
+    }* sebesar *Rp ${total}* belum lunas ya. Mohon segera diproses. Terima kasih 🙏`;
+
+    await session.sock.sendMessage(jid, { text: msg });
+    res.json({ status: "success" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to send reminder" });
+  }
+});
+
+// --- API TEMPLATES ---
+app.post("/templates/save", (req, res) => {
+  const { sessionId, templates } = req.body;
+  if (!sessionAIStore[sessionId]) sessionAIStore[sessionId] = {};
+  sessionAIStore[sessionId].templates = templates;
+  res.json({ status: "success" });
+});
+
+app.get("/templates/list/:sessionId", (req, res) => {
+  const { sessionId } = req.params;
+  const templates = sessionAIStore[sessionId]?.templates || [];
+  res.json({ status: "success", data: templates });
+});
+
 // --- API INVOICE ---
+app.get("/invoice/list/:sessionId", (req, res) => {
+  const { sessionId } = req.params;
+  const list = invoicesStore[sessionId] || [];
+  // Return UNPAID invoices
+  const unpaid = list.filter((inv) => inv.status === "UNPAID");
+  res.json({ status: "success", data: unpaid });
+});
+
 app.post("/chat/send-invoice-pdf", async (req, res) => {
-  const { sessionId, to, invoiceData } = req.body;
+  const { sessionId, to, invoiceData, invoiceId, action } = req.body;
   const session = sessions.get(sessionId);
   if (!session || session.status !== "connected")
     return res.status(400).json({ error: "Session not ready" });
 
   try {
+    // Handle Invoice Storage
+    if (!invoicesStore[sessionId]) invoicesStore[sessionId] = [];
+
+    let finalInvoiceData = invoiceData;
+
+    if (invoiceId) {
+      // Existing Invoice
+      const found = invoicesStore[sessionId].find(
+        (inv) => inv.id === invoiceId
+      );
+      if (found) {
+        finalInvoiceData = found;
+        // If action is pay, update status
+        if (action === "pay") {
+          finalInvoiceData.status = "PAID";
+          finalInvoiceData.isPaid = true;
+          saveInvoices();
+        }
+      }
+    } else {
+      // New Invoice - Save it
+      finalInvoiceData.id = "INV-" + Date.now();
+      finalInvoiceData.status = "UNPAID";
+      finalInvoiceData.to = to;
+      finalInvoiceData.date = new Date().toISOString();
+      // Ensure isPaid is false for new invoices
+      finalInvoiceData.isPaid = false;
+      invoicesStore[sessionId].push(finalInvoiceData);
+      saveInvoices();
+    }
+
     // Get Invoice Settings
     const aiSession = sessionAIStore[sessionId];
     const invSettings = aiSession?.invoiceSettings || {
@@ -517,8 +610,8 @@ app.post("/chat/send-invoice-pdf", async (req, res) => {
     // Status (Paid/Unpaid)
     doc
       .fontSize(10)
-      .fillColor(invoiceData.isPaid ? "green" : "red")
-      .text(invoiceData.isPaid ? "PAID" : "UNPAID", { align: "right" });
+      .fillColor(finalInvoiceData.isPaid ? "green" : "red")
+      .text(finalInvoiceData.isPaid ? "PAID" : "UNPAID", { align: "right" });
 
     // Address (Left Aligned, below logo)
     doc.fillColor("black");
@@ -527,14 +620,24 @@ app.post("/chat/send-invoice-pdf", async (req, res) => {
     }
 
     // Invoice Details (Right Aligned)
-    doc.text(`No: ${invoiceData.invoiceNote}`, 300, 110, { align: "right" });
-    doc.text(`Date: ${new Date().toLocaleDateString("id-ID")}`, 300, 125, {
-      align: "right",
-    });
+    doc.text(
+      `No: ${finalInvoiceData.invoiceNote || finalInvoiceData.id}`,
+      300,
+      110,
+      { align: "right" }
+    );
+    doc.text(
+      `Date: ${new Date(finalInvoiceData.date).toLocaleDateString("id-ID")}`,
+      300,
+      125,
+      {
+        align: "right",
+      }
+    );
 
     // Customer Info
     doc.text(`Bill To:`, 50, 180);
-    doc.font("Helvetica-Bold").text(invoiceData.customerName, 50, 195);
+    doc.font("Helvetica-Bold").text(finalInvoiceData.customerName, 50, 195);
 
     // Table
     let y = 240;
@@ -552,7 +655,7 @@ app.post("/chat/send-invoice-pdf", async (req, res) => {
     doc.font("Helvetica");
     y += 25;
 
-    invoiceData.cart.forEach((item) => {
+    finalInvoiceData.cart.forEach((item) => {
       const price = Number(item.price) || 0;
       const qty = Number(item.qty) || 1;
       const subtotal = Number(item.subtotal) || 0;
@@ -575,11 +678,11 @@ app.post("/chat/send-invoice-pdf", async (req, res) => {
       .lineTo(550, y + 10)
       .stroke();
 
-    let finalTotal = Number(invoiceData.total) || 0;
+    let finalTotal = Number(finalInvoiceData.total) || 0;
     let summaryY = y + 20;
 
     // Shipping Cost
-    if (invoiceData.shipping && invoiceData.shipping.cost > 0) {
+    if (finalInvoiceData.shipping && finalInvoiceData.shipping.cost > 0) {
       doc
         .font("Helvetica")
         .text(`Subtotal:`, 350, summaryY, { align: "right", width: 90 });
@@ -589,19 +692,79 @@ app.post("/chat/send-invoice-pdf", async (req, res) => {
       });
       summaryY += 15;
 
-      doc.text(`Ongkir (${invoiceData.shipping.label}):`, 300, summaryY, {
+      doc.text(`Ongkir (${finalInvoiceData.shipping.label}):`, 300, summaryY, {
         align: "right",
         width: 140,
       });
       doc.text(
-        Number(invoiceData.shipping.cost).toLocaleString("id-ID"),
+        Number(finalInvoiceData.shipping.cost).toLocaleString("id-ID"),
         450,
         summaryY,
         { align: "right", width: 100 }
       );
       summaryY += 15;
 
-      finalTotal += Number(invoiceData.shipping.cost);
+      // Note: finalTotal in invoiceData usually already includes shipping if calculated on frontend?
+      // Let's check frontend logic.
+      // Frontend: total: this.cartTotal. cartTotal includes shipping.
+      // So finalInvoiceData.total ALREADY includes shipping.
+      // But the PDF logic I wrote previously:
+      // finalTotal += Number(invoiceData.shipping.cost);
+      // This might be double counting if I'm not careful.
+
+      // Let's check the previous code I replaced.
+      // Previous code:
+      // let finalTotal = Number(invoiceData.total) || 0;
+      // ...
+      // finalTotal += Number(invoiceData.shipping.cost);
+
+      // Wait, if frontend sends total WITH shipping, then I shouldn't add it again.
+      // Frontend: total: this.cartTotal
+      // cartTotal: subtotal + shipping.
+
+      // So `invoiceData.total` IS the Grand Total.
+      // The PDF logic should be:
+      // Subtotal = Total - Shipping
+      // Ongkir = Shipping
+      // Total = Total
+
+      // BUT, the previous code I wrote (or saw) was adding it.
+      // "finalTotal += Number(invoiceData.shipping.cost);"
+      // This implies `invoiceData.total` was treated as Subtotal?
+
+      // Let's check frontend `cartTotal` again.
+      // get cartTotal() { return subtotal + shipping }
+      // So `invoiceData.total` is Grand Total.
+
+      // So in PDF:
+      // Subtotal should be `finalTotal - shipping.cost`.
+
+      // I will fix this logic in the new code.
+
+      const shippingCost = Number(finalInvoiceData.shipping.cost);
+      const subtotalVal = finalTotal - shippingCost;
+
+      // Overwrite the previous logic to be correct
+      doc
+        .font("Helvetica")
+        .text(`Subtotal:`, 350, summaryY, { align: "right", width: 90 });
+      doc.text(subtotalVal.toLocaleString("id-ID"), 450, summaryY, {
+        align: "right",
+        width: 100,
+      });
+      summaryY += 15;
+
+      doc.text(`Ongkir (${finalInvoiceData.shipping.label}):`, 300, summaryY, {
+        align: "right",
+        width: 140,
+      });
+      doc.text(shippingCost.toLocaleString("id-ID"), 450, summaryY, {
+        align: "right",
+        width: 100,
+      });
+      summaryY += 15;
+
+      // finalTotal is already correct
     }
 
     doc
@@ -612,15 +775,15 @@ app.post("/chat/send-invoice-pdf", async (req, res) => {
       });
 
     // Stamp LUNAS
-    if (invoiceData.isPaid) {
-      const stampY = summaryY - 10; // Adjust Y position relative to Total
+    if (finalInvoiceData.isPaid) {
+      const stampY = summaryY - 10;
       doc.save();
-      doc.rotate(-15, { origin: [450, stampY] }); // Rotate around the stamp center
+      doc.rotate(-15, { origin: [450, stampY] });
       doc
         .rect(400, stampY, 120, 40)
         .lineWidth(2)
         .strokeColor("#22c55e")
-        .stroke(); // Border
+        .stroke();
       doc
         .fontSize(25)
         .fillColor("#22c55e")
@@ -648,7 +811,7 @@ app.post("/chat/send-invoice-pdf", async (req, res) => {
           document: pdfBuffer,
           mimetype: "application/pdf",
           fileName,
-          caption: `Invoice untuk ${invoiceData.customerName}`,
+          caption: `Invoice untuk ${finalInvoiceData.customerName}`,
         });
 
         // --- SAVE INVOICE MESSAGE TO DB ---
@@ -662,10 +825,12 @@ app.post("/chat/send-invoice-pdf", async (req, res) => {
               data: {
                 sessionId,
                 remoteJid: chatId,
-                name: invoiceData.customerName || "Unknown",
+                name: finalInvoiceData.customerName || "Unknown",
               },
             });
           }
+          // ... (rest of saving logic) ...
+
           await prisma.message.create({
             data: {
               chatId: chat.id,

@@ -57,7 +57,10 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
     qtyInput: 1,
     invoiceNote: "",
     isPaid: false,
+    invoiceTab: "new",
+    unpaidInvoices: [],
     shippingOptions: [], // [{label: 'JNE', price: 10000}]
+    messageTemplates: [], // [{shortcut: '/rek', content: '...'}]
     selectedShippingIndex: "",
     crmData: {},
     showCRMModal: false,
@@ -632,8 +635,84 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
       }
     },
 
+    async fetchUnpaidInvoices() {
+      try {
+        const res = await fetch(`/invoice/list/${this.sessionId}`);
+        const json = await res.json();
+        if (json.status === "success") {
+          this.unpaidInvoices = json.data;
+        }
+      } catch (e) {
+        console.error("Failed to fetch unpaid invoices", e);
+      }
+    },
+
+    async markAsPaid(invoiceId) {
+      const inv = this.unpaidInvoices.find((i) => i.id === invoiceId);
+      if (!inv) return;
+
+      if (
+        !confirm(`Tandai invoice ${inv.invoiceNote || inv.id} sebagai LUNAS?`)
+      )
+        return;
+
+      const payload = {
+        sessionId: this.sessionId,
+        to: inv.to,
+        invoiceId: invoiceId,
+        action: "pay",
+        invoiceData: {},
+      };
+
+      try {
+        const res = await fetch("/chat/send-invoice-pdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.status === "success") {
+          alert("Invoice berhasil dilunaskan dan dikirim! 📄");
+          this.fetchUnpaidInvoices();
+        } else {
+          alert("Gagal memproses invoice.");
+        }
+      } catch (e) {
+        alert("Error processing invoice.");
+      }
+    },
+
+    async sendInvoiceReminder(invoiceId) {
+      const inv = this.unpaidInvoices.find((i) => i.id === invoiceId);
+      if (!inv) return;
+      if (
+        !confirm(`Kirim reminder untuk invoice ${inv.invoiceNote || inv.id}?`)
+      )
+        return;
+
+      try {
+        const res = await fetch("/chat/send-invoice-reminder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: this.sessionId, invoiceId }),
+        });
+        const json = await res.json();
+        if (json.status === "success") alert("Reminder terkirim! 🔔");
+        else alert("Gagal mengirim reminder.");
+      } catch (e) {
+        alert("Error sending reminder.");
+      }
+    },
+
     async fetchSettings() {
       try {
+        // Fetch Templates
+        fetch(`/templates/list/${this.sessionId}`)
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.status === "success") this.messageTemplates = d.data;
+          });
+
         const res = await fetch(`/ai/settings/${this.sessionId}`);
         const json = await res.json();
         if (json.status === "success") {
@@ -654,6 +733,30 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         }
       } catch (e) {
         console.error("Failed to fetch settings", e);
+      }
+    },
+
+    addTemplate() {
+      this.messageTemplates.push({ shortcut: "", content: "" });
+    },
+    removeTemplate(idx) {
+      this.messageTemplates.splice(idx, 1);
+    },
+    async saveTemplates() {
+      try {
+        const res = await fetch("/templates/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: this.sessionId,
+            templates: this.messageTemplates,
+          }),
+        });
+        const json = await res.json();
+        if (json.status === "success") alert("Template tersimpan!");
+        else alert("Gagal menyimpan template");
+      } catch (e) {
+        alert("Error saving templates");
       }
     },
 
@@ -907,9 +1010,20 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
     },
     async sendMessage() {
       if (!this.inputText.trim() && !this.selectedFile) return;
-      const text = this.inputText;
+      let text = this.inputText;
       const to = this.activeChat;
       const isMedia = !!this.selectedFile;
+
+      // --- TEMPLATE EXPANSION ---
+      if (!isMedia && text.startsWith("/")) {
+        const tpl = this.messageTemplates.find(
+          (t) => t.shortcut === text.trim()
+        );
+        if (tpl) {
+          text = tpl.content;
+        }
+      }
+      // --------------------------
 
       // Optimistic UI: Tampilkan pesan sementara
       if (!isMedia) {

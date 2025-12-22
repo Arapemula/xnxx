@@ -1167,26 +1167,79 @@
 
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- 1. AI Persona Settings -->
-            <div
-              class="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
-            >
-              <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-bold text-gray-800">🤖 AI Persona</h2>
+            <div class="space-y-6">
+              <div
+                class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-w-0"
+              >
+                <div class="flex justify-between items-center mb-4">
+                  <h2 class="text-lg font-bold text-gray-800">🤖 AI Persona</h2>
+                  <button
+                    @click="savePrompt"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
+                  >
+                    Simpan Prompt
+                  </button>
+                </div>
+                <p class="text-sm text-gray-500 mb-2">
+                  Instruksi utama untuk mengatur gaya bicara dan perilaku bot.
+                </p>
+                <textarea
+                  x-model="aiPrompt"
+                  class="w-full h-64 p-4 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-y font-mono bg-gray-50"
+                  placeholder="Tulis instruksi system prompt di sini..."
+                ></textarea>
+              </div>
+
+              <!-- Template Pesan -->
+              <div
+                class="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
+              >
+                <div class="flex justify-between items-center mb-4">
+                  <h2 class="text-lg font-bold text-gray-800">
+                    ⚡ Template Pesan
+                  </h2>
+                  <button
+                    @click="saveTemplates"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
+                  >
+                    Simpan Template
+                  </button>
+                </div>
+                <p class="text-sm text-gray-500 mb-4">
+                  Shortcut untuk balasan cepat. Ketik shortcut di chat (misal:
+                  /rek) untuk memunculkan pesan.
+                </p>
+                <div class="space-y-2 mb-4">
+                  <template x-for="(tpl, idx) in messageTemplates" :key="idx">
+                    <div class="flex gap-2 items-start">
+                      <input
+                        type="text"
+                        x-model="tpl.shortcut"
+                        placeholder="/shortcut"
+                        class="w-1/3 border border-gray-300 rounded p-2 text-sm font-mono"
+                      />
+                      <textarea
+                        x-model="tpl.content"
+                        placeholder="Isi pesan..."
+                        class="flex-1 border border-gray-300 rounded p-2 text-sm resize-y"
+                        rows="1"
+                      ></textarea>
+                      <button
+                        @click="removeTemplate(idx)"
+                        class="text-red-500 hover:text-red-700 p-2"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </template>
+                </div>
                 <button
-                  @click="savePrompt"
-                  class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
+                  @click="addTemplate"
+                  class="w-full py-2 border border-dashed border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 text-sm"
                 >
-                  Simpan Prompt
+                  + Tambah Template
                 </button>
               </div>
-              <p class="text-sm text-gray-500 mb-2">
-                Instruksi utama untuk mengatur gaya bicara dan perilaku bot.
-              </p>
-              <textarea
-                x-model="aiPrompt"
-                class="w-full h-64 p-4 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none font-mono bg-gray-50"
-                placeholder="Tulis instruksi system prompt di sini..."
-              ></textarea>
             </div>
 
             <!-- 2. Knowledge Base & Inventory -->
@@ -1284,9 +1337,8 @@
                       </button>
                     </div>
                     <p class="text-xs text-blue-600 mt-2">
-                      ℹ️ Caranya: Buka Google Sheet > File > Share > Publish to
-                      web > Pilih "Entire Document" & "Comma-separated values
-                      (.csv)" > Publish > Copy Link.
+                      ℹ️ Caranya: Masukan Link data spreadsheet anda kesini >
+                      kemudian Save & Sync
                     </p>
                   </div>
                 </div>
@@ -1361,159 +1413,157 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Invoice Settings -->
-              <div
-                class="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
-              >
-                <h2 class="text-lg font-bold text-gray-800 mb-4">
-                  🧾 Custom Invoice
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <!-- Left Column -->
-                  <div class="space-y-4">
-                    <div>
-                      <label
-                        class="block text-xs font-bold text-gray-700 mb-1 uppercase"
-                        >Nama Toko / Judul Invoice</label
-                      >
-                      <input
-                        type="text"
-                        x-model="invoiceTitle"
-                        class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="CONTOH: TOKO MAJU JAYA"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        class="block text-xs font-bold text-gray-700 mb-1 uppercase"
-                        >Alamat & Kontak</label
-                      >
-                      <textarea
-                        x-model="invoiceAddress"
-                        rows="4"
-                        class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="Jl. Contoh No. 123, Jakarta&#10;Telp: 0812-3456-7890"
-                      ></textarea>
-                    </div>
-
-                    <!-- Shipping Options -->
-                    <div>
-                      <label
-                        class="block text-xs font-bold text-gray-700 mb-1 uppercase"
-                        >Opsi Ongkir</label
-                      >
-                      <div class="space-y-2 mb-2">
-                        <template
-                          x-for="(opt, idx) in shippingOptions"
-                          :key="idx"
-                        >
-                          <div class="flex gap-2">
-                            <input
-                              type="text"
-                              x-model="opt.label"
-                              class="flex-1 p-2 border border-gray-200 rounded text-sm"
-                              placeholder="Nama (JNE, GoSend)"
-                            />
-                            <input
-                              type="number"
-                              x-model="opt.price"
-                              class="w-24 p-2 border border-gray-200 rounded text-sm"
-                              placeholder="Harga"
-                            />
-                            <button
-                              @click="removeShippingOption(idx)"
-                              class="text-red-500 hover:text-red-700 px-2"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        </template>
-                      </div>
-                      <button
-                        @click="addShippingOption"
-                        class="text-xs text-blue-600 font-bold hover:underline"
-                      >
-                        + Tambah Opsi Ongkir
-                      </button>
-                    </div>
+            </div>
+            <!-- Invoice Settings -->
+            <div
+              class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2"
+            >
+              <h2 class="text-lg font-bold text-gray-800 mb-4">
+                🧾 Custom Invoice
+              </h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Left Column -->
+                <div class="space-y-4">
+                  <div>
+                    <label
+                      class="block text-xs font-bold text-gray-700 mb-1 uppercase"
+                      >Nama Toko / Judul Invoice</label
+                    >
+                    <input
+                      type="text"
+                      x-model="invoiceTitle"
+                      class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="CONTOH: TOKO MAJU JAYA"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-xs font-bold text-gray-700 mb-1 uppercase"
+                      >Alamat & Kontak</label
+                    >
+                    <textarea
+                      x-model="invoiceAddress"
+                      rows="4"
+                      class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Jl. Contoh No. 123, Jakarta&#10;Telp: 0812-3456-7890"
+                    ></textarea>
                   </div>
 
-                  <!-- Right Column -->
-                  <div class="space-y-4">
-                    <div>
-                      <label
-                        class="block text-xs font-bold text-gray-700 mb-1 uppercase"
-                        >Logo Toko (Optional)</label
+                  <!-- Shipping Options -->
+                  <div>
+                    <label
+                      class="block text-xs font-bold text-gray-700 mb-1 uppercase"
+                      >Opsi Ongkir</label
+                    >
+                    <div class="space-y-2 mb-2">
+                      <template
+                        x-for="(opt, idx) in shippingOptions"
+                        :key="idx"
                       >
-                      <div class="flex items-center gap-4">
-                        <div
-                          class="w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center overflow-hidden relative"
-                        >
-                          <!-- Priority: Preview > Saved Logo > Placeholder -->
-                          <template x-if="invoiceLogoPreview">
-                            <img
-                              :src="invoiceLogoPreview"
-                              class="w-full h-full object-cover"
-                            />
-                          </template>
-                          <template x-if="!invoiceLogoPreview && invoiceLogo">
-                            <img
-                              :src="'/uploads/' + invoiceLogo"
-                              class="w-full h-full object-cover"
-                            />
-                          </template>
-                          <template x-if="!invoiceLogoPreview && !invoiceLogo">
-                            <span class="text-2xl text-gray-300">🖼️</span>
-                          </template>
-                        </div>
-                        <div class="flex-1">
+                        <div class="flex gap-2">
                           <input
-                            type="file"
-                            x-ref="logoInput"
-                            @change="handleLogoUpload"
-                            accept="image/*"
-                            class="hidden"
+                            type="text"
+                            x-model="opt.label"
+                            class="flex-1 p-2 border border-gray-200 rounded text-sm"
+                            placeholder="Nama (JNE, GoSend)"
+                          />
+                          <input
+                            type="number"
+                            x-model="opt.price"
+                            class="w-24 p-2 border border-gray-200 rounded text-sm"
+                            placeholder="Harga"
                           />
                           <button
-                            @click="$refs.logoInput.click()"
-                            class="text-sm text-blue-600 font-bold hover:underline"
+                            @click="removeShippingOption(idx)"
+                            class="text-red-500 hover:text-red-700 px-2"
                           >
-                            Upload Logo Baru
+                            ✕
                           </button>
-                          <p class="text-xs text-gray-400 mt-1">
-                            Format: PNG/JPG. Max 2MB.
-                          </p>
                         </div>
-                      </div>
+                      </template>
                     </div>
-                    <div>
-                      <label
-                        class="block text-xs font-bold text-gray-700 mb-1 uppercase"
-                        >Footer Note</label
-                      >
-                      <textarea
-                        x-model="invoiceFooter"
-                        rows="2"
-                        class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="Terima kasih sudah berbelanja!"
-                      ></textarea>
-                    </div>
+                    <button
+                      @click="addShippingOption"
+                      class="text-xs text-blue-600 font-bold hover:underline"
+                    >
+                      + Tambah Opsi Ongkir
+                    </button>
                   </div>
                 </div>
-                <div class="mt-6 flex justify-end">
-                  <button
-                    @click="saveInvoiceSettings"
-                    class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition shadow-lg shadow-green-200"
-                  >
-                    Simpan Pengaturan Invoice
-                  </button>
+
+                <!-- Right Column -->
+                <div class="space-y-4">
+                  <div>
+                    <label
+                      class="block text-xs font-bold text-gray-700 mb-1 uppercase"
+                      >Logo Toko (Optional)</label
+                    >
+                    <div class="flex items-center gap-4">
+                      <div
+                        class="w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center overflow-hidden relative"
+                      >
+                        <!-- Priority: Preview > Saved Logo > Placeholder -->
+                        <template x-if="invoiceLogoPreview">
+                          <img
+                            :src="invoiceLogoPreview"
+                            class="w-full h-full object-cover"
+                          />
+                        </template>
+                        <template x-if="!invoiceLogoPreview && invoiceLogo">
+                          <img
+                            :src="'/uploads/' + invoiceLogo"
+                            class="w-full h-full object-cover"
+                          />
+                        </template>
+                        <template x-if="!invoiceLogoPreview && !invoiceLogo">
+                          <span class="text-2xl text-gray-300">🖼️</span>
+                        </template>
+                      </div>
+                      <div class="flex-1">
+                        <input
+                          type="file"
+                          x-ref="logoInput"
+                          @change="handleLogoUpload"
+                          accept="image/*"
+                          class="hidden"
+                        />
+                        <button
+                          @click="$refs.logoInput.click()"
+                          class="text-sm text-blue-600 font-bold hover:underline"
+                        >
+                          Upload Logo Baru
+                        </button>
+                        <p class="text-xs text-gray-400 mt-1">
+                          Format: PNG/JPG. Max 2MB.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      class="block text-xs font-bold text-gray-700 mb-1 uppercase"
+                      >Footer Note</label
+                    >
+                    <textarea
+                      x-model="invoiceFooter"
+                      rows="2"
+                      class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Terima kasih sudah berbelanja!"
+                    ></textarea>
+                  </div>
                 </div>
+              </div>
+              <div class="mt-6 flex justify-end">
+                <button
+                  @click="saveInvoiceSettings"
+                  class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition shadow-lg shadow-green-200"
+                >
+                  Simpan Pengaturan Invoice
+                </button>
               </div>
             </div>
           </div>
         </div>
-
         <!-- Live Schedule Page -->
         <div
           x-show="currentPage === 'schedule'"
@@ -1692,11 +1742,34 @@
         >
           ✕
         </button>
-        <h2 class="text-lg font-bold text-gray-800 mb-1">Buat Invoice PDF</h2>
-        <p class="text-xs text-gray-500 mb-4">
-          Pilih barang, tentukan jumlah, dan kirim sebagai PDF.
-        </p>
-        <div class="flex-1 overflow-y-auto pr-2">
+        <h2 class="text-lg font-bold text-gray-800 mb-1">Invoice Manager</h2>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-200 mb-4">
+          <button
+            @click="invoiceTab = 'new'"
+            :class="{'border-b-2 border-blue-500 text-blue-600': invoiceTab === 'new'}"
+            class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-500 transition"
+          >
+            Buat Baru
+          </button>
+          <button
+            @click="invoiceTab = 'unpaid'; fetchUnpaidInvoices()"
+            :class="{'border-b-2 border-blue-500 text-blue-600': invoiceTab === 'unpaid'}"
+            class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-500 transition"
+          >
+            Tagihan Belum Lunas
+          </button>
+        </div>
+
+        <!-- Tab: New Invoice -->
+        <div
+          x-show="invoiceTab === 'new'"
+          class="flex-1 overflow-y-auto pr-2 flex flex-col"
+        >
+          <p class="text-xs text-gray-500 mb-4">
+            Pilih barang, tentukan jumlah, dan kirim sebagai PDF.
+          </p>
           <div class="flex gap-2 mb-4">
             <select
               x-model="selectedProductIndex"
@@ -1814,7 +1887,57 @@
             </div>
           </div>
         </div>
-        <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
+
+        <!-- Tab: Unpaid Invoices -->
+        <div
+          x-show="invoiceTab === 'unpaid'"
+          class="flex-1 overflow-y-auto pr-2"
+        >
+          <template x-for="inv in unpaidInvoices" :key="inv.id">
+            <div
+              class="border border-gray-200 p-3 rounded-lg mb-2 hover:bg-gray-50 transition flex justify-between items-center"
+            >
+              <div>
+                <div
+                  class="font-bold text-gray-800"
+                  x-text="inv.invoiceNote || inv.id"
+                ></div>
+                <div
+                  class="text-xs text-gray-500"
+                  x-text="inv.customerName + ' • ' + new Date(inv.date).toLocaleDateString('id-ID')"
+                ></div>
+                <div
+                  class="text-sm font-mono text-blue-600 font-bold mt-1"
+                  x-text="formatRupiah(inv.total)"
+                ></div>
+              </div>
+              <button
+                @click="markAsPaid(inv.id)"
+                class="bg-green-100 text-green-700 border border-green-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-200 transition flex items-center gap-1"
+              >
+                <span>✅ LUNAS</span>
+              </button>
+              <button
+                @click="sendInvoiceReminder(inv.id)"
+                class="bg-yellow-100 text-yellow-700 border border-yellow-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-200 transition flex items-center gap-1 ml-2"
+                title="Kirim Reminder"
+              >
+                <span>🔔 Ingatkan</span>
+              </button>
+            </div>
+          </template>
+          <div
+            x-show="unpaidInvoices.length === 0"
+            class="text-center text-gray-400 py-8 italic"
+          >
+            Tidak ada tagihan belum lunas.
+          </div>
+        </div>
+
+        <div
+          x-show="invoiceTab === 'new'"
+          class="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100"
+        >
           <button
             @click="showInvoiceModal = false"
             class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded-lg"

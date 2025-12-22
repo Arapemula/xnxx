@@ -1,12 +1,60 @@
 {
   "cs pak erpan": {
-    "incoming": 42,
-    "outgoing": 66,
-    "aiCount": 20,
-    "mediaCount": 16,
-    "invoiceIssued": 14,
+    "incoming": 44,
+    "outgoing": 77,
+    "aiCount": 21,
+    "mediaCount": 19,
+    "invoiceIssued": 17,
     "invoicePaid": 9,
     "logs": [
+      {
+        "time": "2025-12-22T09:12:29.913Z",
+        "type": "INV",
+        "msg": "Tagihan",
+        "user": ""
+      },
+      {
+        "time": "2025-12-22T09:11:44.261Z",
+        "type": "OUT",
+        "msg": "Manual Send",
+        "user": ""
+      },
+      {
+        "time": "2025-12-22T09:11:40.090Z",
+        "type": "OUT",
+        "msg": "Manual Send",
+        "user": ""
+      },
+      {
+        "time": "2025-12-22T09:09:18.136Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-22T09:09:15.013Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-22T09:09:03.555Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-22T08:54:39.480Z",
+        "type": "INV",
+        "msg": "Tagihan",
+        "user": ""
+      },
+      {
+        "time": "2025-12-22T08:54:29.132Z",
+        "type": "INV",
+        "msg": "Tagihan",
+        "user": ""
+      },
       {
         "time": "2025-12-22T08:11:51.579Z",
         "type": "INV",
@@ -87,54 +135,6 @@
       },
       {
         "time": "2025-12-22T08:04:01.165Z",
-        "type": "AI",
-        "msg": "Auto Reply",
-        "user": "Bot AI"
-      },
-      {
-        "time": "2025-12-22T08:03:56.456Z",
-        "type": "IN",
-        "msg": "Pesan Masuk",
-        "user": "Naufal Arhab"
-      },
-      {
-        "time": "2025-12-22T08:03:40.013Z",
-        "type": "AI",
-        "msg": "Auto Reply",
-        "user": "Bot AI"
-      },
-      {
-        "time": "2025-12-22T08:03:35.635Z",
-        "type": "IN",
-        "msg": "Pesan Masuk",
-        "user": "Naufal Arhab"
-      },
-      {
-        "time": "2025-12-22T03:20:33.876Z",
-        "type": "INV",
-        "msg": "Lunas",
-        "user": ""
-      },
-      {
-        "time": "2025-12-22T03:18:02.484Z",
-        "type": "INV",
-        "msg": "Lunas",
-        "user": ""
-      },
-      {
-        "time": "2025-12-22T03:15:27.807Z",
-        "type": "INV",
-        "msg": "Tagihan",
-        "user": ""
-      },
-      {
-        "time": "2025-12-22T03:10:33.521Z",
-        "type": "INV",
-        "msg": "Tagihan",
-        "user": ""
-      },
-      {
-        "time": "2025-12-22T03:03:11.326Z",
         "type": "AI",
         "msg": "Auto Reply",
         "user": "Bot AI"

@@ -589,6 +589,7 @@ const createSession = async (sessionId, io, webhookUrl = null, res = null) => {
 
     // AI Reply
     const aiSession = sessionAIStore[sessionId];
+
     if (
       aiSession?.isActive &&
       !isFromMe &&
