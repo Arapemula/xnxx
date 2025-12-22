@@ -30,6 +30,7 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
     isLoading: false,
     qrCodeVal: null,
     mobileMenu: false,
+    mobileActionMenu: false,
     chatList: [],
     messages: {},
     activeChat: null,
@@ -389,16 +390,25 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
               {
                 label: "Total Aktivitas",
                 data: [0, 0, 0],
-                backgroundColor: ["#6b7280", "#3b82f6", "#10b981"],
-                borderRadius: 6,
-                barThickness: 50,
+                backgroundColor: ["#a5b4fc", "#6366f1", "#ec4899"],
+                borderRadius: 8,
+                barThickness: 40,
+                borderWidth: 0,
               },
             ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true } },
+            scales: { 
+                y: { 
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)' } 
+                },
+                x: {
+                    grid: { display: false }
+                }
+            },
             plugins: { legend: { display: false } },
           },
         });
@@ -416,10 +426,19 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
               {
                 label: "Chat Masuk",
                 data: Array(24).fill(0),
-                borderColor: "#3b82f6",
-                backgroundColor: "rgba(59, 130, 246, 0.1)",
                 fill: true,
                 tension: 0.4,
+                borderColor: "#ec4899",
+                pointBackgroundColor: "#fff",
+                pointBorderColor: "#ec4899",
+                pointBorderWidth: 2,
+                backgroundColor: (context) => {
+                    const ctx = context.chart.ctx;
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                    gradient.addColorStop(0, "rgba(236, 72, 153, 0.4)");
+                    gradient.addColorStop(1, "rgba(236, 72, 153, 0.0)");
+                    return gradient;
+                },
               },
             ],
           },
@@ -427,7 +446,7 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              y: { beginAtZero: true, ticks: { stepSize: 1 } },
+              y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.05)' } },
               x: { grid: { display: false } },
             },
             plugins: { legend: { display: false } },
