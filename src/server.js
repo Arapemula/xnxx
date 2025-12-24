@@ -35,6 +35,23 @@ const { jidNormalizedUser } = require("@whiskeysockets/baileys");
 // --- IMPORT ROUTER AUTH (LOGIN/REGISTER) ---
 const authRoutes = require("./auth");
 
+// --- IMPORT ANTI-SPAM PROTECTION ---
+const {
+  antiSpamMiddleware,
+  authRateLimiter,
+  messageRateLimiter,
+  broadcastRateLimiter,
+  socketConnectionLimiter,
+  getStats: getAntiSpamStats,
+  getBlacklistInfo,
+  blacklistIP,
+  unblacklistIP,
+  blacklistUser,
+  unblacklistUser,
+  clearAllLimits,
+  getClientIP,
+} = require("./antispam");
+
 // IMPORT DARI ENGINE
 const {
   sessions,
@@ -55,6 +72,7 @@ const {
   processedMessages,
   autoReplyStore,
   loadAutoReplies,
+  aiProviderStatus, // AI Fallback status tracking
 } = require("./wa_engine");
 
 const app = express();
@@ -103,6 +121,18 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// --- ANTI-SPAM PROTECTION MIDDLEWARE ---
+// Apply rate limiting to all API routes
+app.use("/api", antiSpamMiddleware);
+app.use("/chat", antiSpamMiddleware);
+app.use("/session", antiSpamMiddleware);
+app.use("/ai", antiSpamMiddleware);
+app.use("/crm", antiSpamMiddleware);
+app.use("/invoice", antiSpamMiddleware);
+
+// Stricter rate limiting for auth routes
+app.use("/auth", authRateLimiter);
+
 // Serve Uploads (for Invoice Logos etc)
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
@@ -124,6 +154,9 @@ app.use(
 app.use("/auth", authRoutes);
 
 // --- SOCKET IO ---
+// Apply connection limiter to Socket.IO
+io.use(socketConnectionLimiter);
+
 io.on("connection", (socket) => {
   socket.on("join_session", (sessionId) => {
     socket.join(sessionId);
@@ -319,7 +352,7 @@ app.get("/api/top-customers/:sessionId", async (req, res) => {
 });
 
 // --- API CHAT ---
-app.post("/chat/send", async (req, res) => {
+app.post("/chat/send", messageRateLimiter, async (req, res) => {
   const { sessionId, to, text } = req.body;
   const session = sessions.get(sessionId);
   if (!session || session.status !== "connected")
@@ -2331,6 +2364,100 @@ app.delete(
 );
 
 // =============================================
+// AI PROVIDER STATUS API (For Developer Dashboard)
+// =============================================
+
+// GET AI provider status (rate limit tracking)
+app.get("/api/developer/ai-status", verifyDeveloperRole, (req, res) => {
+  try {
+    const now = Date.now();
+
+    // Format status for frontend with calculated remaining cooldown
+    const providerStatus = {};
+
+    ["groq", "sambanova", "gemini", "openrouter"].forEach((provider) => {
+      const status = aiProviderStatus[provider];
+      let remainingCooldown = 0;
+      let isAvailable = status?.available ?? true;
+
+      if (!isAvailable && status?.retryAfter) {
+        remainingCooldown = Math.max(
+          0,
+          Math.ceil((status.retryAfter - now) / 1000)
+        );
+        // If cooldown expired, mark as available
+        if (remainingCooldown <= 0) {
+          isAvailable = true;
+          remainingCooldown = 0;
+        }
+      }
+
+      providerStatus[provider] = {
+        available: isAvailable,
+        lastError: status?.lastError || null,
+        remainingCooldownSeconds: remainingCooldown,
+        retryAt: status?.retryAfter
+          ? new Date(status.retryAfter).toISOString()
+          : null,
+      };
+    });
+
+    res.json({
+      status: "success",
+      data: providerStatus,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.error("Error fetching AI status:", e);
+    res.status(500).json({ error: "Failed to fetch AI status" });
+  }
+});
+
+// Reset AI provider status (force re-enable a provider)
+app.post("/api/developer/ai-status/reset", verifyDeveloperRole, (req, res) => {
+  const { provider } = req.body;
+
+  if (
+    !provider ||
+    !["groq", "sambanova", "gemini", "openrouter", "all"].includes(provider)
+  ) {
+    return res.status(400).json({
+      error:
+        "Invalid provider. Use: groq, sambanova, gemini, openrouter, or all",
+    });
+  }
+
+  try {
+    if (provider === "all") {
+      ["groq", "sambanova", "gemini", "openrouter"].forEach((p) => {
+        aiProviderStatus[p] = {
+          available: true,
+          lastError: null,
+          retryAfter: null,
+        };
+      });
+    } else {
+      aiProviderStatus[provider] = {
+        available: true,
+        lastError: null,
+        retryAfter: null,
+      };
+    }
+
+    res.json({
+      status: "success",
+      message:
+        provider === "all"
+          ? "All providers reset"
+          : `${provider} reset successfully`,
+    });
+  } catch (e) {
+    console.error("Error resetting AI status:", e);
+    res.status(500).json({ error: "Failed to reset AI status" });
+  }
+});
+
+// =============================================
 // SCHEDULED BROADCAST API
 // =============================================
 
@@ -2620,6 +2747,111 @@ async function cleanupOldMessages() {
     console.error("[CLEANUP ERROR]", error);
   }
 }
+
+// --- ANTI-SPAM MANAGEMENT API ---
+
+// Get anti-spam statistics
+app.get("/api/developer/antispam/stats", (req, res) => {
+  try {
+    const stats = getAntiSpamStats();
+    res.json({ status: "success", data: stats });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to get stats" });
+  }
+});
+
+// Get blacklist information
+app.get("/api/developer/antispam/blacklist", (req, res) => {
+  try {
+    const info = getBlacklistInfo();
+    res.json({ status: "success", data: info });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to get blacklist" });
+  }
+});
+
+// Blacklist an IP
+app.post("/api/developer/antispam/blacklist/ip", (req, res) => {
+  const { ip, reason } = req.body;
+  if (!ip) return res.status(400).json({ error: "IP is required" });
+  try {
+    blacklistIP(ip, reason || "Manual via API");
+    res.json({ status: "success", message: `IP ${ip} has been blacklisted` });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to blacklist IP" });
+  }
+});
+
+// Unblacklist an IP
+app.delete("/api/developer/antispam/blacklist/ip", (req, res) => {
+  const { ip } = req.body;
+  if (!ip) return res.status(400).json({ error: "IP is required" });
+  try {
+    unblacklistIP(ip);
+    res.json({ status: "success", message: `IP ${ip} has been unblacklisted` });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to unblacklist IP" });
+  }
+});
+
+// Blacklist a WhatsApp user
+app.post("/api/developer/antispam/blacklist/user", (req, res) => {
+  const { sessionId, userJid, reason, duration } = req.body;
+  if (!sessionId || !userJid) {
+    return res
+      .status(400)
+      .json({ error: "sessionId and userJid are required" });
+  }
+  try {
+    // Duration is in hours, default 24 hours
+    const durationMs = (duration || 24) * 60 * 60 * 1000;
+    blacklistUser(sessionId, userJid, reason || "Manual via API", durationMs);
+    res.json({
+      status: "success",
+      message: `User ${userJid} has been blacklisted`,
+    });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to blacklist user" });
+  }
+});
+
+// Unblacklist a WhatsApp user
+app.delete("/api/developer/antispam/blacklist/user", (req, res) => {
+  const { sessionId, userJid } = req.body;
+  if (!sessionId || !userJid) {
+    return res
+      .status(400)
+      .json({ error: "sessionId and userJid are required" });
+  }
+  try {
+    unblacklistUser(sessionId, userJid);
+    res.json({
+      status: "success",
+      message: `User ${userJid} has been unblacklisted`,
+    });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to unblacklist user" });
+  }
+});
+
+// Clear all rate limits (emergency reset)
+app.post("/api/developer/antispam/reset", (req, res) => {
+  try {
+    clearAllLimits();
+    res.json({
+      status: "success",
+      message: "All rate limits have been cleared",
+    });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to clear limits" });
+  }
+});
+
+// Get current client IP (useful for testing)
+app.get("/api/developer/antispam/my-ip", (req, res) => {
+  const ip = getClientIP(req);
+  res.json({ status: "success", ip });
+});
 
 const PORT = 3000;
 server.listen(PORT, async () => {

@@ -235,6 +235,404 @@
       </div>
     </div>
 
+    <!-- AI Provider Status Panel -->
+    <div class="max-w-7xl mx-auto mb-8">
+      <div class="glass-card rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">🤖</span>
+            <h3 class="text-lg font-bold text-gray-800">Status AI Provider</h3>
+          </div>
+          <div class="flex gap-2">
+            <button
+              @click="fetchAIStatus"
+              class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1 rounded-lg font-medium transition"
+            >
+              🔄 Refresh
+            </button>
+            <button
+              @click="resetAllProviders"
+              class="text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-1 rounded-lg font-medium transition"
+            >
+              ♻️ Reset All
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <!-- Groq -->
+          <div
+            class="relative p-4 rounded-xl border-2 transition-all"
+            :class="aiStatus.groq?.available ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <div
+                  class="w-3 h-3 rounded-full animate-pulse"
+                  :class="aiStatus.groq?.available ? 'bg-emerald-500' : 'bg-red-500'"
+                ></div>
+                <span class="font-bold text-gray-800">Groq</span>
+                <span
+                  class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium"
+                  >Primary</span
+                >
+              </div>
+              <button
+                @click="resetProvider('groq')"
+                class="text-xs bg-white hover:bg-gray-50 text-gray-600 px-2 py-1 rounded shadow-sm transition"
+                x-show="!aiStatus.groq?.available"
+              >
+                Reset
+              </button>
+            </div>
+            <p
+              class="text-xs font-medium"
+              :class="aiStatus.groq?.available ? 'text-emerald-600' : 'text-red-600'"
+              x-text="aiStatus.groq?.available ? '✓ Available' : '✕ Rate Limited'"
+            ></p>
+            <p
+              class="text-[10px] text-gray-500 mt-1"
+              x-show="!aiStatus.groq?.available && aiStatus.groq?.remainingCooldownSeconds > 0"
+            >
+              Retry in:
+              <span
+                class="font-bold"
+                x-text="formatCooldown(aiStatus.groq?.remainingCooldownSeconds)"
+              ></span>
+            </p>
+            <p
+              class="text-[10px] text-gray-400 mt-1"
+              x-show="aiStatus.groq?.lastError && !aiStatus.groq?.available"
+              x-text="'Error: ' + aiStatus.groq?.lastError"
+            ></p>
+          </div>
+
+          <!-- SambaNova -->
+          <div
+            class="relative p-4 rounded-xl border-2 transition-all"
+            :class="aiStatus.sambanova?.available ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <div
+                  class="w-3 h-3 rounded-full animate-pulse"
+                  :class="aiStatus.sambanova?.available ? 'bg-emerald-500' : 'bg-red-500'"
+                ></div>
+                <span class="font-bold text-gray-800">SambaNova</span>
+                <span
+                  class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium"
+                  >Backup 1</span
+                >
+              </div>
+              <button
+                @click="resetProvider('sambanova')"
+                class="text-xs bg-white hover:bg-gray-50 text-gray-600 px-2 py-1 rounded shadow-sm transition"
+                x-show="!aiStatus.sambanova?.available"
+              >
+                Reset
+              </button>
+            </div>
+            <p
+              class="text-xs font-medium"
+              :class="aiStatus.sambanova?.available ? 'text-emerald-600' : 'text-red-600'"
+              x-text="aiStatus.sambanova?.available ? '✓ Available' : '✕ Rate Limited'"
+            ></p>
+            <p
+              class="text-[10px] text-gray-500 mt-1"
+              x-show="!aiStatus.sambanova?.available && aiStatus.sambanova?.remainingCooldownSeconds > 0"
+            >
+              Retry in:
+              <span
+                class="font-bold"
+                x-text="formatCooldown(aiStatus.sambanova?.remainingCooldownSeconds)"
+              ></span>
+            </p>
+            <p
+              class="text-[10px] text-gray-400 mt-1"
+              x-show="aiStatus.sambanova?.lastError && !aiStatus.sambanova?.available"
+              x-text="'Error: ' + aiStatus.sambanova?.lastError"
+            ></p>
+          </div>
+
+          <!-- Gemini -->
+          <div
+            class="relative p-4 rounded-xl border-2 transition-all"
+            :class="aiStatus.gemini?.available ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <div
+                  class="w-3 h-3 rounded-full animate-pulse"
+                  :class="aiStatus.gemini?.available ? 'bg-emerald-500' : 'bg-red-500'"
+                ></div>
+                <span class="font-bold text-gray-800">Gemini</span>
+                <span
+                  class="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium"
+                  >Backup 2</span
+                >
+              </div>
+              <button
+                @click="resetProvider('gemini')"
+                class="text-xs bg-white hover:bg-gray-50 text-gray-600 px-2 py-1 rounded shadow-sm transition"
+                x-show="!aiStatus.gemini?.available"
+              >
+                Reset
+              </button>
+            </div>
+            <p
+              class="text-xs font-medium"
+              :class="aiStatus.gemini?.available ? 'text-emerald-600' : 'text-red-600'"
+              x-text="aiStatus.gemini?.available ? '✓ Available' : '✕ Rate Limited'"
+            ></p>
+            <p
+              class="text-[10px] text-gray-500 mt-1"
+              x-show="!aiStatus.gemini?.available && aiStatus.gemini?.remainingCooldownSeconds > 0"
+            >
+              Retry in:
+              <span
+                class="font-bold"
+                x-text="formatCooldown(aiStatus.gemini?.remainingCooldownSeconds)"
+              ></span>
+            </p>
+            <p
+              class="text-[10px] text-gray-400 mt-1"
+              x-show="aiStatus.gemini?.lastError && !aiStatus.gemini?.available"
+              x-text="'Error: ' + aiStatus.gemini?.lastError"
+            ></p>
+          </div>
+
+          <!-- OpenRouter -->
+          <div
+            class="relative p-4 rounded-xl border-2 transition-all"
+            :class="aiStatus.openrouter?.available ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <div
+                  class="w-3 h-3 rounded-full animate-pulse"
+                  :class="aiStatus.openrouter?.available ? 'bg-emerald-500' : 'bg-red-500'"
+                ></div>
+                <span class="font-bold text-gray-800">OpenRouter</span>
+                <span
+                  class="text-[10px] bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full font-medium"
+                  >Backup 3</span
+                >
+              </div>
+              <button
+                @click="resetProvider('openrouter')"
+                class="text-xs bg-white hover:bg-gray-50 text-gray-600 px-2 py-1 rounded shadow-sm transition"
+                x-show="!aiStatus.openrouter?.available"
+              >
+                Reset
+              </button>
+            </div>
+            <p
+              class="text-xs font-medium"
+              :class="aiStatus.openrouter?.available ? 'text-emerald-600' : 'text-red-600'"
+              x-text="aiStatus.openrouter?.available ? '✓ Available' : '✕ Rate Limited'"
+            ></p>
+            <p
+              class="text-[10px] text-gray-500 mt-1"
+              x-show="!aiStatus.openrouter?.available && aiStatus.openrouter?.remainingCooldownSeconds > 0"
+            >
+              Retry in:
+              <span
+                class="font-bold"
+                x-text="formatCooldown(aiStatus.openrouter?.remainingCooldownSeconds)"
+              ></span>
+            </p>
+            <p
+              class="text-[10px] text-gray-400 mt-1"
+              x-show="aiStatus.openrouter?.lastError && !aiStatus.openrouter?.available"
+              x-text="'Error: ' + aiStatus.openrouter?.lastError"
+            ></p>
+          </div>
+        </div>
+
+        <p class="text-[10px] text-gray-400 mt-3 text-center">
+          Status diperbarui: <span x-text="aiStatusTimestamp || '-'"></span> •
+          Auto-refresh setiap 30 detik
+        </p>
+      </div>
+    </div>
+
+    <!-- Anti-Spam Protection Panel -->
+    <div class="max-w-7xl mx-auto mb-8">
+      <div class="glass-card rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">🛡️</span>
+            <h3 class="text-lg font-bold text-gray-800">
+              Anti-Spam Protection
+            </h3>
+          </div>
+          <div class="flex gap-2">
+            <button
+              @click="fetchAntiSpamStats"
+              class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1 rounded-lg font-medium transition"
+            >
+              🔄 Refresh
+            </button>
+            <button
+              @click="resetAllRateLimits"
+              class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-lg font-medium transition"
+            >
+              🧹 Reset All Limits
+            </button>
+          </div>
+        </div>
+
+        <!-- Anti-Spam Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div class="p-3 rounded-xl bg-blue-50 border border-blue-200">
+            <p class="text-[10px] font-bold text-blue-600 uppercase">
+              API Requests
+            </p>
+            <p
+              class="text-xl font-bold text-blue-800"
+              x-text="antiSpamStats?.apiRequests || 0"
+            ></p>
+          </div>
+          <div class="p-3 rounded-xl bg-purple-50 border border-purple-200">
+            <p class="text-[10px] font-bold text-purple-600 uppercase">
+              Socket Connections
+            </p>
+            <p
+              class="text-xl font-bold text-purple-800"
+              x-text="antiSpamStats?.socketConnections || 0"
+            ></p>
+          </div>
+          <div class="p-3 rounded-xl bg-red-50 border border-red-200">
+            <p class="text-[10px] font-bold text-red-600 uppercase">
+              Blacklisted IPs
+            </p>
+            <p
+              class="text-xl font-bold text-red-800"
+              x-text="antiSpamStats?.blacklistedIPs || 0"
+            ></p>
+          </div>
+          <div class="p-3 rounded-xl bg-amber-50 border border-amber-200">
+            <p class="text-[10px] font-bold text-amber-600 uppercase">
+              Blacklisted Users
+            </p>
+            <p
+              class="text-xl font-bold text-amber-800"
+              x-text="antiSpamStats?.blacklistedUsers || 0"
+            ></p>
+          </div>
+        </div>
+
+        <!-- Blacklist Management -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- IP Blacklist -->
+          <div class="p-4 rounded-xl bg-gray-50 border border-gray-200">
+            <h4
+              class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2"
+            >
+              🌐 Blacklist IP
+            </h4>
+            <div class="flex gap-2 mb-3">
+              <input
+                type="text"
+                x-model="newBlacklistIP"
+                placeholder="Masukkan IP address..."
+                class="flex-1 px-3 py-2 text-sm rounded-lg input-modern outline-none"
+              />
+              <button
+                @click="addBlacklistIP"
+                class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition"
+              >
+                + Block
+              </button>
+            </div>
+            <div class="max-h-32 overflow-y-auto">
+              <template x-if="blacklistInfo?.ips?.length === 0">
+                <p class="text-xs text-gray-400 text-center py-2">
+                  Tidak ada IP yang di-blacklist
+                </p>
+              </template>
+              <template x-for="ip in (blacklistInfo?.ips || [])" :key="ip">
+                <div
+                  class="flex items-center justify-between py-1 px-2 bg-white rounded-lg mb-1"
+                >
+                  <span
+                    class="text-xs font-mono text-gray-700"
+                    x-text="ip"
+                  ></span>
+                  <button
+                    @click="removeBlacklistIP(ip)"
+                    class="text-red-500 hover:text-red-700 text-xs font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- User Blacklist -->
+          <div class="p-4 rounded-xl bg-gray-50 border border-gray-200">
+            <h4
+              class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2"
+            >
+              👤 Blacklist WA User
+            </h4>
+            <div class="flex gap-2 mb-3">
+              <input
+                type="text"
+                x-model="newBlacklistUserJid"
+                placeholder="628xxxxxxxxxx@s.whatsapp.net"
+                class="flex-1 px-3 py-2 text-sm rounded-lg input-modern outline-none"
+              />
+              <button
+                @click="addBlacklistUser"
+                class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition"
+              >
+                + Block
+              </button>
+            </div>
+            <div class="max-h-32 overflow-y-auto">
+              <template x-if="blacklistInfo?.users?.length === 0">
+                <p class="text-xs text-gray-400 text-center py-2">
+                  Tidak ada user yang di-blacklist
+                </p>
+              </template>
+              <template
+                x-for="user in (blacklistInfo?.users || [])"
+                :key="user.userJid"
+              >
+                <div
+                  class="flex items-center justify-between py-1 px-2 bg-white rounded-lg mb-1"
+                >
+                  <div>
+                    <span
+                      class="text-xs font-mono text-gray-700"
+                      x-text="user.userJid?.replace('@s.whatsapp.net', '')"
+                    ></span>
+                    <span
+                      class="text-[10px] text-gray-400 ml-2"
+                      x-text="user.reason"
+                    ></span>
+                  </div>
+                  <button
+                    @click="removeBlacklistUser(user.sessionId, user.userJid)"
+                    class="text-amber-500 hover:text-amber-700 text-xs font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-[10px] text-gray-400 mt-3 text-center">
+          Rate Limit: API 100 req/min • Message 30/min/session • Auth 10/15min •
+          Socket 10 conn/IP
+        </p>
+      </div>
+    </div>
+
     <!-- Filter & Search -->
     <div class="max-w-7xl mx-auto mb-6">
       <div class="glass-card rounded-2xl p-4 shadow-xl">
@@ -757,6 +1155,38 @@
           customDays: 30,
           isLoading: false,
 
+          // AI Provider Status
+          aiStatus: {
+            groq: {
+              available: true,
+              lastError: null,
+              remainingCooldownSeconds: 0,
+            },
+            sambanova: {
+              available: true,
+              lastError: null,
+              remainingCooldownSeconds: 0,
+            },
+            gemini: {
+              available: true,
+              lastError: null,
+              remainingCooldownSeconds: 0,
+            },
+            openrouter: {
+              available: true,
+              lastError: null,
+              remainingCooldownSeconds: 0,
+            },
+          },
+          aiStatusTimestamp: null,
+          aiStatusInterval: null,
+
+          // Anti-Spam Status
+          antiSpamStats: null,
+          blacklistInfo: { ips: [], users: [] },
+          newBlacklistIP: "",
+          newBlacklistUserJid: "",
+
           stats: {
             total: 0,
             active: 0,
@@ -790,6 +1220,16 @@
             }
 
             await this.fetchUsers();
+
+            // Fetch AI status and start auto-refresh
+            await this.fetchAIStatus();
+            this.aiStatusInterval = setInterval(
+              () => this.fetchAIStatus(),
+              30000
+            );
+
+            // Fetch Anti-Spam stats
+            await this.fetchAntiSpamStats();
           },
 
           async validateDeveloperAccess() {
@@ -1052,6 +1492,296 @@
               showToast("Terjadi kesalahan", "error");
             }
             this.isLoading = false;
+          },
+
+          // ========================================
+          // AI PROVIDER STATUS METHODS
+          // ========================================
+
+          async fetchAIStatus() {
+            try {
+              const res = await fetch("/api/developer/ai-status", {
+                headers: {
+                  Authorization: `Bearer ${this.sessionId}`,
+                },
+              });
+              const data = await res.json();
+              if (data.status === "success") {
+                this.aiStatus = data.data;
+                this.aiStatusTimestamp = new Date(
+                  data.timestamp
+                ).toLocaleTimeString("id-ID");
+              }
+            } catch (e) {
+              console.error("Failed to fetch AI status:", e);
+            }
+          },
+
+          async resetProvider(provider) {
+            try {
+              const res = await fetch("/api/developer/ai-status/reset", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${this.sessionId}`,
+                },
+                body: JSON.stringify({ provider }),
+              });
+              const data = await res.json();
+              if (data.status === "success") {
+                showToast(
+                  `${provider.toUpperCase()} berhasil direset`,
+                  "success"
+                );
+                await this.fetchAIStatus();
+              } else {
+                showToast(data.error || "Gagal reset provider", "error");
+              }
+            } catch (e) {
+              console.error("Reset error:", e);
+              showToast("Terjadi kesalahan", "error");
+            }
+          },
+
+          async resetAllProviders() {
+            const confirmed = await showConfirm({
+              title: "Reset Semua Provider?",
+              message:
+                "Ini akan mereset status semua AI provider ke available.",
+              type: "warning",
+              icon: "♻️",
+              confirmText: "Ya, Reset",
+              cancelText: "Batal",
+            });
+            if (!confirmed) return;
+
+            try {
+              const res = await fetch("/api/developer/ai-status/reset", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${this.sessionId}`,
+                },
+                body: JSON.stringify({ provider: "all" }),
+              });
+              const data = await res.json();
+              if (data.status === "success") {
+                showToast("Semua provider berhasil direset", "success");
+                await this.fetchAIStatus();
+              } else {
+                showToast(data.error || "Gagal reset", "error");
+              }
+            } catch (e) {
+              console.error("Reset all error:", e);
+              showToast("Terjadi kesalahan", "error");
+            }
+          },
+
+          // ========================================
+          // ANTI-SPAM FUNCTIONS
+          // ========================================
+
+          async fetchAntiSpamStats() {
+            try {
+              const res = await fetch("/api/developer/antispam/stats", {
+                headers: {
+                  Authorization: `Bearer ${this.sessionId}`,
+                },
+              });
+              const data = await res.json();
+              if (data.status === "success") {
+                this.antiSpamStats = data.data;
+              }
+
+              // Also fetch blacklist info
+              const blacklistRes = await fetch(
+                "/api/developer/antispam/blacklist",
+                {
+                  headers: {
+                    Authorization: `Bearer ${this.sessionId}`,
+                  },
+                }
+              );
+              const blacklistData = await blacklistRes.json();
+              if (blacklistData.status === "success") {
+                this.blacklistInfo = blacklistData.data;
+              }
+            } catch (e) {
+              console.error("Failed to fetch anti-spam stats:", e);
+            }
+          },
+
+          async resetAllRateLimits() {
+            const confirmed = await showConfirm({
+              title: "Reset Semua Rate Limits?",
+              message:
+                "Ini akan menghapus semua tracking rate limit. Gunakan dengan hati-hati!",
+              type: "danger",
+              icon: "🧹",
+              confirmText: "Ya, Reset",
+              cancelText: "Batal",
+            });
+            if (!confirmed) return;
+
+            try {
+              const res = await fetch("/api/developer/antispam/reset", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${this.sessionId}`,
+                },
+              });
+              const data = await res.json();
+              if (data.status === "success") {
+                showToast("Semua rate limits berhasil direset", "success");
+                await this.fetchAntiSpamStats();
+              } else {
+                showToast(data.error || "Gagal reset", "error");
+              }
+            } catch (e) {
+              console.error("Reset rate limits error:", e);
+              showToast("Terjadi kesalahan", "error");
+            }
+          },
+
+          async addBlacklistIP() {
+            if (!this.newBlacklistIP.trim()) {
+              showToast("Masukkan IP address", "warning");
+              return;
+            }
+
+            try {
+              const res = await fetch("/api/developer/antispam/blacklist/ip", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${this.sessionId}`,
+                },
+                body: JSON.stringify({
+                  ip: this.newBlacklistIP.trim(),
+                  reason: "Manual via Dashboard",
+                }),
+              });
+              const data = await res.json();
+              if (data.status === "success") {
+                showToast(
+                  `IP ${this.newBlacklistIP} berhasil di-blacklist`,
+                  "success"
+                );
+                this.newBlacklistIP = "";
+                await this.fetchAntiSpamStats();
+              } else {
+                showToast(data.error || "Gagal blacklist IP", "error");
+              }
+            } catch (e) {
+              console.error("Add blacklist IP error:", e);
+              showToast("Terjadi kesalahan", "error");
+            }
+          },
+
+          async removeBlacklistIP(ip) {
+            try {
+              const res = await fetch("/api/developer/antispam/blacklist/ip", {
+                method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${this.sessionId}`,
+                },
+                body: JSON.stringify({ ip }),
+              });
+              const data = await res.json();
+              if (data.status === "success") {
+                showToast(`IP ${ip} berhasil di-unblacklist`, "success");
+                await this.fetchAntiSpamStats();
+              } else {
+                showToast(data.error || "Gagal unblacklist IP", "error");
+              }
+            } catch (e) {
+              console.error("Remove blacklist IP error:", e);
+              showToast("Terjadi kesalahan", "error");
+            }
+          },
+
+          async addBlacklistUser() {
+            if (!this.newBlacklistUserJid.trim()) {
+              showToast("Masukkan nomor WhatsApp", "warning");
+              return;
+            }
+
+            // Format JID if needed
+            let jid = this.newBlacklistUserJid.trim();
+            if (!jid.includes("@")) {
+              jid = jid.replace(/\D/g, "") + "@s.whatsapp.net";
+            }
+
+            try {
+              const res = await fetch(
+                "/api/developer/antispam/blacklist/user",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${this.sessionId}`,
+                  },
+                  body: JSON.stringify({
+                    sessionId: this.sessionId,
+                    userJid: jid,
+                    reason: "Manual via Dashboard",
+                    duration: 24, // 24 hours
+                  }),
+                }
+              );
+              const data = await res.json();
+              if (data.status === "success") {
+                showToast(
+                  `User ${jid} berhasil di-blacklist (24 jam)`,
+                  "success"
+                );
+                this.newBlacklistUserJid = "";
+                await this.fetchAntiSpamStats();
+              } else {
+                showToast(data.error || "Gagal blacklist user", "error");
+              }
+            } catch (e) {
+              console.error("Add blacklist user error:", e);
+              showToast("Terjadi kesalahan", "error");
+            }
+          },
+
+          async removeBlacklistUser(sessionId, userJid) {
+            try {
+              const res = await fetch(
+                "/api/developer/antispam/blacklist/user",
+                {
+                  method: "DELETE",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${this.sessionId}`,
+                  },
+                  body: JSON.stringify({ sessionId, userJid }),
+                }
+              );
+              const data = await res.json();
+              if (data.status === "success") {
+                showToast(`User ${userJid} berhasil di-unblacklist`, "success");
+                await this.fetchAntiSpamStats();
+              } else {
+                showToast(data.error || "Gagal unblacklist user", "error");
+              }
+            } catch (e) {
+              console.error("Remove blacklist user error:", e);
+              showToast("Terjadi kesalahan", "error");
+            }
+          },
+
+          formatCooldown(seconds) {
+            if (!seconds || seconds <= 0) return "0s";
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            if (mins > 0) {
+              return `${mins}m ${secs}s`;
+            }
+            return `${secs}s`;
           },
         };
       }
