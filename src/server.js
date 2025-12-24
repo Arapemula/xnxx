@@ -1976,6 +1976,285 @@ app.get("/api/top-products/:sessionId", async (req, res) => {
   }
 });
 
+// =====================================================
+// --- DEVELOPER DASHBOARD APIS ---
+// =====================================================
+
+// Middleware to verify developer role
+const verifyDeveloperRole = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const sessionId = authHeader?.replace("Bearer ", "") || req.query.sessionId || req.body?.sessionId;
+  
+  if (!sessionId) {
+    return res.status(401).json({ error: "Authorization required", code: "NO_AUTH" });
+  }
+  
+  try {
+    const user = await prisma.user.findUnique({
+      where: { waSessionId: sessionId }
+    });
+    
+    if (!user) {
+      return res.status(401).json({ error: "User not found", code: "USER_NOT_FOUND" });
+    }
+    
+    if (user.role !== "DEVELOPER") {
+      return res.status(403).json({ error: "Access denied. Developer role required.", code: "FORBIDDEN" });
+    }
+    
+    req.user = user;
+    next();
+  } catch (e) {
+    console.error("Developer auth error:", e);
+    return res.status(500).json({ error: "Authentication failed" });
+  }
+};
+
+// GET all users with subscription info (for Developer only)
+app.get("/api/developer/users", verifyDeveloperRole, async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        waSessionId: true,
+        role: true,
+        expiryDate: true,
+        hideCountdown: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Calculate remaining days for each user
+    const usersWithInfo = users.map((user) => {
+      let remainingDays = null;
+      let status = "ACTIVE";
+
+      if (user.role === "DEVELOPER") {
+        status = "UNLIMITED";
+      } else if (user.expiryDate) {
+        const now = new Date();
+        const expiry = new Date(user.expiryDate);
+        const diffTime = expiry - now;
+        remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (remainingDays <= 0) {
+          status = "EXPIRED";
+          remainingDays = 0;
+        } else if (remainingDays <= 3) {
+          status = "EXPIRING_SOON";
+        }
+      }
+
+      return {
+        ...user,
+        remainingDays,
+        status,
+      };
+    });
+
+    res.json({ status: "success", data: usersWithInfo });
+  } catch (e) {
+    console.error("Error fetching users:", e);
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
+// UPDATE user subscription (add/remove days)
+app.post("/api/developer/update-subscription", verifyDeveloperRole, async (req, res) => {
+  const { userId, action, days } = req.body;
+
+  if (!userId || !action || days === undefined) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    let newExpiryDate;
+
+    if (action === "set_unlimited") {
+      // Set to unlimited (null expiryDate)
+      newExpiryDate = null;
+    } else {
+      // Calculate from current expiry or now if expired
+      const baseDate =
+        user.expiryDate && new Date(user.expiryDate) > new Date()
+          ? new Date(user.expiryDate)
+          : new Date();
+
+      if (action === "add") {
+        baseDate.setDate(baseDate.getDate() + Number(days));
+      } else if (action === "subtract") {
+        baseDate.setDate(baseDate.getDate() - Number(days));
+      } else if (action === "set") {
+        // Set specific expiry date
+        baseDate.setDate(new Date().getDate() + Number(days));
+      }
+
+      newExpiryDate = baseDate;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { expiryDate: newExpiryDate },
+    });
+
+    res.json({
+      status: "success",
+      message: `Subscription updated for ${user.email}`,
+      expiryDate: updatedUser.expiryDate,
+    });
+  } catch (e) {
+    console.error("Error updating subscription:", e);
+    res.status(500).json({ error: "Failed to update subscription" });
+  }
+});
+
+// UPDATE user role (promote to developer or demote to user)
+app.post("/api/developer/update-role", verifyDeveloperRole, async (req, res) => {
+  const { userId, role } = req.body;
+
+  if (!userId || !role) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  if (!["USER", "DEVELOPER"].includes(role)) {
+    return res.status(400).json({ error: "Invalid role" });
+  }
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        role: role,
+        // If promoting to DEVELOPER, set unlimited subscription
+        expiryDate: role === "DEVELOPER" ? null : undefined,
+      },
+    });
+
+    res.json({
+      status: "success",
+      message: `User role updated to ${role}`,
+      user: updatedUser,
+    });
+  } catch (e) {
+    console.error("Error updating role:", e);
+    res.status(500).json({ error: "Failed to update role" });
+  }
+});
+
+// GET user subscription info (for logged-in user)
+app.get("/api/user/subscription/:sessionId", async (req, res) => {
+  const { sessionId } = req.params;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { waSessionId: sessionId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        expiryDate: true,
+        hideCountdown: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    let remainingDays = null;
+    let status = "ACTIVE";
+    let isExpired = false;
+
+    if (user.role === "DEVELOPER") {
+      status = "UNLIMITED";
+    } else if (user.expiryDate) {
+      const now = new Date();
+      const expiry = new Date(user.expiryDate);
+      const diffTime = expiry - now;
+      remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (remainingDays <= 0) {
+        status = "EXPIRED";
+        remainingDays = 0;
+        isExpired = true;
+      } else if (remainingDays <= 3) {
+        status = "EXPIRING_SOON";
+      }
+    }
+
+    res.json({
+      status: "success",
+      data: {
+        ...user,
+        remainingDays,
+        subscriptionStatus: status,
+        isExpired,
+      },
+    });
+  } catch (e) {
+    console.error("Error fetching subscription:", e);
+    res.status(500).json({ error: "Failed to fetch subscription info" });
+  }
+});
+
+// UPDATE user hideCountdown preference
+app.post("/api/user/toggle-countdown", async (req, res) => {
+  const { sessionId, hideCountdown } = req.body;
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { waSessionId: sessionId },
+      data: { hideCountdown: hideCountdown },
+    });
+
+    res.json({
+      status: "success",
+      hideCountdown: updatedUser.hideCountdown,
+    });
+  } catch (e) {
+    console.error("Error updating countdown preference:", e);
+    res.status(500).json({ error: "Failed to update preference" });
+  }
+});
+
+// DELETE user account (for Developer only)
+app.delete("/api/developer/delete-user/:userId", verifyDeveloperRole, async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // First check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: Number(userId) },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Delete related data first (cascading)
+    await prisma.chat.deleteMany({ where: { sessionId: user.waSessionId } });
+    await prisma.sale.deleteMany({ where: { sessionId: user.waSessionId } });
+    await prisma.schedule.deleteMany({ where: { sessionId: user.waSessionId } });
+    await prisma.session.deleteMany({ where: { sessionId: user.waSessionId } });
+
+    // Delete user
+    await prisma.user.delete({ where: { id: Number(userId) } });
+
+    res.json({ status: "success", message: "User deleted successfully" });
+  } catch (e) {
+    console.error("Error deleting user:", e);
+    res.status(500).json({ error: "Failed to delete user" });
+  }
+});
+
 // --- CLEANUP JOB ---
 async function cleanupOldMessages() {
   try {

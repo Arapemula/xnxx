@@ -1,2266 +1,1521 @@
 <!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NayooAI Dashboard</title>
-    <script
-      defer
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
-    ></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <script src="/js/tailwindcss.js"></script>
 
-    <link rel="stylesheet" href="/css/style.css" />
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NayooAI Dashboard</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
 
-  <body
-    class="h-screen h-[100dvh] flex flex-col overflow-hidden"
-    x-data="app()"
-  >
-    <div
-      x-show="!isLoggedIn"
-      x-transition
-      class="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center p-4"
-    >
-      <div
-        class="glass-panel rounded-2xl w-full max-w-md p-8 text-center shadow-2xl"
-      >
-        <h1 class="text-2xl font-bold text-gray-800 mb-2">Koneksi WhatsApp</h1>
-        <p class="text-gray-600 mb-6">
-          ID Sesi:
-          <span
-            class="font-mono font-bold bg-gray-100 px-2 py-1 rounded"
-            x-text="sessionId"
-          ></span>
-        </p>
+  <script src="/js/tailwindcss.js"></script>
 
-        <button
-          @click="startAuth"
-          :disabled="isLoading"
-          class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 mb-4"
-        >
-          <span
-            x-text="isLoading ? 'Menghubungkan...' : (qrCodeVal ? 'Scan QR Code' : 'Mulai Koneksi')"
-          ></span>
-        </button>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
 
-        <button @click="logout" class="text-sm text-red-500 hover:underline">
-          Logout / Ganti Akun
-        </button>
+<body class="h-screen h-[100dvh] flex flex-col overflow-hidden" x-data="app()">
+  <div x-show="!isLoggedIn" x-transition class="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center p-4">
+    <div class="glass-panel rounded-2xl w-full max-w-md p-8 text-center shadow-2xl">
+      <h1 class="text-2xl font-bold text-gray-800 mb-2">Koneksi WhatsApp</h1>
+      <p class="text-gray-600 mb-6">
+        ID Sesi:
+        <span class="font-mono font-bold bg-gray-100 px-2 py-1 rounded" x-text="sessionId"></span>
+      </p>
 
-        <div x-show="qrCodeVal" class="my-4 flex flex-col items-center">
-          <div
-            id="qrcode-container"
-            class="border-4 border-white shadow-lg rounded-lg"
-          ></div>
-        </div>
+      <button @click="startAuth" :disabled="isLoading"
+        class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 mb-4">
+        <span x-text="isLoading ? 'Menghubungkan...' : (qrCodeVal ? 'Scan QR Code' : 'Mulai Koneksi')"></span>
+      </button>
+
+      <button @click="logout" class="text-sm text-red-500 hover:underline">
+        Logout / Ganti Akun
+      </button>
+
+      <div x-show="qrCodeVal" class="my-4 flex flex-col items-center">
+        <div id="qrcode-container" class="border-4 border-white shadow-lg rounded-lg"></div>
       </div>
     </div>
+  </div>
 
-    <div
-      x-show="showPromptModal"
-      x-transition
-      class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
-      x-cloak
-    >
-      <div class="glass-panel rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
-        <button
-          @click="showPromptModal = false"
-          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        >
-          ✕
-        </button>
-        <h2 class="text-lg font-bold text-gray-800 mb-2">
-          Instruksi AI (Persona)
+  <!-- SUBSCRIPTION EXPIRED BLOCKING MODAL -->
+  <div x-show="isSubscriptionExpired" x-cloak
+    class="fixed inset-0 z-[100] bg-gradient-to-br from-gray-900/95 to-black/98 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="glass-panel rounded-2xl sm:rounded-3xl w-full max-w-sm sm:max-w-lg p-5 sm:p-8 text-center shadow-2xl animate-fade-in relative overflow-hidden my-auto">
+      <!-- Decorative Elements - Hidden on mobile for performance -->
+      <div class="hidden sm:block absolute -top-20 -right-20 w-40 h-40 bg-red-500/20 rounded-full blur-3xl"></div>
+      <div class="hidden sm:block absolute -bottom-20 -left-20 w-40 h-40 bg-orange-500/20 rounded-full blur-3xl"></div>
+      
+      <!-- Content -->
+      <div class="relative z-10">
+        <!-- Icon -->
+        <div class="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-red-100 to-orange-100 rounded-full flex items-center justify-center shadow-lg">
+          <span class="text-3xl sm:text-5xl">⏰</span>
+        </div>
+        
+        <!-- Title -->
+        <h2 class="text-xl sm:text-2xl font-extrabold text-gray-800 mb-2 sm:mb-3">
+          Masa Langganan Habis!
         </h2>
-        <textarea
-          x-model="aiPrompt"
-          class="w-full h-32 p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"
-          placeholder="Contoh: Kamu adalah Admin..."
-        ></textarea>
-        <div class="flex justify-end gap-2 mt-4">
-          <button
-            @click="showPromptModal = false"
-            class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded-lg"
-          >
-            Batal
-          </button>
-          <button
-            @click="savePrompt"
-            class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700"
-          >
-            Simpan
+        
+        <!-- Description -->
+        <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 leading-relaxed px-2">
+          Akses dashboard Anda telah <span class="font-bold text-red-600">berakhir</span>. 
+          Hubungi Developer untuk memperpanjang subscription.
+        </p>
+        
+        <!-- Expiry Info Box -->
+        <div class="bg-red-50 border border-red-200 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
+          <div class="flex items-center justify-center gap-2 sm:gap-3">
+            <span class="text-xl sm:text-2xl">📅</span>
+            <div class="text-left">
+              <p class="text-[10px] sm:text-xs text-red-600 font-bold uppercase">Berakhir</p>
+              <p class="text-base sm:text-lg font-extrabold text-red-700" x-text="formatExpiryDate()"></p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Contact Info -->
+        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
+          <p class="text-xs sm:text-sm font-bold text-indigo-800 mb-1 sm:mb-2">📞 Hubungi Developer:</p>
+          <p class="text-sm sm:text-base text-indigo-600 font-medium break-all">admin@nayoo.id</p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex flex-col gap-2 sm:gap-3">
+          <a href="https://wa.me/6281234567890?text=Halo,%20saya%20ingin%20memperpanjang%20langganan%20NayooAI" 
+             target="_blank"
+             class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl hover:shadow-lg hover:shadow-green-300 transition transform active:scale-95 flex items-center justify-center gap-2 text-sm sm:text-base">
+            <span>💬</span> Hubungi via WhatsApp
+          </a>
+          <button @click="logout()" 
+            class="w-full bg-gray-100 text-gray-700 font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl hover:bg-gray-200 active:bg-gray-300 transition text-sm sm:text-base">
+            🚪 Logout / Ganti Akun
           </button>
         </div>
       </div>
     </div>
+  </div>
 
-    <div x-show="isLoggedIn" x-cloak class="flex-1 flex h-full">
-      <!-- Mobile Backdrop -->
-      <div
-        x-show="mobileMenu"
-        x-transition.opacity
-        @click="mobileMenu = false"
-        class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
-      ></div>
+  <div x-show="showPromptModal" x-transition
+    class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4" x-cloak>
+    <div class="glass-panel rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+      <button @click="showPromptModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+        ✕
+      </button>
+      <h2 class="text-lg font-bold text-gray-800 mb-2">
+        Instruksi AI (Persona)
+      </h2>
+      <textarea x-model="aiPrompt"
+        class="w-full h-32 p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+        placeholder="Contoh: Kamu adalah Admin..."></textarea>
+      <div class="flex justify-end gap-2 mt-4">
+        <button @click="showPromptModal = false" class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded-lg">
+          Batal
+        </button>
+        <button @click="savePrompt"
+          class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700">
+          Simpan
+        </button>
+      </div>
+    </div>
+  </div>
 
-        <aside
-          class="w-72 md:w-80 glass-panel flex flex-col h-full z-50 shadow-2xl md:shadow-none absolute md:relative transition-transform duration-300 transform md:translate-x-0"
-          :class="mobileMenu ? 'translate-x-0' : '-translate-x-full'"
-        >
-        <div
-          class="h-16 border-b border-gray-200/50 flex items-center justify-between px-4 bg-white/50 backdrop-blur-sm"
-        >
-          <div class="flex items-center gap-2">
-            <div
-              class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xs"
-            >
-              CS
-            </div>
-            <span
-              class="font-semibold text-gray-700 truncate w-24"
-              x-text="sessionId"
-            ></span>
-          </div>
-          <div class="flex items-center gap-1">
-            <button
-              @click="showBroadcastModal = true"
-              class="p-1.5 text-gray-400 hover:bg-orange-100 hover:text-orange-600 rounded transition"
-              title="Broadcast"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
-                />
-              </svg>
-            </button>
-            <button
-              @click="switchPage('chat')"
-              class="p-1.5 rounded transition"
-              :class="currentPage === 'chat' ? 'bg-green-100 text-green-700' : 'text-gray-400 hover:bg-green-100 hover:text-green-600'"
-              title="Chat Room"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-            </button>
-            <button
-              @click="switchPage('analytics')"
-              class="p-1.5 rounded transition"
-              :class="currentPage !== 'chat' ? 'bg-blue-100 text-blue-700' : 'text-gray-400 hover:bg-blue-100 hover:text-blue-600'"
-              title="Dashboard"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-            </button>
-            <button
-              @click="logout"
-              class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition"
-              title="Log Out"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
+  <div x-show="isLoggedIn" x-cloak class="flex-1 flex h-full">
+    <!-- Mobile Backdrop -->
+    <div x-show="mobileMenu" x-transition.opacity @click="mobileMenu = false"
+      class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"></div>
 
-        <div
-          x-show="currentPage !== 'chat'"
-          class="px-4 py-4 border-b border-gray-200/50 bg-white/30"
-        >
-          <nav class="flex flex-col gap-2">
-            <button
-              @click="switchPage('analytics')"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group relative overflow-hidden transform hover:-translate-y-1"
-              :class="currentPage === 'analytics' ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-200' : 'hover:bg-white text-gray-600 hover:shadow-md'"
-            >
-              <span class="text-lg">📊</span> 
-              <span>Dashboard</span>
-              <div x-show="currentPage === 'analytics'" class="absolute right-0 top-0 bottom-0 w-1 bg-white/20"></div>
-            </button>
-            <button
-              @click="switchPage('settings')"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group relative overflow-hidden transform hover:-translate-y-1"
-              :class="currentPage === 'settings' ? 'bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white shadow-lg shadow-pink-200' : 'hover:bg-white text-gray-600 hover:shadow-md'"
-            >
-              <span class="text-lg">⚙️</span> 
-              <span>Advance Setting</span>
-            </button>
-            <button
-              @click="switchPage('schedule')"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group relative overflow-hidden transform hover:-translate-y-1"
-              :class="currentPage === 'schedule' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-200' : 'hover:bg-white text-gray-600 hover:shadow-md'"
-            >
-              <span class="text-lg">📅</span> 
-              <span>Live Schedule</span>
-            </button>
-          </nav>
-        </div>
-
-        <div
-          x-show="currentPage === 'chat'"
-          class="flex-1 flex flex-col overflow-hidden"
-        >
-          <div class="p-4 bg-blue-50 border-b border-blue-100">
-            <div class="flex justify-between items-center mb-3">
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-blue-800"
-                  >AI Auto Reply</span
-                >
-                <button
-                  @click="showPromptModal = true"
-                  class="text-blue-400 hover:text-blue-600"
-                >
-                  <svg
-                    class="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <label class="flex items-center cursor-pointer relative">
-                <input
-                  type="checkbox"
-                  class="sr-only"
-                  x-model="aiActive"
-                  @change="toggleAI"
-                />
-                <div
-                  class="w-8 h-4 bg-gray-300 rounded-full transition"
-                  :class="aiActive ? 'bg-blue-500' : 'bg-gray-300'"
-                ></div>
-                <div
-                  class="dot absolute w-4 h-4 bg-white rounded-full shadow left-0 transition transform"
-                  :class="aiActive ? 'translate-x-4' : 'translate-x-0'"
-                ></div>
-              </label>
-            </div>
-            <div class="flex items-center gap-2">
-              <button
-                @click="$refs.excelInput.click()"
-                class="flex-1 bg-white border border-blue-200 text-blue-600 text-[10px] font-bold py-1.5 px-2 rounded hover:bg-blue-100 flex items-center justify-center gap-1"
-              >
-                <span
-                  x-text="aiHasFile ? '✅ Excel Ready' : '📂 Upload Produk'"
-                ></span>
-              </button>
-              <input
-                type="file"
-                x-ref="excelInput"
-                @change="uploadExcel"
-                accept=".xlsx, .xls"
-                class="hidden"
-              />
-            </div>
-          </div>
-
+    <aside
+      class="w-72 md:w-80 glass-panel flex flex-col h-full z-50 shadow-2xl md:shadow-none absolute md:relative transition-transform duration-300 transform md:translate-x-0"
+      :class="mobileMenu ? 'translate-x-0' : '-translate-x-full'">
+      <div class="h-16 border-b border-gray-200/50 flex items-center justify-between px-4 bg-white/50 backdrop-blur-sm">
+        <div class="flex items-center gap-2">
           <div
-            class="px-4 py-3 border-b border-gray-100 bg-white flex items-center justify-between"
-          >
-            <span
-              class="text-xs font-bold text-gray-500 uppercase tracking-wider"
-              >Chat List</span
-            >
-            <label class="flex items-center cursor-pointer text-xs gap-1">
-              <input
-                type="checkbox"
-                x-model="showGroups"
-                @change="toggleGroupSettings"
-                class="accent-green-600"
-              />
-              <span class="text-gray-500">Grup</span>
-            </label>
+            class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xs">
+            CS
           </div>
-
-          <div class="flex-1 overflow-y-auto">
-            <template
-              x-for="chat in chatList.filter(c => showGroups ? true : !c.isGroup)"
-              :key="chat.id"
-            >
-              <div
-                @click="selectChat(chat)"
-                class="p-3 mb-2 rounded-xl border border-transparent hover:bg-white/40 cursor-pointer transition-all duration-200 relative group"
-                :class="activeChat === chat.id ? 'bg-gradient-to-r from-indigo-50 to-transparent border-l-4 border-l-indigo-500 shadow-md' : 'hover:shadow-sm'"
-              >
-                <button
-                  @click.stop="deleteChat(chat.id)"
-                  class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition p-1 z-10 bg-white/80 rounded-full shadow-sm backdrop-blur-sm"
-                  title="Hapus Chat"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                </button>
-                <div class="flex items-center gap-3">
-                  <div class="relative w-12 h-12 flex-shrink-0">
-                    <template x-if="chat.profilePicUrl"
-                      ><img
-                        :src="chat.profilePicUrl"
-                        class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
-                    /></template>
-                    <template x-if="!chat.profilePicUrl">
-                      <div
-                        class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-100 to-purple-100 flex items-center justify-center text-blue-600 font-bold text-sm border-2 border-white shadow-md"
-                        x-text="getInitials(chat.name)"
-                      ></div>
-                    </template>
-                  </div>
-                  <div class="flex-1 overflow-hidden">
-                    <div class="flex justify-between items-center mb-0.5">
-                      <div class="flex items-center gap-2">
-                        <span
-                          class="font-bold text-gray-800 text-sm truncate"
-                          x-text="chat.name"
-                        ></span>
-                        <span
-                          class="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase shadow-sm"
-                          :class="getLabelColor(getCRMLabel(chat.id))"
-                          x-text="getCRMLabel(chat.id)"
-                        ></span>
-                      </div>
-                      <span
-                        class="text-[10px] text-gray-400 whitespace-nowrap ml-2 font-medium"
-                        x-text="formatTime(chat.timestamp)"
-                      ></span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                      <p
-                        class="text-xs text-gray-500 truncate font-medium"
-                        x-text="chat.lastMsg"
-                      ></p>
-                      <span
-                        x-show="chat.unread > 0"
-                        class="ml-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm"
-                        x-text="chat.unread"
-                      ></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </div>
+          <span class="font-semibold text-gray-700 truncate w-24" x-text="sessionId"></span>
         </div>
-
-        <!-- Empty spacer for other pages -->
-        <div x-show="currentPage !== 'chat'" class="flex-1 bg-gray-50"></div>
-      </aside>
-
-      <main class="flex-1 flex flex-col relative h-full w-full">
-        <div
-          class="md:hidden absolute top-4 left-4 z-30"
-          x-show="currentPage !== 'chat' || !activeChat"
-          x-transition
-        >
-          <button
-            @click="mobileMenu = !mobileMenu"
-            class="glass p-2 rounded-full shadow text-gray-700 hover:text-indigo-600 transition"
-          >
-            Menu
+        <div class="flex items-center gap-1">
+          <button @click="showBroadcastModal = true"
+            class="p-1.5 text-gray-400 hover:bg-orange-100 hover:text-orange-600 rounded transition" title="Broadcast">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+            </svg>
+          </button>
+          <button @click="switchPage('chat')" class="p-1.5 rounded transition"
+            :class="currentPage === 'chat' ? 'bg-green-100 text-green-700' : 'text-gray-400 hover:bg-green-100 hover:text-green-600'"
+            title="Chat Room">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </button>
+          <button @click="switchPage('analytics')" class="p-1.5 rounded transition"
+            :class="currentPage !== 'chat' ? 'bg-blue-100 text-blue-700' : 'text-gray-400 hover:bg-blue-100 hover:text-blue-600'"
+            title="Dashboard">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </button>
+          <button @click="logout" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition"
+            title="Log Out">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
           </button>
         </div>
+      </div>
 
-        <div
-          x-show="currentPage === 'chat'"
-          class="flex flex-col h-full w-full"
-        >
-          <div
-            x-show="!activeChat"
-            class="flex-1 flex flex-col items-center justify-center text-gray-400 select-none"
-          >
-            <h2 class="text-xl font-medium">NayooAI</h2>
-            <p class="text-sm mt-2 text-gray-500">
-              Pilih chat di sidebar untuk memulai.
-            </p>
-          </div>
+      <div x-show="currentPage !== 'chat'" class="px-4 py-4 border-b border-gray-200/50 " style="background-color: #F9FAFB;">
+        <nav class="flex flex-col gap-2">
+          <button @click="switchPage('analytics')"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group relative overflow-hidden transform hover:-translate-y-1"
+            :class="currentPage === 'analytics' ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-200' : 'hover:bg-white text-gray-600 hover:shadow-md'">
+            <span class="text-lg">📊</span>
+            <span>Dashboard</span>
+            <div x-show="currentPage === 'analytics'" class="absolute right-0 top-0 bottom-0 w-1 bg-white/20"></div>
+          </button>
+          <button @click="switchPage('settings')"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group relative overflow-hidden transform hover:-translate-y-1"
+            :class="currentPage === 'settings' ? 'bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white shadow-lg shadow-pink-200' : 'hover:bg-white text-gray-600 hover:shadow-md'">
+            <span class="text-lg">⚙️</span>
+            <span>Advance Setting</span>
+          </button>
+          <button @click="switchPage('schedule')"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group relative overflow-hidden transform hover:-translate-y-1"
+            :class="currentPage === 'schedule' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-200' : 'hover:bg-white text-gray-600 hover:shadow-md'">
+            <span class="text-lg">📅</span>
+            <span>Live Schedule</span>
+          </button>
+        </nav>
 
-          <div
-            x-show="activeChat"
-            class="h-16 glass border-b border-gray-200/50 flex items-center px-4 shadow-sm z-10 justify-between"
-          >
-            <div class="flex items-center gap-3 md:pl-0">
-              <button
-                @click="activeChat = null; mobileMenu = true"
-                class="md:hidden p-2 -ml-2 text-gray-600 hover:text-indigo-600 transition"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
+        <!-- Subscription Countdown Component -->
+        <template x-if="userRole === 'USER' && !hideCountdown">
+          <div class="mt-4 p-3 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-indigo-700 flex items-center gap-1">
+                ⏰ Sisa Langganan
+              </span>
+              <button @click="toggleCountdownVisibility()" class="text-xs text-gray-400 hover:text-gray-600">
+                Sembunyikan
               </button>
-              <div
-                class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden flex-shrink-0 border border-gray-200"
-              >
-                <template x-if="getActiveChatObj()?.profilePicUrl"
-                  ><img
-                    :src="getActiveChatObj()?.profilePicUrl"
-                    class="w-full h-full object-cover"
-                /></template>
-                <template x-if="!getActiveChatObj()?.profilePicUrl"
-                  ><span
-                    class="text-gray-600 font-bold text-sm"
-                    x-text="getInitials(getActiveChatObj()?.name)"
-                  ></span
-                ></template>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="relative w-12 h-12">
+                <svg class="w-12 h-12 -rotate-90" viewBox="0 0 36 36">
+                  <path class="text-gray-200" stroke="currentColor" stroke-width="3" fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  <path :stroke="remainingDays <= 3 ? '#EF4444' : (remainingDays <= 7 ? '#F59E0B' : '#10B981')"
+                    stroke-width="3" stroke-linecap="round" fill="none"
+                    :stroke-dasharray="(Math.min(remainingDays, 30) / 30 * 100) + ', 100'"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-sm font-extrabold text-gray-800" x-text="remainingDays"></span>
+                </div>
               </div>
               <div>
-                <div class="flex items-center gap-2">
-                  <div
-                    class="font-bold text-gray-800 text-sm"
-                    x-text="getActiveChatObj()?.name"
-                  ></div>
-                  <button
-                    @click="showCRMModal = true"
-                    class="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-0.5 rounded transition"
-                  >
-                    Edit Label
-                  </button>
-                </div>
-                <div
-                  class="text-xs text-green-600"
-                  x-text="getCRMLabel(activeChat) + (getCRMNote(activeChat) ? ' - ' + getCRMNote(activeChat) : '')"
-                ></div>
+                <p class="text-sm font-bold text-gray-800" x-text="remainingDays + ' hari tersisa'"></p>
+                <p class="text-[10px] text-gray-500" x-text="'Berakhir: ' + formatExpiryDate()"></p>
               </div>
             </div>
-          </div>
-
-          <div
-            x-show="activeChat"
-            class="flex-1 overflow-y-auto p-4 space-y-4"
-            id="chat-container"
-          >
-            <template x-for="msg in (activeMessages || [])" :key="msg.id">
-              <div
-                class="flex w-full gap-2 group"
-                :class="msg.fromMe ? 'justify-end' : 'justify-start'"
-              >
-                <button
-                  x-show="msg.fromMe"
-                  @click="deleteMessage(msg.id)"
-                  class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-xs self-center px-2 transition"
-                >
-                  🗑️
-                </button>
-                <div x-show="!msg.fromMe" class="flex-shrink-0 flex items-end">
-                  <template x-if="msg.senderProfilePicUrl"
-                    ><img
-                      :src="msg.senderProfilePicUrl"
-                      class="w-8 h-8 rounded-full shadow-sm mb-1 object-cover"
-                  /></template>
-                  <template x-if="!msg.senderProfilePicUrl">
-                    <div
-                      class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-[10px] font-bold text-gray-600 mb-1"
-                      x-text="getInitials(msg.senderName)"
-                    ></div>
-                  </template>
-                </div>
-                <div
-                  class="max-w-[70%] px-4 py-2 text-sm shadow-sm relative flex flex-col"
-                  :class="msg.fromMe ? 'chat-bubble-me' : 'chat-bubble-other'"
-                >
-                  <div
-                    x-show="msg.isGroup && !msg.fromMe"
-                    class="text-[10px] font-bold text-orange-600 mb-1"
-                    x-text="msg.senderName"
-                  ></div>
-                  <template x-if="msg.mediaUrl && msg.mediaType === 'image'">
-                    <div class="mb-2">
-                      <img
-                        :src="msg.mediaUrl"
-                        class="rounded-lg w-full max-w-xs object-cover cursor-pointer hover:opacity-90 transition"
-                        @click="window.open(msg.mediaUrl, '_blank')"
-                      />
-                    </div>
-                  </template>
-                  <template x-if="msg.mediaUrl && msg.mediaType !== 'image'">
-                    <div
-                      class="mb-2 p-2 bg-gray-100 rounded flex items-center gap-2 border border-gray-200"
-                    >
-                      <div
-                        class="bg-gray-300 p-2 rounded text-gray-600 text-lg"
-                      >
-                        📄
-                      </div>
-                      <div class="overflow-hidden">
-                        <a
-                          :href="msg.mediaUrl"
-                          download
-                          class="text-blue-600 font-bold hover:underline truncate block text-sm"
-                          x-text="'Download File'"
-                        ></a>
-                        <span
-                          class="text-[10px] text-gray-500 uppercase"
-                          x-text="msg.mediaType || 'FILE'"
-                        ></span>
-                      </div>
-                    </div>
-                  </template>
-                  <p x-text="msg.text" class="whitespace-pre-wrap"></p>
-                  <div
-                    class="text-[10px] text-right mt-1 opacity-60"
-                    x-text="formatTime(msg.timestamp || msg.time)"
-                  ></div>
-                </div>
-                <button
-                  x-show="!msg.fromMe"
-                  @click="deleteMessage(msg.id)"
-                  class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-xs self-center px-2 transition"
-                >
-                  🗑️
-                </button>
-              </div>
+            <template x-if="remainingDays <= 3">
+              <p class="text-[10px] text-red-600 font-bold mt-2 animate-pulse">
+                ⚠️ Langganan hampir habis! Hubungi Developer untuk perpanjang.
+              </p>
             </template>
           </div>
+        </template>
 
-          <div
-            x-show="activeChat"
-            class="glass p-4 border-t border-white/50 sticky bottom-0 z-20 !overflow-visible"
-          >
-            <div
-              x-show="selectedFile"
-              class="mb-2 p-3 bg-white/80 backdrop-blur-sm rounded-xl border border-blue-200 flex justify-between items-center shadow-sm animate-fade-in"
-            >
-              <div class="flex items-center gap-2 overflow-hidden">
-                <span class="bg-blue-100 p-1.5 rounded text-lg">📄</span>
-                <span
-                  class="text-sm text-gray-700 truncate max-w-xs font-medium"
-                  x-text="selectedFile ? selectedFile.name : ''"
-                ></span>
-              </div>
-              <button
-                @click="selectedFile = null"
-                class="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition"
-              >
-                ✕
-              </button>
+        <!-- Hidden Countdown Toggle -->
+        <template x-if="userRole === 'USER' && hideCountdown">
+          <div class="mt-4">
+            <button @click="toggleCountdownVisibility()" 
+              class="w-full text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+              👁️ Tampilkan Info Langganan
+            </button>
+          </div>
+        </template>
+
+        <!-- Developer Link -->
+        <template x-if="userRole === 'DEVELOPER'">
+          <div class="mt-4 p-3 rounded-xl bg-gradient-to-r from-purple-100 to-pink-100 border border-purple-200">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-purple-700">👑 Mode Developer</span>
+              <a href="/developer.html" 
+                class="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg font-bold transition">
+                Dashboard Dev
+              </a>
             </div>
-            <div
-              class="flex items-center gap-3 bg-white/80 backdrop-blur-md rounded-2xl px-4 py-3 border border-white/60 shadow-lg ring-1 ring-black/5 focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-300 relative"
-            >
-              <!-- Mobile Action Menu Support -->
-              <div class="md:hidden relative" x-cloak>
-                  <button 
-                      @click="mobileActionMenu = !mobileActionMenu"
-                      class="text-gray-400 hover:text-blue-600 transition-transform active:scale-95"
-                      type="button"
-                  >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                  </button>
+          </div>
+        </template>
+      </div>
 
-                  <!-- Popup Menu -->
-                  <div 
-                      x-show="mobileActionMenu" 
-                      @click.outside="mobileActionMenu = false"
-                      x-transition:enter="transition ease-out duration-200"
-                      x-transition:enter-start="opacity-0 scale-95 translate-y-2"
-                      x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                      class="absolute bottom-full left-0 mb-3 w-48 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 z-50 overflow-hidden ring-1 ring-black/5"
-                      style="display: none;"
-                  >
-                      <div class="flex flex-col py-2">
-                          <button @click="$refs.fileInput.click(); mobileActionMenu = false" class="text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700 text-sm font-bold border-b border-gray-100 transition-colors">
-                              <span class="bg-blue-100 text-blue-600 p-1.5 rounded-lg">📎</span> Attach File
-                          </button>
-                          <button @click="openInvoiceModal(); mobileActionMenu = false" class="text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700 text-sm font-bold border-b border-gray-100 transition-colors">
-                              <span class="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg">📄</span> Buat Invoice
-                          </button>
-                          <button @click="openScheduleModal(); mobileActionMenu = false" class="text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700 text-sm font-bold transition-colors">
-                              <span class="bg-cyan-100 text-cyan-600 p-1.5 rounded-lg">📅</span> Buat Jadwal
-                          </button>
-                      </div>
-                  </div>
-              </div>
-
-              <button
-                @click="$refs.fileInput.click()"
-                class="hidden md:block text-gray-400 hover:text-blue-600 transition-transform hover:scale-110 active:scale-95"
-                title="Attach File"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-              </button>
-              <input
-                type="file"
-                x-ref="fileInput"
-                @change="handleFileSelect"
-                accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
-                class="hidden"
-              />
-
-              <button
-                @click="openInvoiceModal"
-                class="hidden md:block text-gray-400 hover:text-indigo-600 transition-transform hover:scale-110 active:scale-95"
-                title="Buat Invoice"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              </button>
-              <button
-                @click="openScheduleModal()"
-                class="hidden md:block text-gray-400 hover:text-cyan-600 transition-transform hover:scale-110 active:scale-95"
-                title="Buat Jadwal"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </button>
-              <textarea
-                x-model="inputText"
-                @keydown.enter.prevent="sendMessage"
-                rows="1"
-                class="flex-1 bg-transparent outline-none resize-none text-sm max-h-32 py-3 px-4 placeholder-gray-400 font-medium text-gray-700"
-                placeholder="Ketik pesan anda..."
-              ></textarea>
-              <button
-                @click="sendMessage"
-                class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-2 rounded-xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transform transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-50"
-                :disabled="!inputText.trim() && !selectedFile"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-90" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+      <div x-show="currentPage === 'chat'" class="flex-1 flex flex-col overflow-hidden">
+        <div class="p-4 bg-blue-50 border-b border-blue-100">
+          <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-blue-800">AI Auto Reply</span>
+              <button @click="showPromptModal = true" class="text-blue-400 hover:text-blue-600">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </button>
             </div>
+            <label class="flex items-center cursor-pointer relative">
+              <input type="checkbox" class="sr-only" x-model="aiActive" @change="toggleAI" />
+              <div class="w-8 h-4 bg-gray-300 rounded-full transition"
+                :class="aiActive ? 'bg-blue-500' : 'bg-gray-300'"></div>
+              <div class="dot absolute w-4 h-4 bg-white rounded-full shadow left-0 transition transform"
+                :class="aiActive ? 'translate-x-4' : 'translate-x-0'"></div>
+            </label>
+          </div>
+          <div class="flex items-center gap-2">
+            <button @click="$refs.excelInput.click()"
+              class="flex-1 bg-white border border-blue-200 text-blue-600 text-[10px] font-bold py-1.5 px-2 rounded hover:bg-blue-100 flex items-center justify-center gap-1">
+              <span x-text="aiHasFile ? '✅ Excel Ready' : '📂 Upload Produk'"></span>
+            </button>
+            <input type="file" x-ref="excelInput" @change="uploadExcel" accept=".xlsx, .xls" class="hidden" />
           </div>
         </div>
 
-        <div
-          x-show="currentPage === 'analytics'"
-          class="flex flex-col h-full w-full p-6 md:p-8 overflow-y-auto"
-        >
-          <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-8 pt-10 md:pt-0">
+        <div class="px-4 py-3 border-b border-gray-100 bg-white flex items-center justify-between">
+          <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Chat List</span>
+          <label class="flex items-center cursor-pointer text-xs gap-1">
+            <input type="checkbox" x-model="showGroups" @change="toggleGroupSettings" class="accent-green-600" />
+            <span class="text-gray-500">Grup</span>
+          </label>
+        </div>
+
+        <div class="flex-1 overflow-y-auto" style="background-color: #F9FAFB;">
+          <template x-for="chat in chatList.filter(c => showGroups ? true : !c.isGroup)" :key="chat.id">
+            <div @click="selectChat(chat)"
+              class="p-3 mb-2 rounded-xl border border-transparent hover:bg-white/40 cursor-pointer transition-all duration-200 relative group"
+              :class="activeChat === chat.id ? 'bg-gradient-to-r from-indigo-50 to-transparent border-l-4 border-l-indigo-500 shadow-md' : 'hover:shadow-sm'">
+              <button @click.stop="deleteChat(chat.id)"
+                class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition p-1 z-10 bg-white/80 rounded-full shadow-sm backdrop-blur-sm"
+                title="Hapus Chat">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              <div class="flex items-center gap-3">
+                <div class="relative w-12 h-12 flex-shrink-0">
+                  <template x-if="chat.profilePicUrl"><img :src="chat.profilePicUrl"
+                      class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" /></template>
+                  <template x-if="!chat.profilePicUrl">
+                    <div
+                      class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-100 to-purple-100 flex items-center justify-center text-blue-600 font-bold text-sm border-2 border-white shadow-md"
+                      x-text="getInitials(chat.name)"></div>
+                  </template>
+                </div>
+                <div class="flex-1 overflow-hidden">
+                  <div class="flex justify-between items-center mb-0.5">
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-gray-800 text-sm truncate" x-text="chat.name"></span>
+                      <span class="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase shadow-sm"
+                        :class="getLabelColor(getCRMLabel(chat.id))" x-text="getCRMLabel(chat.id)"></span>
+                    </div>
+                    <span class="text-[10px] text-gray-400 whitespace-nowrap ml-2 font-medium"
+                      x-text="formatTime(chat.timestamp)"></span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <p class="text-xs text-gray-500 truncate font-medium" x-text="chat.lastMsg"></p>
+                    <span x-show="chat.unread > 0"
+                      class="ml-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm"
+                      x-text="chat.unread"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Empty spacer for other pages -->
+      <div x-show="currentPage !== 'chat'" class="flex-1 bg-gray-50"></div>
+    </aside>
+
+    <main class="flex-1 flex flex-col relative h-full w-full">
+      <div class="md:hidden absolute top-4 left-4 z-30" x-show="currentPage !== 'chat' || !activeChat" x-transition>
+        <button @click="mobileMenu = !mobileMenu"
+          class="glass p-2 rounded-full shadow text-gray-700 hover:text-indigo-600 transition">
+          Menu
+        </button>
+      </div>
+
+      <div x-show="currentPage === 'chat'" class="flex flex-col h-full w-full">
+        <div x-show="!activeChat" class="flex-1 flex flex-col items-center justify-center text-gray-400 select-none">
+          <h2 class="text-xl font-medium">NayooAI</h2>
+          <p class="text-sm mt-2 text-gray-500">
+            Pilih chat di sidebar untuk memulai.
+          </p>
+        </div>
+
+        <div x-show="activeChat"
+          class="h-16 glass border-b border-gray-200/50 flex items-center px-4 shadow-sm z-10 justify-between">
+          <div class="flex items-center gap-3 md:pl-0">
+            <button @click="activeChat = null; mobileMenu = true"
+              class="md:hidden p-2 -ml-2 text-gray-600 hover:text-indigo-600 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div
+              class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden flex-shrink-0 border border-gray-200">
+              <template x-if="getActiveChatObj()?.profilePicUrl"><img :src="getActiveChatObj()?.profilePicUrl"
+                  class="w-full h-full object-cover" /></template>
+              <template x-if="!getActiveChatObj()?.profilePicUrl"><span class="text-gray-600 font-bold text-sm"
+                  x-text="getInitials(getActiveChatObj()?.name)"></span></template>
+            </div>
             <div>
-              <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">
-                Dashboard Performa
-              </h1>
-              <p class="text-gray-500 text-sm mt-1 flex items-center gap-2">
-                Data real-time untuk akun:
-                <span x-text="sessionId" class="font-mono bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs"></span>
-              </p>
+              <div class="flex items-center gap-2">
+                <div class="font-bold text-gray-800 text-sm" x-text="getActiveChatObj()?.name"></div>
+                <button @click="showCRMModal = true"
+                  class="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-0.5 rounded transition">
+                  Edit Label
+                </button>
+              </div>
+              <div class="text-xs text-green-600"
+                x-text="getCRMLabel(activeChat) + (getCRMNote(activeChat) ? ' - ' + getCRMNote(activeChat) : '')"></div>
             </div>
-            <div class="flex flex-wrap gap-2">
-              <input
-                type="month"
-                x-model="selectedMonth"
-                @change="fetchAnalytics"
-                class="px-4 py-2 bg-white border border-gray-200 text-sm text-gray-600 rounded-lg hover:bg-gray-50 shadow-sm transition focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-              <button
-                @click="fetchAnalytics"
-                class="px-4 py-2 bg-white/60 hover:bg-white border border-gray-200 text-sm font-semibold text-gray-600 rounded-lg shadow-sm transition flex items-center gap-2 backdrop-blur-sm"
-              >
-                <span>🔄</span> Refresh
+          </div>
+        </div>
+
+        <div x-show="activeChat" class="flex-1 overflow-y-auto p-4 space-y-4" id="chat-container">
+          <template x-for="msg in (activeMessages || [])" :key="msg.id">
+            <div class="flex w-full gap-2 group" :class="msg.fromMe ? 'justify-end' : 'justify-start'">
+              <button x-show="msg.fromMe" @click="deleteMessage(msg.id)"
+                class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-xs self-center px-2 transition">
+                🗑️
               </button>
-              <button
-                @click="exportDashboard"
-                class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold rounded-lg hover:shadow-lg hover:shadow-emerald-200 transition flex items-center gap-2 transform hover:-translate-y-0.5"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
+              <div x-show="!msg.fromMe" class="flex-shrink-0 flex items-end">
+                <template x-if="msg.senderProfilePicUrl"><img :src="msg.senderProfilePicUrl"
+                    class="w-8 h-8 rounded-full shadow-sm mb-1 object-cover" /></template>
+                <template x-if="!msg.senderProfilePicUrl">
+                  <div
+                    class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-[10px] font-bold text-gray-600 mb-1"
+                    x-text="getInitials(msg.senderName)"></div>
+                </template>
+              </div>
+              <div class="max-w-[70%] px-4 py-2 text-sm shadow-sm relative flex flex-col"
+                :class="msg.fromMe ? 'chat-bubble-me' : 'chat-bubble-other'">
+                <div x-show="msg.isGroup && !msg.fromMe" class="text-[10px] font-bold text-orange-600 mb-1"
+                  x-text="msg.senderName"></div>
+                <template x-if="msg.mediaUrl && msg.mediaType === 'image'">
+                  <div class="mb-2">
+                    <img :src="msg.mediaUrl"
+                      class="rounded-lg w-full max-w-xs object-cover cursor-pointer hover:opacity-90 transition"
+                      @click="window.open(msg.mediaUrl, '_blank')" />
+                  </div>
+                </template>
+                <template x-if="msg.mediaUrl && msg.mediaType !== 'image'">
+                  <div class="mb-2 p-2 bg-gray-100 rounded flex items-center gap-2 border border-gray-200">
+                    <div class="bg-gray-300 p-2 rounded text-gray-600 text-lg">
+                      📄
+                    </div>
+                    <div class="overflow-hidden">
+                      <a :href="msg.mediaUrl" download
+                        class="text-blue-600 font-bold hover:underline truncate block text-sm"
+                        x-text="'Download File'"></a>
+                      <span class="text-[10px] text-gray-500 uppercase" x-text="msg.mediaType || 'FILE'"></span>
+                    </div>
+                  </div>
+                </template>
+                <p x-text="msg.text" class="whitespace-pre-wrap"></p>
+                <div class="text-[10px] text-right mt-1 opacity-60" x-text="formatTime(msg.timestamp || msg.time)">
+                </div>
+              </div>
+              <button x-show="!msg.fromMe" @click="deleteMessage(msg.id)"
+                class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-xs self-center px-2 transition">
+                🗑️
+              </button>
+            </div>
+          </template>
+        </div>
+
+        <div x-show="activeChat" class="glass p-4 border-t border-white/50 sticky bottom-0 z-20 !overflow-visible">
+          <div x-show="selectedFile"
+            class="mb-2 p-3 bg-white/80 backdrop-blur-sm rounded-xl border border-blue-200 flex justify-between items-center shadow-sm animate-fade-in">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <span class="bg-blue-100 p-1.5 rounded text-lg">📄</span>
+              <span class="text-sm text-gray-700 truncate max-w-xs font-medium"
+                x-text="selectedFile ? selectedFile.name : ''"></span>
+            </div>
+            <button @click="selectedFile = null" class="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition">
+              ✕
+            </button>
+          </div>
+          <div
+            class="flex items-center gap-3 bg-white/80 backdrop-blur-md rounded-2xl px-4 py-3 border border-white/60 shadow-lg ring-1 ring-black/5 focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-300 relative">
+            <!-- Mobile Action Menu Support -->
+            <div class="md:hidden relative" x-cloak>
+              <button @click="mobileActionMenu = !mobileActionMenu"
+                class="text-gray-400 hover:text-blue-600 transition-transform active:scale-95" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Export Excel
               </button>
+
+              <!-- Popup Menu -->
+              <div x-show="mobileActionMenu" @click.outside="mobileActionMenu = false"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                class="absolute bottom-full left-0 mb-3 w-48 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 z-50 overflow-hidden ring-1 ring-black/5"
+                style="display: none;">
+                <div class="flex flex-col py-2">
+                  <button @click="$refs.fileInput.click(); mobileActionMenu = false"
+                    class="text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700 text-sm font-bold border-b border-gray-100 transition-colors">
+                    <span class="bg-blue-100 text-blue-600 p-1.5 rounded-lg">📎</span> Attach File
+                  </button>
+                  <button @click="openInvoiceModal(); mobileActionMenu = false"
+                    class="text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700 text-sm font-bold border-b border-gray-100 transition-colors">
+                    <span class="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg">📄</span> Buat Invoice
+                  </button>
+                  <button @click="openScheduleModal(); mobileActionMenu = false"
+                    class="text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700 text-sm font-bold transition-colors">
+                    <span class="bg-cyan-100 text-cyan-600 p-1.5 rounded-lg">📅</span> Buat Jadwal
+                  </button>
+                </div>
+              </div>
             </div>
+
+            <button @click="$refs.fileInput.click()"
+              class="hidden md:block text-gray-400 hover:text-blue-600 transition-transform hover:scale-110 active:scale-95"
+              title="Attach File">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+            </button>
+            <input type="file" x-ref="fileInput" @change="handleFileSelect"
+              accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" class="hidden" />
+
+            <button @click="openInvoiceModal"
+              class="hidden md:block text-gray-400 hover:text-indigo-600 transition-transform hover:scale-110 active:scale-95"
+              title="Buat Invoice">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </button>
+            <button @click="openScheduleModal()"
+              class="hidden md:block text-gray-400 hover:text-cyan-600 transition-transform hover:scale-110 active:scale-95"
+              title="Buat Jadwal">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
+            <textarea x-model="inputText" @keydown.enter.prevent="sendMessage" rows="1"
+              class="flex-1 bg-transparent outline-none resize-none text-sm max-h-32 py-3 px-4 placeholder-gray-400 font-medium text-gray-700"
+              placeholder="Ketik pesan anda..."></textarea>
+            <button @click="sendMessage"
+              class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-2 rounded-xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transform transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-50"
+              :disabled="!inputText.trim() && !selectedFile">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-90" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+              </svg>
+            </button>
           </div>
+        </div>
+      </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <!-- 1. Chat Customer Baru -->
+      <div x-show="currentPage === 'analytics'" class="flex flex-col h-full w-full p-6 md:p-8 overflow-y-auto">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-8 pt-10 md:pt-0">
+          <div>
+            <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">
+              Dashboard Performa
+            </h1>
+            <p class="text-gray-500 text-sm mt-1 flex items-center gap-2">
+              Data real-time untuk akun:
+              <span x-text="sessionId" class="font-mono bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs"></span>
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <input type="month" x-model="selectedMonth" @change="fetchAnalytics"
+              class="px-4 py-2 bg-white border border-gray-200 text-sm text-gray-600 rounded-lg hover:bg-gray-50 shadow-sm transition focus:ring-2 focus:ring-blue-500 outline-none" />
+            <button @click="fetchAnalytics"
+              class="px-4 py-2 bg-white/60 hover:bg-white border border-gray-200 text-sm font-semibold text-gray-600 rounded-lg shadow-sm transition flex items-center gap-2 backdrop-blur-sm">
+              <span>🔄</span> Refresh
+            </button>
+            <button @click="exportDashboard"
+              class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold rounded-lg hover:shadow-lg hover:shadow-emerald-200 transition flex items-center gap-2 transform hover:-translate-y-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export Excel
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <!-- 1. Chat Customer Baru -->
+          <div class="glass p-6 rounded-3xl hover-card relative overflow-hidden group">
             <div
-              class="glass p-6 rounded-3xl hover-card relative overflow-hidden group"
-            >
-              <div class="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-transparent rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
-              <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                  <p class="text-gray-500 text-xs font-bold uppercase tracking-wider">
-                    Pesan Masuk
-                  </p>
-                  <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600 shadow-sm border border-indigo-100">
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      ></path>
-                    </svg>
-                  </div>
-                </div>
-                <p
-                  class="text-4xl font-extrabold text-gray-800"
-                  x-text="stats.newCustomers || 0"
-                >
-                  0
+              class="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-transparent rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110">
+            </div>
+            <div class="relative z-10">
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-wider">
+                  Pesan Masuk
                 </p>
-                <div class="mt-2 text-xs text-indigo-600 font-medium flex items-center gap-1">
-                   <span>↗</span> <span>Updated Live</span>
+                <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600 shadow-sm border border-indigo-100">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                    </path>
+                  </svg>
                 </div>
               </div>
-            </div>
-
-            <!-- 2. Pesan Belum Terbaca (Ganti AI Replies) -->
-            <div
-              class="glass p-6 rounded-3xl hover-card relative overflow-hidden group"
-            >
-              <div class="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-pink-400/20 to-transparent rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
-              <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                  <p class="text-gray-500 text-xs font-bold uppercase tracking-wider">
-                    Belum Terbaca
-                  </p>
-                  <div class="p-2 bg-pink-50 rounded-lg text-pink-600 shadow-sm border border-pink-100">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <p class="text-4xl font-extrabold text-gray-800" x-text="totalUnread">
-                  0
-                </p>
-                <div class="mt-2 text-xs text-pink-500 font-medium flex items-center gap-1" x-show="totalUnread > 0">
-                   <span>⚠️</span> <span>Action Needed</span>
-                </div>
-                <div class="mt-2 text-xs text-gray-400 font-medium flex items-center gap-1" x-show="totalUnread === 0">
-                   <span>✅</span> <span>All Caught Up</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 3. Terbit Invoice -->
-            <div
-              class="glass p-6 rounded-3xl hover-card relative overflow-hidden group"
-            >
-              <div class="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-transparent rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
-              <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                  <p class="text-gray-500 text-xs font-bold uppercase tracking-wider">
-                    Terbit Invoice
-                  </p>
-                  <div class="p-2 bg-purple-50 rounded-lg text-purple-600 shadow-sm border border-purple-100">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <p
-                  class="text-4xl font-extrabold text-gray-800"
-                  x-text="stats.invoiceIssued || 0"
-                >
-                  0
-                </p>
-                <div class="mt-2 text-xs text-purple-600 font-medium flex items-center gap-1">
-                   <span>📊</span> <span>Check Unpaid</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 4. Lunas (Paid) -->
-            <div
-              class="glass p-6 rounded-3xl hover-card relative overflow-hidden group"
-            >
-              <div class="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
-              <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                  <p
-                    class="text-gray-500 text-xs font-bold uppercase tracking-wider"
-                  >
-                    Lunas (Paid)
-                  </p>
-                  <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600 shadow-sm border border-emerald-100">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <p
-                  class="text-4xl font-extrabold text-emerald-600"
-                  x-text="stats.invoicePaid || 0"
-                >
-                  0
-                </p>
-                <div class="mt-2 text-xs text-emerald-600 font-medium flex items-center gap-1">
-                   <span>💰</span> <span>Great Job!</span>
-                </div>
+              <p class="text-4xl font-extrabold text-gray-800" x-text="stats.newCustomers || 0">
+                0
+              </p>
+              <div class="mt-2 text-xs text-indigo-600 font-medium flex items-center gap-1">
+                <span>↗</span> <span>Updated Live</span>
               </div>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- 2. Pesan Belum Terbaca (Ganti AI Replies) -->
+          <div class="glass p-6 rounded-3xl hover-card relative overflow-hidden group">
             <div
-              class="glass p-6 rounded-2xl hover-card lg:col-span-2 flex flex-col min-h-[400px]"
-            >
-              <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-gray-800">
-                  Grafik Perbandingan Aktivitas
-                </h3>
+              class="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-pink-400/20 to-transparent rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110">
+            </div>
+            <div class="relative z-10">
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-wider">
+                  Belum Terbaca
+                </p>
+                <div class="p-2 bg-pink-50 rounded-lg text-pink-600 shadow-sm border border-pink-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
               </div>
-              <div class="flex-1 relative w-full h-full">
-                <canvas id="messageChart"></canvas>
+              <p class="text-4xl font-extrabold text-gray-800" x-text="totalUnread">
+                0
+              </p>
+              <div class="mt-2 text-xs text-pink-500 font-medium flex items-center gap-1" x-show="totalUnread > 0">
+                <span>⚠️</span> <span>Action Needed</span>
+              </div>
+              <div class="mt-2 text-xs text-gray-400 font-medium flex items-center gap-1" x-show="totalUnread === 0">
+                <span>✅</span> <span>All Caught Up</span>
               </div>
             </div>
-            <div class="flex flex-col gap-6">
-              <!-- Hourly Activity Chart -->
-              <div
-                class="glass rounded-2xl hover-card flex flex-col overflow-hidden h-64"
-              >
-                <div class="p-4 border-b border-gray-200/50 bg-gray-50/50">
-                  <h3 class="font-bold text-gray-800 text-sm">
-                    ⏰ Jam Ramai Chat
-                  </h3>
-                </div>
-                <div class="flex-1 p-2 relative">
-                  <canvas id="hourlyChart"></canvas>
-                </div>
-              </div>
+          </div>
 
-              <!-- Top Products Section (Swapped & Enhanced) -->
-              <div
-                class="glass rounded-2xl hover-card flex flex-col overflow-hidden h-64"
-              >
-                <div
-                  class="p-4 border-b border-gray-200/50 bg-gray-50/50 flex justify-between items-center"
-                >
-                  <h3 class="font-bold text-gray-800 text-sm">🏆 Top Produk</h3>
-                  <span
-                    class="text-[10px] text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full"
-                    >Best Sellers</span
-                  >
-                </div>
-                <div class="flex-1 overflow-y-auto table-scroll bg-transparent p-2">
-                  <div class="flex flex-col gap-2">
-                    <template
-                      x-for="(prod, index) in topProducts"
-                      :key="prod.name"
-                    >
-                      <div
-                        class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-100"
-                      >
-                        <!-- Rank Badge -->
-                        <div
-                          class="w-8 h-8 flex items-center justify-center rounded-full font-bold text-xs shadow-sm flex-shrink-0"
-                          :class="{
-                            'bg-yellow-100 text-yellow-700 border border-yellow-200': index === 0,
-                            'bg-gray-100 text-gray-700 border border-gray-200': index === 1,
-                            'bg-orange-100 text-orange-800 border border-orange-200': index === 2,
-                            'bg-white text-gray-500 border border-gray-100': index > 2
-                          }"
-                          x-text="index + 1"
-                        ></div>
-
-                        <!-- Product Info -->
-                        <div class="flex-1 min-w-0">
-                          <p
-                            class="text-sm font-medium text-gray-800 truncate"
-                            x-text="prod.name"
-                            :title="prod.name"
-                          ></p>
-                          <!-- Progress Bar -->
-                          <div
-                            class="w-full bg-gray-100 rounded-full h-1.5 mt-1.5 overflow-hidden"
-                          >
-                            <div
-                              class="h-1.5 rounded-full transition-all duration-500"
-                              :class="{
-                                'bg-yellow-400': index === 0,
-                                'bg-gray-400': index === 1,
-                                'bg-orange-400': index === 2,
-                                'bg-blue-400': index > 2
-                              }"
-                              :style="`width: ${(prod.totalQty / (topProducts[0]?.totalQty || 1)) * 100}%`"
-                            ></div>
-                          </div>
-                        </div>
-
-                        <!-- Qty -->
-                        <div class="text-right">
-                          <p
-                            class="text-sm font-bold text-gray-700"
-                            x-text="prod.totalQty"
-                          ></p>
-                          <p class="text-[10px] text-gray-400">Terjual</p>
-                        </div>
-                      </div>
-                    </template>
-
-                    <div
-                      x-show="topProducts.length === 0"
-                      class="flex flex-col items-center justify-center h-32 text-gray-400"
-                    >
-                      <svg
-                        class="w-8 h-8 mb-2 opacity-50"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                        ></path>
-                      </svg>
-                      <p class="text-xs">Belum ada data penjualan</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Top Customers Section -->
-              <div
-                class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden h-64"
-              >
-                <div
-                  class="p-4 border-b border-gray-200/50 bg-gray-50/50 flex justify-between items-center"
-                >
-                  <h3 class="font-bold text-gray-800 text-sm">
-                    👑 Top Customer
-                  </h3>
-                  <span
-                    class="text-[10px] text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full"
-                    >Most Active</span
-                  >
-                </div>
-                <div class="flex-1 overflow-y-auto table-scroll bg-white p-2">
-                  <div class="flex flex-col gap-2">
-                    <template
-                      x-for="(cust, index) in topCustomers"
-                      :key="cust.customerJid"
-                    >
-                      <div
-                        class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-100"
-                      >
-                        <!-- Rank Badge -->
-                        <div
-                          class="w-8 h-8 flex items-center justify-center rounded-full font-bold text-xs shadow-sm flex-shrink-0"
-                          :class="{
-                            'bg-purple-100 text-purple-700 border border-purple-200': index === 0,
-                            'bg-gray-100 text-gray-700 border border-gray-200': index === 1,
-                            'bg-pink-100 text-pink-800 border border-pink-200': index === 2,
-                            'bg-white text-gray-500 border border-gray-100': index > 2
-                          }"
-                          x-text="index + 1"
-                        ></div>
-
-                        <!-- Customer Info -->
-                        <div class="flex-1 min-w-0">
-                          <p
-                            class="text-sm font-medium text-gray-800 truncate"
-                            x-text="cust.customerName"
-                            :title="cust.customerName"
-                          ></p>
-                          <p
-                            class="text-[10px] text-gray-400 truncate"
-                            x-text="cust.customerJid"
-                          ></p>
-                        </div>
-
-                        <!-- Qty -->
-                        <div class="text-right">
-                          <p
-                            class="text-sm font-bold text-gray-700"
-                            x-text="cust.totalQty"
-                          ></p>
-                          <p class="text-[10px] text-gray-400">Items</p>
-                        </div>
-                      </div>
-                    </template>
-
-                    <div
-                      x-show="topCustomers.length === 0"
-                      class="flex flex-col items-center justify-center h-32 text-gray-400"
-                    >
-                      <p class="text-xs">Belum ada data customer</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Log Aktivitas Section -->
-            </div>
+          <!-- 3. Terbit Invoice -->
+          <div class="glass p-6 rounded-3xl hover-card relative overflow-hidden group">
             <div
-              class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden h-64"
-            >
-              <div class="p-4 border-b border-gray-200/50 bg-gray-50/50">
-                <h3 class="font-bold text-gray-800 text-sm">
-                  Distribusi Label
-                </h3>
-              </div>
-              <div class="flex-1 overflow-y-auto table-scroll bg-transparent p-2">
-                <div class="flex flex-col gap-2">
-                  <template
-                    x-for="label in labelDistribution"
-                    :key="label.name"
-                  >
-                    <div
-                      class="flex items-center justify-between p-2 hover:bg-gray-50 rounded"
-                    >
-                      <div class="flex items-center gap-2">
-                        <span
-                          class="text-xs px-2 py-0.5 rounded font-bold"
-                          :class="getLabelColor(label.name)"
-                          x-text="label.displayName"
-                        ></span>
-                      </div>
-                      <span
-                        class="font-bold text-gray-700 text-sm"
-                        x-text="label.count"
-                      ></span>
-                    </div>
-                  </template>
-                  <div
-                    x-show="labelDistribution.length === 0"
-                    class="text-center text-gray-400 text-xs py-4"
-                  >
-                    Belum ada data label
-                  </div>
+              class="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-transparent rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110">
+            </div>
+            <div class="relative z-10">
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-wider">
+                  Terbit Invoice
+                </p>
+                <div class="p-2 bg-purple-50 rounded-lg text-purple-600 shadow-sm border border-purple-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
                 </div>
+              </div>
+              <p class="text-4xl font-extrabold text-gray-800" x-text="stats.invoiceIssued || 0">
+                0
+              </p>
+              <div class="mt-2 text-xs text-purple-600 font-medium flex items-center gap-1">
+                <span>📊</span> <span>Check Unpaid</span>
               </div>
             </div>
-            <!-- Top Questions -->
+          </div>
+
+          <!-- 4. Lunas (Paid) -->
+          <div class="glass p-6 rounded-3xl hover-card relative overflow-hidden group">
             <div
-              class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden h-64"
-            >
-              <div class="p-4 border-b border-gray-200/50 bg-gray-50/50">
-                <h3 class="font-bold text-gray-800 text-sm">
-                  ❓ Pertanyaan Sering Diajukan
-                </h3>
-              </div>
-              <div class="flex-1 overflow-y-auto table-scroll bg-transparent p-2">
-                <div class="flex flex-col gap-2">
-                  <template x-for="(q, index) in topQuestions" :key="index">
-                    <div
-                      class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-100"
-                    >
-                      <div
-                        class="w-6 h-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-xs"
-                        x-text="index + 1"
-                      ></div>
-                      <div class="flex-1 min-w-0">
-                        <p
-                          class="text-sm text-gray-800 truncate"
-                          x-text="q.question"
-                          :title="q.question"
-                        ></p>
-                      </div>
-                      <div
-                        class="text-xs font-bold text-gray-500"
-                        x-text="q.count + 'x'"
-                      ></div>
-                    </div>
-                  </template>
-                  <div
-                    x-show="!topQuestions || topQuestions.length === 0"
-                    class="text-center text-gray-400 text-xs py-4"
-                  >
-                    Belum ada data
-                  </div>
+              class="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110">
+            </div>
+            <div class="relative z-10">
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-wider">
+                  Lunas (Paid)
+                </p>
+                <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600 shadow-sm border border-emerald-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                 </div>
               </div>
-            </div>
-            <div
-              class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden h-64"
-            >
-              <div class="p-4 border-b border-gray-200/50 bg-gray-50/50">
-                <h3 class="font-bold text-gray-800 text-sm">
-                  Log Aktivitas Terakhir
-                </h3>
-              </div>
-              <div class="flex-1 overflow-y-auto table-scroll bg-transparent">
-                <table class="w-full text-sm text-left">
-                  <thead
-                    class="text-xs text-gray-400 uppercase bg-gray-50 sticky top-0 z-10"
-                  >
-                    <tr>
-                      <th class="px-4 py-3">Waktu</th>
-                      <th class="px-4 py-3">Tipe</th>
-                      <th class="px-4 py-3">User</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-100">
-                    <template x-for="log in stats.logs" :key="log.time">
-                      <tr class="hover:bg-gray-50 transition">
-                        <td
-                          class="px-4 py-3 text-gray-500 whitespace-nowrap text-xs font-mono"
-                          x-text="formatTime(log.time)"
-                        ></td>
-                        <td class="px-4 py-3">
-                          <span
-                            class="px-2 py-0.5 rounded text-[10px] font-bold border"
-                            :class="{ 'bg-green-50 text-green-700': log.type==='IN', 'bg-blue-50 text-blue-700': log.type==='OUT', 'bg-purple-50 text-purple-700': log.type==='AI', 'bg-orange-50 text-orange-700': log.type==='INV' }"
-                            x-text="log.type"
-                          ></span>
-                        </td>
-                        <td
-                          class="px-4 py-3 text-gray-700 font-medium truncate max-w-[120px]"
-                          x-text="log.user"
-                        ></td>
-                      </tr>
-                    </template>
-                  </tbody>
-                </table>
+              <p class="text-4xl font-extrabold text-emerald-600" x-text="stats.invoicePaid || 0">
+                0
+              </p>
+              <div class="mt-2 text-xs text-emerald-600 font-medium flex items-center gap-1">
+                <span>💰</span> <span>Great Job!</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Advance Setting Page -->
-        <div
-          x-show="currentPage === 'settings'"
-          class="flex-1 p-8 overflow-y-auto"
-        >
-          <h1 class="text-2xl font-bold text-gray-800 mb-6">
-            Advance Settings
-          </h1>
+        <!-- Row 2: Grafik Perbandingan & Jam Ramai Chat (50/50) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <!-- Grafik Perbandingan Aktivitas -->
+          <div class="glass p-6 rounded-2xl hover-card flex flex-col min-h-[280px] sm:min-h-[320px]">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-gray-800 text-sm sm:text-base">
+                📊 Grafik Perbandingan Aktivitas
+              </h3>
+            </div>
+            <div class="flex-1 relative w-full h-full min-h-[200px]">
+              <canvas id="messageChart"></canvas>
+            </div>
+          </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- 1. AI Persona Settings -->
-            <div class="space-y-6">
-              <div
-                class="glass p-6 rounded-2xl hover-card border border-white/20 min-w-0"
-              >
-                <div class="flex justify-between items-center mb-4">
-                  <h2 class="text-lg font-bold text-gray-800">🤖 AI Persona</h2>
-                  <button
-                    @click="savePrompt"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
-                  >
-                    Simpan Prompt
+          <!-- Jam Ramai Chat -->
+          <div class="glass rounded-2xl hover-card flex flex-col overflow-hidden min-h-[280px] sm:min-h-[320px]">
+            <div class="p-4 border-b border-gray-200/50 bg-gray-50/50">
+              <h3 class="font-bold text-gray-800 text-sm sm:text-base">
+                ⏰ Jam Ramai Chat
+              </h3>
+            </div>
+            <div class="flex-1 p-3 relative min-h-[200px]">
+              <canvas id="hourlyChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: Top Produk & Top Customer (50/50) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <!-- Top Products Section -->
+          <div class="glass rounded-2xl hover-card flex flex-col overflow-hidden h-72">
+            <div class="p-4 border-b border-gray-200/50 bg-gray-50/50 flex justify-between items-center">
+              <h3 class="font-bold text-gray-800 text-sm">🏆 Top Produk</h3>
+              <span class="text-[10px] text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">Best Sellers</span>
+            </div>
+            <div class="flex-1 overflow-y-auto table-scroll bg-transparent p-2">
+              <div class="flex flex-col gap-2">
+                <template x-for="(prod, index) in topProducts" :key="prod.name">
+                  <div
+                    class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-100">
+                    <!-- Rank Badge -->
+                    <div
+                      class="w-8 h-8 flex items-center justify-center rounded-full font-bold text-xs shadow-sm flex-shrink-0"
+                      :class="{
+                          'bg-yellow-100 text-yellow-700 border border-yellow-200': index === 0,
+                          'bg-gray-100 text-gray-700 border border-gray-200': index === 1,
+                          'bg-orange-100 text-orange-800 border border-orange-200': index === 2,
+                          'bg-white text-gray-500 border border-gray-100': index > 2
+                        }" x-text="index + 1"></div>
+
+                    <!-- Product Info -->
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-800 truncate" x-text="prod.name" :title="prod.name"></p>
+                      <!-- Progress Bar -->
+                      <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                        <div class="h-1.5 rounded-full transition-all duration-500" :class="{
+                              'bg-yellow-400': index === 0,
+                              'bg-gray-400': index === 1,
+                              'bg-orange-400': index === 2,
+                              'bg-blue-400': index > 2
+                            }" :style="`width: ${(prod.totalQty / (topProducts[0]?.totalQty || 1)) * 100}%`"></div>
+                      </div>
+                    </div>
+
+                    <!-- Qty -->
+                    <div class="text-right">
+                      <p class="text-sm font-bold text-gray-700" x-text="prod.totalQty"></p>
+                      <p class="text-[10px] text-gray-400">Terjual</p>
+                    </div>
+                  </div>
+                </template>
+
+                <div x-show="topProducts.length === 0"
+                  class="flex flex-col items-center justify-center h-32 text-gray-400">
+                  <svg class="w-8 h-8 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                  </svg>
+                  <p class="text-xs">Belum ada data penjualan</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Customers Section -->
+          <div class="glass rounded-2xl hover-card flex flex-col overflow-hidden h-72">
+            <div class="p-4 border-b border-gray-200/50 bg-gray-50/50 flex justify-between items-center">
+              <h3 class="font-bold text-gray-800 text-sm">
+                👑 Top Customer
+              </h3>
+              <span class="text-[10px] text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">Most Active</span>
+            </div>
+            <div class="flex-1 overflow-y-auto table-scroll bg-transparent p-2">
+              <div class="flex flex-col gap-2">
+                <template x-for="(cust, index) in topCustomers" :key="cust.customerJid">
+                  <div
+                    class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-100">
+                    <!-- Rank Badge -->
+                    <div
+                      class="w-8 h-8 flex items-center justify-center rounded-full font-bold text-xs shadow-sm flex-shrink-0"
+                      :class="{
+                          'bg-purple-100 text-purple-700 border border-purple-200': index === 0,
+                          'bg-gray-100 text-gray-700 border border-gray-200': index === 1,
+                          'bg-pink-100 text-pink-800 border border-pink-200': index === 2,
+                          'bg-white text-gray-500 border border-gray-100': index > 2
+                        }" x-text="index + 1"></div>
+
+                    <!-- Customer Info -->
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-800 truncate" x-text="cust.customerName"
+                        :title="cust.customerName"></p>
+                      <p class="text-[10px] text-gray-400 truncate" x-text="cust.customerJid"></p>
+                    </div>
+
+                    <!-- Qty -->
+                    <div class="text-right">
+                      <p class="text-sm font-bold text-gray-700" x-text="cust.totalQty"></p>
+                      <p class="text-[10px] text-gray-400">Items</p>
+                    </div>
+                  </div>
+                </template>
+
+                <div x-show="topCustomers.length === 0"
+                  class="flex flex-col items-center justify-center h-32 text-gray-400">
+                  <p class="text-xs">Belum ada data customer</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 4: Distribusi Label & Top Questions (50/50) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Distribusi Label -->
+          <div class="glass rounded-2xl hover-card flex flex-col overflow-hidden h-64">
+            <div class="p-4 border-b border-gray-200/50 bg-gray-50/50">
+              <h3 class="font-bold text-gray-800 text-sm">
+                🏷️ Distribusi Label
+              </h3>
+            </div>
+            <div class="flex-1 overflow-y-auto table-scroll bg-transparent p-2">
+              <div class="flex flex-col gap-2">
+                <template x-for="label in labelDistribution" :key="label.name">
+                  <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs px-2 py-0.5 rounded font-bold" :class="getLabelColor(label.name)"
+                        x-text="label.displayName"></span>
+                    </div>
+                    <span class="font-bold text-gray-700 text-sm" x-text="label.count"></span>
+                  </div>
+                </template>
+                <div x-show="labelDistribution.length === 0" class="text-center text-gray-400 text-xs py-4">
+                  Belum ada data label
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Questions -->
+          <div class="glass rounded-2xl hover-card flex flex-col overflow-hidden h-64">
+            <div class="p-4 border-b border-gray-200/50 bg-gray-50/50">
+              <h3 class="font-bold text-gray-800 text-sm">
+                ❓ Pertanyaan Sering Diajukan
+              </h3>
+            </div>
+            <div class="flex-1 overflow-y-auto table-scroll bg-transparent p-2">
+              <div class="flex flex-col gap-2">
+                <template x-for="(q, index) in topQuestions" :key="index">
+                  <div
+                    class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-100">
+                    <div
+                      class="w-6 h-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-xs"
+                      x-text="index + 1"></div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm text-gray-800 truncate" x-text="q.question" :title="q.question"></p>
+                    </div>
+                    <div class="text-xs font-bold text-gray-500" x-text="q.count + 'x'"></div>
+                  </div>
+                </template>
+                <div x-show="!topQuestions || topQuestions.length === 0" class="text-center text-gray-400 text-xs py-4">
+                  Belum ada data
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advance Setting Page -->
+      <div x-show="currentPage === 'settings'" class="flex-1 p-8 overflow-y-auto">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">
+          Advance Settings
+        </h1>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- 1. AI Persona Settings -->
+          <div class="space-y-6">
+            <div class="glass p-6 rounded-2xl hover-card border border-white/20 min-w-0">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-gray-800">🤖 AI Persona</h2>
+                <button @click="savePrompt"
+                  class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">
+                  Simpan Prompt
+                </button>
+              </div>
+              <p class="text-sm text-gray-500 mb-2">
+                Instruksi utama untuk mengatur gaya bicara dan perilaku bot.
+              </p>
+              <textarea x-model="aiPrompt"
+                class="w-full h-64 p-4 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-y font-mono bg-gray-50"
+                placeholder="Tulis instruksi system prompt di sini..."></textarea>
+            </div>
+          </div>
+
+          <!-- 2. Knowledge Base & Inventory -->
+          <div class="space-y-6">
+            <!-- Inventory Master -->
+            <div class="glass p-6 rounded-2xl hover-card border border-white/20">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h2 class="text-lg font-bold text-gray-800">
+                    📦 Inventory Master
+                  </h2>
+                  <p class="text-sm text-gray-500">
+                    Pilih sumber data utama untuk stok & harga produk.
+                  </p>
+                </div>
+                <!-- Source Selector -->
+                <div class="flex bg-gray-100 p-1 rounded-lg">
+                  <button @click="setInventorySource('excel')"
+                    :class="inventorySource === 'excel' ? 'bg-white shadow text-green-700' : 'text-gray-500 hover:text-gray-700'"
+                    class="px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2">
+                    <span>📊</span> Excel File
+                  </button>
+                  <button @click="setInventorySource('sheet')"
+                    :class="inventorySource === 'sheet' ? 'bg-white shadow text-blue-700' : 'text-gray-500 hover:text-gray-700'"
+                    class="px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2">
+                    <span>🌐</span> Google Sheet
                   </button>
                 </div>
-                <p class="text-sm text-gray-500 mb-2">
-                  Instruksi utama untuk mengatur gaya bicara dan perilaku bot.
-                </p>
-                <textarea
-                  x-model="aiPrompt"
-                  class="w-full h-64 p-4 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-y font-mono bg-gray-50"
-                  placeholder="Tulis instruksi system prompt di sini..."
-                ></textarea>
               </div>
 
-              <!-- Template Pesan -->
-              <div
-                class="glass p-6 rounded-2xl hover-card border border-white/20"
-              >
-                <div class="flex justify-between items-center mb-4">
+              <!-- EXCEL SECTION -->
+              <div x-show="inventorySource === 'excel'" x-transition>
+                <div class="flex items-center gap-4">
+                  <div class="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3">
+                    <span class="text-2xl">📊</span>
+                    <div class="overflow-hidden">
+                      <p class="text-xs font-bold text-gray-500 uppercase">
+                        Current File
+                      </p>
+                      <p class="text-sm font-medium text-gray-800 truncate" x-text="inventoryFile || 'Belum ada file'">
+                      </p>
+                    </div>
+                  </div>
+                  <button @click="$refs.invInput.click()"
+                    class="bg-green-600 text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-green-700 transition whitespace-nowrap">
+                    Upload Master
+                  </button>
+                  <input type="file" x-ref="invInput" @change="uploadInventory" accept=".xlsx, .xls" class="hidden" />
+                </div>
+              </div>
+
+              <!-- GOOGLE SHEET SECTION -->
+              <div x-show="inventorySource === 'sheet'" x-transition>
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <label class="block text-xs font-bold text-blue-800 mb-2 uppercase">Google Sheet Public CSV
+                    URL</label>
+                  <div class="flex gap-2">
+                    <input type="text" x-model="inventoryUrl"
+                      placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv"
+                      class="flex-1 p-2.5 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                    <button @click="saveInventoryUrl"
+                      class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition whitespace-nowrap">
+                      Simpan
+                    </button>
+                    <button @click="syncInventory"
+                      class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-orange-600 transition whitespace-nowrap flex items-center gap-2">
+                      <span>🔄</span> Sync
+                    </button>
+                  </div>
+                  <p class="text-xs text-blue-600 mt-2">
+                    ℹ️ Caranya: Masukan Link data spreadsheet anda kesini >
+                    kemudian Save & Sync
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Knowledge Base -->
+            <div class="glass p-6 rounded-2xl hover-card border border-white/20">
+              <div class="flex justify-between items-center mb-4">
+                <div>
                   <h2 class="text-lg font-bold text-gray-800">
-                    ⚡ Template Pesan
+                    📚 Knowledge Base
                   </h2>
-                  <button
-                    @click="saveTemplates"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
-                  >
-                    Simpan Template
+                  <p class="text-sm text-gray-500">
+                    File tambahan untuk melatih bot (SOP, FAQ, Info Toko).
+                  </p>
+                </div>
+                <button @click="$refs.kbInput.click()"
+                  class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-purple-700 transition">
+                  + Tambah File
+                </button>
+                <input type="file" x-ref="kbInput" @change="uploadKnowledge" accept=".xlsx, .xls" class="hidden" />
+              </div>
+
+              <div class="space-y-2">
+                <template x-for="file in knowledgeFiles" :key="file">
+                  <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg group">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                      <span class="text-xl">📄</span>
+                      <span class="text-sm font-medium text-gray-700 truncate" x-text="file"></span>
+                    </div>
+                    <button @click="deleteKnowledge(file)"
+                      class="text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </template>
+                <div x-show="knowledgeFiles.length === 0"
+                  class="text-center py-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+                  Belum ada file knowledge base
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2: Template Pesan & Custom Invoice (50/50) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <!-- Template Pesan -->
+          <div class="glass p-6 rounded-2xl hover-card border border-white/20">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-lg font-bold text-gray-800">
+                ⚡ Template Pesan
+              </h2>
+              <button @click="saveTemplates"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">
+                Simpan Template
+              </button>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">
+              Shortcut untuk balasan cepat. Ketik shortcut di chat (misal:
+              /rek) untuk memunculkan pesan.
+            </p>
+            <div class="space-y-2 mb-4 max-h-80 overflow-y-auto">
+              <template x-for="(tpl, idx) in messageTemplates" :key="idx">
+                <div class="flex gap-2 items-start">
+                  <input type="text" x-model="tpl.shortcut" placeholder="/shortcut"
+                    class="w-1/3 border border-gray-300 rounded p-2 text-sm font-mono" />
+                  <textarea x-model="tpl.content" placeholder="Isi pesan..."
+                    class="flex-1 border border-gray-300 rounded p-2 text-sm resize-y" rows="2"></textarea>
+                  <button @click="removeTemplate(idx)" class="text-red-500 hover:text-red-700 p-2">
+                    ✕
                   </button>
                 </div>
-                <p class="text-sm text-gray-500 mb-4">
-                  Shortcut untuk balasan cepat. Ketik shortcut di chat (misal:
-                  /rek) untuk memunculkan pesan.
-                </p>
-                <div class="space-y-2 mb-4">
-                  <template x-for="(tpl, idx) in messageTemplates" :key="idx">
-                    <div class="flex gap-2 items-start">
-                      <input
-                        type="text"
-                        x-model="tpl.shortcut"
-                        placeholder="/shortcut"
-                        class="w-1/3 border border-gray-300 rounded p-2 text-sm font-mono"
-                      />
-                      <textarea
-                        x-model="tpl.content"
-                        placeholder="Isi pesan..."
-                        class="flex-1 border border-gray-300 rounded p-2 text-sm resize-y"
-                        rows="1"
-                      ></textarea>
-                      <button
-                        @click="removeTemplate(idx)"
-                        class="text-red-500 hover:text-red-700 p-2"
-                      >
+              </template>
+            </div>
+            <button @click="addTemplate"
+              class="w-full py-2 border border-dashed border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 text-sm">
+              + Tambah Template
+            </button>
+          </div>
+
+          <!-- Custom Invoice -->
+          <div class="glass p-6 rounded-2xl hover-card border border-white/20">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">
+              🧾 Custom Invoice
+            </h2>
+            <div class="space-y-4 max-h-96 overflow-y-auto pr-2">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1 uppercase">Nama Toko / Judul Invoice</label>
+                <input type="text" x-model="invoiceTitle"
+                  class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="CONTOH: TOKO MAJU JAYA" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1 uppercase">Alamat & Kontak</label>
+                <textarea x-model="invoiceAddress" rows="3"
+                  class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Jl. Contoh No. 123, Jakarta&#10;Telp: 0812-3456-7890"></textarea>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <!-- Logo -->
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1 uppercase">Logo Toko</label>
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-12 h-12 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center overflow-hidden">
+                      <template x-if="invoiceLogoPreview">
+                        <img :src="invoiceLogoPreview" class="w-full h-full object-cover" />
+                      </template>
+                      <template x-if="!invoiceLogoPreview && invoiceLogo">
+                        <img :src="'/uploads/' + invoiceLogo" class="w-full h-full object-cover" />
+                      </template>
+                      <template x-if="!invoiceLogoPreview && !invoiceLogo">
+                        <span class="text-lg text-gray-300">🖼️</span>
+                      </template>
+                    </div>
+                    <div>
+                      <input type="file" x-ref="logoInput" @change="handleLogoUpload" accept="image/*" class="hidden" />
+                      <button @click="$refs.logoInput.click()" class="text-xs text-blue-600 font-bold hover:underline">
+                        Upload Logo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Footer -->
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1 uppercase">Footer Note</label>
+                  <textarea x-model="invoiceFooter" rows="2"
+                    class="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    placeholder="Terima kasih!"></textarea>
+                </div>
+              </div>
+
+              <!-- Shipping Options -->
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1 uppercase">Opsi Ongkir</label>
+                <div class="space-y-2 mb-2">
+                  <template x-for="(opt, idx) in shippingOptions" :key="idx">
+                    <div class="flex gap-2">
+                      <input type="text" x-model="opt.label" class="flex-1 p-2 border border-gray-200 rounded text-sm"
+                        placeholder="JNE, GoSend" />
+                      <input type="number" x-model="opt.price" class="w-20 p-2 border border-gray-200 rounded text-sm"
+                        placeholder="Harga" />
+                      <button @click="removeShippingOption(idx)" class="text-red-500 hover:text-red-700 px-2">
                         ✕
                       </button>
                     </div>
                   </template>
                 </div>
-                <button
-                  @click="addTemplate"
-                  class="w-full py-2 border border-dashed border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 text-sm"
-                >
-                  + Tambah Template
+                <button @click="addShippingOption" class="text-xs text-blue-600 font-bold hover:underline">
+                  + Tambah Opsi Ongkir
                 </button>
               </div>
             </div>
-
-            <!-- 2. Knowledge Base & Inventory -->
-            <div class="space-y-6">
-              <!-- Inventory Master -->
-              <div
-                class="glass p-6 rounded-2xl hover-card border border-white/20"
-              >
-                <div class="flex justify-between items-start mb-4">
-                  <div>
-                    <h2 class="text-lg font-bold text-gray-800">
-                      📦 Inventory Master
-                    </h2>
-                    <p class="text-sm text-gray-500">
-                      Pilih sumber data utama untuk stok & harga produk.
-                    </p>
-                  </div>
-                  <!-- Source Selector -->
-                  <div class="flex bg-gray-100 p-1 rounded-lg">
-                    <button
-                      @click="setInventorySource('excel')"
-                      :class="inventorySource === 'excel' ? 'bg-white shadow text-green-700' : 'text-gray-500 hover:text-gray-700'"
-                      class="px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2"
-                    >
-                      <span>📊</span> Excel File
-                    </button>
-                    <button
-                      @click="setInventorySource('sheet')"
-                      :class="inventorySource === 'sheet' ? 'bg-white shadow text-blue-700' : 'text-gray-500 hover:text-gray-700'"
-                      class="px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2"
-                    >
-                      <span>🌐</span> Google Sheet
-                    </button>
-                  </div>
-                </div>
-
-                <!-- EXCEL SECTION -->
-                <div x-show="inventorySource === 'excel'" x-transition>
-                  <div class="flex items-center gap-4">
-                    <div
-                      class="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3"
-                    >
-                      <span class="text-2xl">📊</span>
-                      <div class="overflow-hidden">
-                        <p class="text-xs font-bold text-gray-500 uppercase">
-                          Current File
-                        </p>
-                        <p
-                          class="text-sm font-medium text-gray-800 truncate"
-                          x-text="inventoryFile || 'Belum ada file'"
-                        ></p>
-                      </div>
-                    </div>
-                    <button
-                      @click="$refs.invInput.click()"
-                      class="bg-green-600 text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-green-700 transition whitespace-nowrap"
-                    >
-                      Upload Master
-                    </button>
-                    <input
-                      type="file"
-                      x-ref="invInput"
-                      @change="uploadInventory"
-                      accept=".xlsx, .xls"
-                      class="hidden"
-                    />
-                  </div>
-                </div>
-
-                <!-- GOOGLE SHEET SECTION -->
-                <div x-show="inventorySource === 'sheet'" x-transition>
-                  <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                    <label
-                      class="block text-xs font-bold text-blue-800 mb-2 uppercase"
-                      >Google Sheet Public CSV URL</label
-                    >
-                    <div class="flex gap-2">
-                      <input
-                        type="text"
-                        x-model="inventoryUrl"
-                        placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv"
-                        class="flex-1 p-2.5 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      <button
-                        @click="saveInventoryUrl"
-                        class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition whitespace-nowrap"
-                      >
-                        Simpan
-                      </button>
-                      <button
-                        @click="syncInventory"
-                        class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-orange-600 transition whitespace-nowrap flex items-center gap-2"
-                      >
-                        <span>🔄</span> Sync
-                      </button>
-                    </div>
-                    <p class="text-xs text-blue-600 mt-2">
-                      ℹ️ Caranya: Masukan Link data spreadsheet anda kesini >
-                      kemudian Save & Sync
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Knowledge Base -->
-              <div
-                class="glass p-6 rounded-2xl hover-card border border-white/20"
-              >
-                <div class="flex justify-between items-center mb-4">
-                  <div>
-                    <h2 class="text-lg font-bold text-gray-800">
-                      📚 Knowledge Base
-                    </h2>
-                    <p class="text-sm text-gray-500">
-                      File tambahan untuk melatih bot (SOP, FAQ, Info Toko).
-                    </p>
-                  </div>
-                  <button
-                    @click="$refs.kbInput.click()"
-                    class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-purple-700 transition"
-                  >
-                    + Tambah File
-                  </button>
-                  <input
-                    type="file"
-                    x-ref="kbInput"
-                    @change="uploadKnowledge"
-                    accept=".xlsx, .xls"
-                    class="hidden"
-                  />
-                </div>
-
-                <div class="space-y-2">
-                  <template x-for="file in knowledgeFiles" :key="file">
-                    <div
-                      class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg group"
-                    >
-                      <div class="flex items-center gap-3 overflow-hidden">
-                        <span class="text-xl">📄</span>
-                        <span
-                          class="text-sm font-medium text-gray-700 truncate"
-                          x-text="file"
-                        ></span>
-                      </div>
-                      <button
-                        @click="deleteKnowledge(file)"
-                        class="text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          class="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </template>
-                  <div
-                    x-show="knowledgeFiles.length === 0"
-                    class="text-center py-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg"
-                  >
-                    Belum ada file knowledge base
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- Invoice Settings -->
-            <div
-              class="glass p-6 rounded-2xl hover-card border border-white/20 lg:col-span-2"
-            >
-              <h2 class="text-lg font-bold text-gray-800 mb-4">
-                🧾 Custom Invoice
-              </h2>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Left Column -->
-                <div class="space-y-4">
-                  <div>
-                    <label
-                      class="block text-xs font-bold text-gray-700 mb-1 uppercase"
-                      >Nama Toko / Judul Invoice</label
-                    >
-                    <input
-                      type="text"
-                      x-model="invoiceTitle"
-                      class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      placeholder="CONTOH: TOKO MAJU JAYA"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      class="block text-xs font-bold text-gray-700 mb-1 uppercase"
-                      >Alamat & Kontak</label
-                    >
-                    <textarea
-                      x-model="invoiceAddress"
-                      rows="4"
-                      class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      placeholder="Jl. Contoh No. 123, Jakarta&#10;Telp: 0812-3456-7890"
-                    ></textarea>
-                  </div>
-
-                  <!-- Shipping Options -->
-                  <div>
-                    <label
-                      class="block text-xs font-bold text-gray-700 mb-1 uppercase"
-                      >Opsi Ongkir</label
-                    >
-                    <div class="space-y-2 mb-2">
-                      <template
-                        x-for="(opt, idx) in shippingOptions"
-                        :key="idx"
-                      >
-                        <div class="flex gap-2">
-                          <input
-                            type="text"
-                            x-model="opt.label"
-                            class="flex-1 p-2 border border-gray-200 rounded text-sm"
-                            placeholder="Nama (JNE, GoSend)"
-                          />
-                          <input
-                            type="number"
-                            x-model="opt.price"
-                            class="w-24 p-2 border border-gray-200 rounded text-sm"
-                            placeholder="Harga"
-                          />
-                          <button
-                            @click="removeShippingOption(idx)"
-                            class="text-red-500 hover:text-red-700 px-2"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      </template>
-                    </div>
-                    <button
-                      @click="addShippingOption"
-                      class="text-xs text-blue-600 font-bold hover:underline"
-                    >
-                      + Tambah Opsi Ongkir
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Right Column -->
-                <div class="space-y-4">
-                  <div>
-                    <label
-                      class="block text-xs font-bold text-gray-700 mb-1 uppercase"
-                      >Logo Toko (Optional)</label
-                    >
-                    <div class="flex items-center gap-4">
-                      <div
-                        class="w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center overflow-hidden relative"
-                      >
-                        <!-- Priority: Preview > Saved Logo > Placeholder -->
-                        <template x-if="invoiceLogoPreview">
-                          <img
-                            :src="invoiceLogoPreview"
-                            class="w-full h-full object-cover"
-                          />
-                        </template>
-                        <template x-if="!invoiceLogoPreview && invoiceLogo">
-                          <img
-                            :src="'/uploads/' + invoiceLogo"
-                            class="w-full h-full object-cover"
-                          />
-                        </template>
-                        <template x-if="!invoiceLogoPreview && !invoiceLogo">
-                          <span class="text-2xl text-gray-300">🖼️</span>
-                        </template>
-                      </div>
-                      <div class="flex-1">
-                        <input
-                          type="file"
-                          x-ref="logoInput"
-                          @change="handleLogoUpload"
-                          accept="image/*"
-                          class="hidden"
-                        />
-                        <button
-                          @click="$refs.logoInput.click()"
-                          class="text-sm text-blue-600 font-bold hover:underline"
-                        >
-                          Upload Logo Baru
-                        </button>
-                        <p class="text-xs text-gray-400 mt-1">
-                          Format: PNG/JPG. Max 2MB.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <label
-                      class="block text-xs font-bold text-gray-700 mb-1 uppercase"
-                      >Footer Note</label
-                    >
-                    <textarea
-                      x-model="invoiceFooter"
-                      rows="2"
-                      class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      placeholder="Terima kasih sudah berbelanja!"
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
-              <div class="mt-6 flex justify-end">
-                <button
-                  @click="saveInvoiceSettings"
-                  class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition shadow-lg shadow-green-200"
-                >
-                  Simpan Pengaturan Invoice
-                </button>
-              </div>
+            <div class="mt-4 flex justify-end">
+              <button @click="saveInvoiceSettings"
+                class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition shadow-md">
+                Simpan Invoice
+              </button>
             </div>
           </div>
         </div>
-        <!-- Live Schedule Page -->
-        <div
-          x-show="currentPage === 'schedule'"
-          class="flex-1 p-8 overflow-y-auto"
-        >
-          <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Live Schedule</h1>
-            <button
-              @click="openScheduleModal()"
-              class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition flex items-center gap-2"
-            >
-              <span>➕</span> Tambah Jadwal
-            </button>
+      </div>
+      <!-- Live Schedule Page -->
+      <div x-show="currentPage === 'schedule'" class="flex-1 p-8 overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-2xl font-bold text-gray-800">Live Schedule</h1>
+          <button @click="openScheduleModal()"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition flex items-center gap-2">
+            <span>➕</span> Tambah Jadwal
+          </button>
+        </div>
+
+        <!-- Calendar Component -->
+        <div class="glass rounded-2xl hover-card p-6 mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold text-gray-800" x-text="`${monthNames[calendarMonth]} ${calendarYear}`"></h2>
+            <div class="flex gap-2">
+              <button @click="changeMonth(-1)" class="p-2 hover:bg-gray-100 rounded-lg text-gray-600">
+                ◀
+              </button>
+              <button @click="changeMonth(1)" class="p-2 hover:bg-gray-100 rounded-lg text-gray-600">
+                ▶
+              </button>
+            </div>
           </div>
 
-          <!-- Calendar Component -->
-          <div
-            class="glass rounded-2xl hover-card p-6 mb-6"
-          >
-            <div class="flex justify-between items-center mb-4">
-              <h2
-                class="text-lg font-bold text-gray-800"
-                x-text="`${monthNames[calendarMonth]} ${calendarYear}`"
-              ></h2>
-              <div class="flex gap-2">
-                <button
-                  @click="changeMonth(-1)"
-                  class="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
-                >
-                  ◀
-                </button>
-                <button
-                  @click="changeMonth(1)"
-                  class="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
-                >
-                  ▶
-                </button>
-              </div>
-            </div>
+          <div class="grid grid-cols-7 gap-2 text-center mb-2">
+            <template x-for="day in ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']">
+              <div class="text-xs font-bold text-gray-400 uppercase py-2" x-text="day"></div>
+            </template>
+          </div>
 
-            <div class="grid grid-cols-7 gap-2 text-center mb-2">
-              <template
-                x-for="day in ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']"
-              >
-                <div
-                  class="text-xs font-bold text-gray-400 uppercase py-2"
-                  x-text="day"
-                ></div>
-              </template>
-            </div>
-
-            <div class="grid grid-cols-7 gap-2">
-              <template x-for="(day, index) in calendarDays" :key="index">
-                <div
-                  @click="selectDate(day)"
-                  class="h-14 rounded-lg border border-transparent flex flex-col items-center justify-center relative transition cursor-pointer"
-                  :class="{
+          <div class="grid grid-cols-7 gap-2">
+            <template x-for="(day, index) in calendarDays" :key="index">
+              <div @click="selectDate(day)"
+                class="h-14 rounded-lg border border-transparent flex flex-col items-center justify-center relative transition cursor-pointer"
+                :class="{
                        'bg-blue-600 text-white shadow-md': selectedDate === day.fullDate,
                        'bg-blue-50 text-blue-700 font-bold border-blue-200': isToday(day) && selectedDate !== day.fullDate,
                        'hover:bg-gray-100 text-gray-700': !isToday(day) && selectedDate !== day.fullDate && day.date,
                        'invisible': !day.date
-                     }"
-                >
-                  <span x-text="day.date"></span>
-                  <div
-                    x-show="day.hasSchedule"
-                    class="w-1.5 h-1.5 rounded-full mt-1"
-                    :class="selectedDate === day.fullDate ? 'bg-white' : 'bg-orange-500'"
-                  ></div>
-                </div>
-              </template>
-            </div>
-          </div>
-
-          <div
-            class="flex justify-between items-center mb-4"
-            x-show="selectedDate"
-          >
-            <h3 class="font-bold text-gray-700">
-              Jadwal Tanggal:
-              <span x-text="formatDateTime(selectedDate).split(',')[1]"></span>
-            </h3>
-            <button
-              @click="selectedDate = null"
-              class="text-sm text-blue-600 hover:underline"
-            >
-              Tampilkan Semua
-            </button>
-          </div>
-
-          <div
-            class="glass rounded-2xl hover-card overflow-hidden"
-          >
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm text-left">
-                <thead
-                  class="bg-gray-50 text-gray-600 font-bold border-b border-gray-200"
-                >
-                  <tr>
-                    <th class="px-6 py-4">Waktu</th>
-                    <th class="px-6 py-4">Judul & Deskripsi</th>
-                    <th class="px-6 py-4">Customer</th>
-                    <th class="px-6 py-4 text-right">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                  <template x-for="sch in filteredSchedules" :key="sch.id">
-                    <tr class="hover:bg-gray-50 transition">
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <div
-                          class="font-bold text-gray-800"
-                          x-text="formatDateTime(sch.date)"
-                        ></div>
-                      </td>
-                      <td class="px-6 py-4">
-                        <div
-                          class="font-bold text-gray-800"
-                          x-text="sch.title"
-                        ></div>
-                        <div
-                          class="text-xs text-gray-500 truncate max-w-xs"
-                          x-text="sch.description"
-                        ></div>
-                      </td>
-                      <td class="px-6 py-4">
-                        <div
-                          class="text-gray-800 font-medium"
-                          x-text="formatCustomerDisplay(sch.customerJid)"
-                        ></div>
-                      </td>
-                      <td class="px-6 py-4 text-right">
-                        <button
-                          @click="openScheduleModal(sch)"
-                          class="text-blue-600 hover:text-blue-800 font-bold mr-3"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          @click="deleteSchedule(sch.id)"
-                          class="text-red-600 hover:text-red-800 font-bold"
-                        >
-                          Hapus
-                        </button>
-                      </td>
-                    </tr>
-                  </template>
-                  <tr x-show="schedules.length === 0">
-                    <td
-                      colspan="4"
-                      class="px-6 py-12 text-center text-gray-400"
-                    >
-                      <p class="text-lg">Belum ada jadwal</p>
-                      <p class="text-sm">Buat jadwal baru untuk memulai</p>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                     }">
+                <span x-text="day.date"></span>
+                <div x-show="day.hasSchedule" class="w-1.5 h-1.5 rounded-full mt-1"
+                  :class="selectedDate === day.fullDate ? 'bg-white' : 'bg-orange-500'"></div>
+              </div>
+            </template>
           </div>
         </div>
-      </main>
-    </div>
 
-    <div
-      x-show="showInvoiceModal"
-      x-transition
-      class="fixed inset-0 z-[60] bg-black bg-opacity-50 flex items-center justify-center p-4"
-      x-cloak
-    >
-      <div
-        class="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]"
-      >
-        <button
-          @click="showInvoiceModal = false"
-          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        >
-          ✕
-        </button>
-        <h2 class="text-lg font-bold text-gray-800 mb-1">Invoice Manager</h2>
-
-        <!-- Tabs -->
-        <div class="flex border-b border-gray-200 mb-4">
-          <button
-            @click="invoiceTab = 'new'"
-            :class="{'border-b-2 border-blue-500 text-blue-600': invoiceTab === 'new'}"
-            class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-500 transition"
-          >
-            Buat Baru
-          </button>
-          <button
-            @click="invoiceTab = 'unpaid'; fetchUnpaidInvoices()"
-            :class="{'border-b-2 border-blue-500 text-blue-600': invoiceTab === 'unpaid'}"
-            class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-500 transition"
-          >
-            Tagihan Belum Lunas
+        <div class="flex justify-between items-center mb-4" x-show="selectedDate">
+          <h3 class="font-bold text-gray-700">
+            Jadwal Tanggal:
+            <span x-text="formatDateTime(selectedDate).split(',')[1]"></span>
+          </h3>
+          <button @click="selectedDate = null" class="text-sm text-blue-600 hover:underline">
+            Tampilkan Semua
           </button>
         </div>
 
-        <!-- Tab: New Invoice -->
-        <div
-          x-show="invoiceTab === 'new'"
-          class="flex-1 overflow-y-auto pr-2 flex flex-col"
-        >
-          <p class="text-xs text-gray-500 mb-4">
-            Pilih barang, tentukan jumlah, dan kirim sebagai PDF.
-          </p>
-          <div class="flex gap-2 mb-4">
-            <select
-              x-model="selectedProductIndex"
-              class="flex-1 border border-gray-300 rounded p-2 text-sm outline-none focus:border-blue-500"
-            >
-              <option value="">-- Pilih Produk --</option>
-              <template x-for="(prod, index) in products" :key="index">
-                <option :value="index" x-text="getDisplayName(prod)"></option>
-              </template>
-            </select>
-            <input
-              type="number"
-              x-model="qtyInput"
-              min="1"
-              value="1"
-              class="w-16 border border-gray-300 rounded p-2 text-sm text-center"
-              placeholder="Qty"
-            />
-            <button
-              @click="addToCart"
-              class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-blue-700"
-            >
-              Tambah
-            </button>
-          </div>
-          <div class="border border-gray-200 rounded-lg overflow-hidden mb-4">
+        <div class="glass rounded-2xl hover-card overflow-hidden">
+          <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
-              <thead
-                class="bg-gray-50 text-gray-600 font-bold border-b border-gray-200"
-              >
+              <thead class="bg-gray-50 text-gray-600 font-bold border-b border-gray-200">
                 <tr>
-                  <th class="p-3">Barang</th>
-                  <th class="p-3 text-center">Qty</th>
-                  <th class="p-3 text-right">Total</th>
-                  <th class="p-3 w-10"></th>
+                  <th class="px-6 py-4">Waktu</th>
+                  <th class="px-6 py-4">Judul & Deskripsi</th>
+                  <th class="px-6 py-4">Customer</th>
+                  <th class="px-6 py-4 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
-                <tr x-show="cart.length === 0">
-                  <td colspan="4" class="p-4 text-center text-gray-400 italic">
-                    Belum ada barang dipilih.
-                  </td>
-                </tr>
-                <template x-for="(item, idx) in cart" :key="idx">
-                  <tr>
-                    <td class="p-3" x-text="item.name"></td>
-                    <td class="p-3 text-center" x-text="item.qty"></td>
-                    <td
-                      class="p-3 text-right font-mono"
-                      x-text="formatRupiah(item.subtotal)"
-                    ></td>
-                    <td class="p-3 text-center">
-                      <button
-                        @click="removeFromCart(idx)"
-                        class="text-red-500 hover:text-red-700"
-                      >
-                        ✕
+                <template x-for="sch in filteredSchedules" :key="sch.id">
+                  <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="font-bold text-gray-800" x-text="formatDateTime(sch.date)"></div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="font-bold text-gray-800" x-text="sch.title"></div>
+                      <div class="text-xs text-gray-500 truncate max-w-xs" x-text="sch.description"></div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="text-gray-800 font-medium" x-text="formatCustomerDisplay(sch.customerJid)"></div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                      <button @click="openScheduleModal(sch)" class="text-blue-600 hover:text-blue-800 font-bold mr-3">
+                        Edit
+                      </button>
+                      <button @click="deleteSchedule(sch.id)" class="text-red-600 hover:text-red-800 font-bold">
+                        Hapus
                       </button>
                     </td>
                   </tr>
                 </template>
-              </tbody>
-              <tfoot class="bg-gray-50 font-bold text-gray-800">
-                <tr>
-                  <td colspan="2" class="p-3 text-right">Grand Total:</td>
-                  <td
-                    class="p-3 text-right text-blue-600"
-                    x-text="formatRupiah(cartTotal)"
-                  ></td>
-                  <td></td>
+                <tr x-show="schedules.length === 0">
+                  <td colspan="4" class="px-6 py-12 text-center text-gray-400">
+                    <p class="text-lg">Belum ada jadwal</p>
+                    <p class="text-sm">Buat jadwal baru untuk memulai</p>
+                  </td>
                 </tr>
-              </tfoot>
+              </tbody>
             </table>
           </div>
-          <div class="flex gap-4 items-end mt-4">
-            <div class="flex-1">
-              <label class="text-xs font-bold text-gray-600"
-                >No. Referensi / Catatan</label
-              ><input
-                type="text"
-                x-model="invoiceNote"
-                class="w-full border border-gray-300 rounded p-2 text-sm mt-1"
-                placeholder="Contoh: INV-001"
-              />
-            </div>
-            <div class="w-1/3">
-              <label class="text-xs font-bold text-gray-600"
-                >Ongkos Kirim</label
-              >
-              <select
-                x-model="selectedShippingIndex"
-                class="w-full border border-gray-300 rounded p-2 text-sm mt-1"
-              >
-                <option value="">- Tanpa Ongkir -</option>
-                <template x-for="(opt, idx) in shippingOptions" :key="idx">
-                  <option
-                    :value="idx"
-                    x-text="opt.label + ' - ' + formatRupiah(opt.price)"
-                  ></option>
-                </template>
-              </select>
-            </div>
-            <div
-              class="flex items-center h-10 bg-green-50 px-4 rounded border border-green-200 cursor-pointer hover:bg-green-100 transition"
-            >
-              <label class="flex items-center cursor-pointer gap-2 select-none"
-                ><input
-                  type="checkbox"
-                  x-model="isPaid"
-                  class="w-5 h-5 text-green-600 rounded focus:ring-green-500 accent-green-600"
-                /><span class="text-sm font-bold text-green-800"
-                  >✅ Tandai LUNAS</span
-                ></label
-              >
-            </div>
-          </div>
-        </div>
-
-        <!-- Tab: Unpaid Invoices -->
-        <div
-          x-show="invoiceTab === 'unpaid'"
-          class="flex-1 overflow-y-auto pr-2"
-        >
-          <template x-for="inv in unpaidInvoices" :key="inv.id">
-            <div
-              class="border border-gray-200 p-3 rounded-lg mb-2 hover:bg-gray-50 transition flex justify-between items-center"
-            >
-              <div>
-                <div
-                  class="font-bold text-gray-800"
-                  x-text="inv.invoiceNote || inv.id"
-                ></div>
-                <div
-                  class="text-xs text-gray-500"
-                  x-text="inv.customerName + ' • ' + new Date(inv.date).toLocaleDateString('id-ID')"
-                ></div>
-                <div
-                  class="text-sm font-mono text-blue-600 font-bold mt-1"
-                  x-text="formatRupiah(inv.total)"
-                ></div>
-              </div>
-              <button
-                @click="markAsPaid(inv.id)"
-                class="bg-green-100 text-green-700 border border-green-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-200 transition flex items-center gap-1"
-              >
-                <span>✅ LUNAS</span>
-              </button>
-              <button
-                @click="sendInvoiceReminder(inv.id)"
-                class="bg-yellow-100 text-yellow-700 border border-yellow-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-200 transition flex items-center gap-1 ml-2"
-                title="Kirim Reminder"
-              >
-                <span>🔔 Ingatkan</span>
-              </button>
-            </div>
-          </template>
-          <div
-            x-show="unpaidInvoices.length === 0"
-            class="text-center text-gray-400 py-8 italic"
-          >
-            Tidak ada tagihan belum lunas.
-          </div>
-        </div>
-
-        <div
-          x-show="invoiceTab === 'new'"
-          class="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100"
-        >
-          <button
-            @click="showInvoiceModal = false"
-            class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded-lg"
-          >
-            Batal
-          </button>
-          <button
-            @click="sendInvoice"
-            :disabled="cart.length === 0"
-            class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
-            id="btn-send-invoice"
-          >
-            Kirim Invoice PDF 🚀
-          </button>
         </div>
       </div>
-    </div>
+    </main>
+  </div>
 
-    <div
-      x-show="showCRMModal"
-      x-transition
-      class="fixed inset-0 z-[65] bg-black bg-opacity-50 flex items-center justify-center p-4"
-      x-cloak
-    >
-      <div class="bg-white rounded-xl w-full max-w-sm p-6 shadow-2xl relative">
-        <button
-          @click="showCRMModal = false"
-          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        >
-          ✕
+  <div x-show="showInvoiceModal" x-transition
+    class="fixed inset-0 z-[60] bg-black bg-opacity-50 flex items-center justify-center p-4" x-cloak>
+    <div class="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
+      <button @click="showInvoiceModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+        ✕
+      </button>
+      <h2 class="text-lg font-bold text-gray-800 mb-1">Invoice Manager</h2>
+
+      <!-- Tabs -->
+      <div class="flex border-b border-gray-200 mb-4">
+        <button @click="invoiceTab = 'new'" :class="{'border-b-2 border-blue-500 text-blue-600': invoiceTab === 'new'}"
+          class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-500 transition">
+          Buat Baru
         </button>
-        <h2 class="text-lg font-bold text-gray-800 mb-4">Edit Info Customer</h2>
-        <div class="mb-4">
-          <label class="block text-xs font-bold text-gray-600 mb-1"
-            >Label</label
-          >
-          <select
-            x-model="tempLabel"
-            class="w-full border border-gray-300 rounded p-2 text-sm"
-          >
-            <option value="General">General</option>
-            <option value="Lead">Lead (Calon)</option>
-            <option value="Hot">Hot Prospect 🔥</option>
-            <option value="Pending">Pending Payment ⏳</option>
-            <option value="Lunas">Lunas ✅</option>
-            <option value="VIP">VIP 🌟</option>
-            <option value="Complain">Complain ⚠️</option>
-          </select>
-        </div>
-        <div class="mb-6">
-          <label class="block text-xs font-bold text-gray-600 mb-1"
-            >Catatan</label
-          >
-          <textarea
-            x-model="tempNote"
-            rows="3"
-            class="w-full border border-gray-300 rounded p-2 text-sm resize-none"
-            placeholder="Catatan khusus customer ini..."
-          ></textarea>
-        </div>
-        <button
-          @click="saveCRM"
-          class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700"
-        >
-          Simpan Perubahan
+        <button @click="invoiceTab = 'unpaid'; fetchUnpaidInvoices()"
+          :class="{'border-b-2 border-blue-500 text-blue-600': invoiceTab === 'unpaid'}"
+          class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-500 transition">
+          Tagihan Belum Lunas
         </button>
       </div>
-    </div>
 
-    <div
-      x-show="showBroadcastModal"
-      x-transition
-      class="fixed inset-0 z-[65] bg-black bg-opacity-50 flex items-center justify-center p-4"
-      x-cloak
-    >
-      <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl relative">
-        <button
-          @click="showBroadcastModal = false"
-          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        >
-          ✕
-        </button>
-        <h2 class="text-lg font-bold text-gray-800 mb-1">Broadcast Pesan 📢</h2>
+      <!-- Tab: New Invoice -->
+      <div x-show="invoiceTab === 'new'" class="flex-1 overflow-y-auto pr-2 flex flex-col">
         <p class="text-xs text-gray-500 mb-4">
-          Kirim pesan massal ke kontak berdasarkan label.
+          Pilih barang, tentukan jumlah, dan kirim sebagai PDF.
         </p>
-        <div class="mb-4">
-          <label class="block text-xs font-bold text-gray-600 mb-1"
-            >Target Penerima</label
-          >
-          <select
-            x-model="broadcastTarget"
-            class="w-full border border-gray-300 rounded p-2 text-sm"
-          >
-            <option value="all">Semua Kontak (Di CRM)</option>
-            <option value="manual">Input Manual (Nomor HP)</option>
-            <option value="Lead">Label: Lead</option>
-            <option value="Hot">Label: Hot Prospect</option>
-            <option value="Pending">Label: Pending Payment</option>
-            <option value="Lunas">Label: Lunas</option>
-            <option value="VIP">Label: VIP</option>
+        <div class="flex gap-2 mb-4">
+          <select x-model="selectedProductIndex"
+            class="flex-1 border border-gray-300 rounded p-2 text-sm outline-none focus:border-blue-500">
+            <option value="">-- Pilih Produk --</option>
+            <template x-for="(prod, index) in products" :key="index">
+              <option :value="index" x-text="getDisplayName(prod)"></option>
+            </template>
           </select>
-        </div>
-        <div class="mb-4" x-show="broadcastTarget === 'manual'">
-          <label class="block text-xs font-bold text-gray-600 mb-1"
-            >Daftar Nomor (Pisahkan dengan Enter atau Koma)</label
-          >
-          <textarea
-            x-model="manualNumbers"
-            rows="3"
-            class="w-full border border-gray-300 rounded p-2 text-sm"
-            placeholder="081234567890&#10;6281234567890"
-          ></textarea>
-        </div>
-        <div class="mb-4">
-          <label class="block text-xs font-bold text-gray-600 mb-1"
-            >Isi Pesan</label
-          >
-          <textarea
-            x-model="broadcastMsg"
-            rows="5"
-            class="w-full border border-gray-300 rounded p-2 text-sm"
-            placeholder="Tulis pesan promo/info disini..."
-          ></textarea>
-        </div>
-        <button
-          @click="sendBroadcast"
-          :disabled="!broadcastMsg"
-          class="w-full bg-orange-600 text-white font-bold py-2 rounded hover:bg-orange-700 disabled:opacity-50"
-        >
-          Kirim Broadcast 🚀
-        </button>
-      </div>
-    </div>
-
-    <!-- Schedule Modal -->
-    <div
-      x-show="showScheduleModal"
-      x-transition
-      class="fixed inset-0 z-[70] bg-black bg-opacity-50 flex items-center justify-center p-4"
-      x-cloak
-    >
-      <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl relative">
-        <button
-          @click="showScheduleModal = false"
-          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        >
-          ✕
-        </button>
-        <h2
-          class="text-lg font-bold text-gray-800 mb-4"
-          x-text="scheduleForm.id ? 'Edit Jadwal' : 'Buat Jadwal Baru'"
-        ></h2>
-
-        <div class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1"
-              >Judul</label
-            >
-            <input
-              type="text"
-              x-model="scheduleForm.title"
-              class="w-full border border-gray-300 rounded p-2 text-sm"
-              placeholder="Contoh: Follow Up Customer"
-            />
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1"
-                >Tanggal</label
-              >
-              <input
-                type="date"
-                x-model="scheduleForm.date"
-                class="w-full border border-gray-300 rounded p-2 text-sm"
-              />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1"
-                >Waktu</label
-              >
-              <input
-                type="time"
-                x-model="scheduleForm.time"
-                class="w-full border border-gray-300 rounded p-2 text-sm"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1"
-              >Deskripsi</label
-            >
-            <textarea
-              x-model="scheduleForm.description"
-              rows="3"
-              class="w-full border border-gray-300 rounded p-2 text-sm resize-none"
-              placeholder="Detail kegiatan..."
-            ></textarea>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1"
-              >Customer (Opsional)</label
-            >
-            <input
-              type="text"
-              x-model="scheduleForm.customerDisplay"
-              class="w-full border border-gray-300 rounded p-2 text-sm bg-gray-50"
-              placeholder="Nomor HP Customer"
-              readonly
-            />
-            <p class="text-[10px] text-gray-400 mt-1">
-              Otomatis terisi jika membuka dari chat.
-            </p>
-          </div>
-
-          <button
-            @click="saveSchedule"
-            class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition"
-          >
-            Simpan Jadwal
+          <input type="number" x-model="qtyInput" min="1" value="1"
+            class="w-16 border border-gray-300 rounded p-2 text-sm text-center" placeholder="Qty" />
+          <button @click="addToCart"
+            class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-blue-700">
+            Tambah
           </button>
         </div>
+        <div class="border border-gray-200 rounded-lg overflow-hidden mb-4">
+          <table class="w-full text-sm text-left">
+            <thead class="bg-gray-50 text-gray-600 font-bold border-b border-gray-200">
+              <tr>
+                <th class="p-3">Barang</th>
+                <th class="p-3 text-center">Qty</th>
+                <th class="p-3 text-right">Total</th>
+                <th class="p-3 w-10"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr x-show="cart.length === 0">
+                <td colspan="4" class="p-4 text-center text-gray-400 italic">
+                  Belum ada barang dipilih.
+                </td>
+              </tr>
+              <template x-for="(item, idx) in cart" :key="idx">
+                <tr>
+                  <td class="p-3" x-text="item.name"></td>
+                  <td class="p-3 text-center" x-text="item.qty"></td>
+                  <td class="p-3 text-right font-mono" x-text="formatRupiah(item.subtotal)"></td>
+                  <td class="p-3 text-center">
+                    <button @click="removeFromCart(idx)" class="text-red-500 hover:text-red-700">
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+            <tfoot class="bg-gray-50 font-bold text-gray-800">
+              <tr>
+                <td colspan="2" class="p-3 text-right">Grand Total:</td>
+                <td class="p-3 text-right text-blue-600" x-text="formatRupiah(cartTotal)"></td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="flex gap-4 items-end mt-4">
+          <div class="flex-1">
+            <label class="text-xs font-bold text-gray-600">No. Referensi / Catatan</label><input type="text"
+              x-model="invoiceNote" class="w-full border border-gray-300 rounded p-2 text-sm mt-1"
+              placeholder="Contoh: INV-001" />
+          </div>
+          <div class="w-1/3">
+            <label class="text-xs font-bold text-gray-600">Ongkos Kirim</label>
+            <select x-model="selectedShippingIndex" class="w-full border border-gray-300 rounded p-2 text-sm mt-1">
+              <option value="">- Tanpa Ongkir -</option>
+              <template x-for="(opt, idx) in shippingOptions" :key="idx">
+                <option :value="idx" x-text="opt.label + ' - ' + formatRupiah(opt.price)"></option>
+              </template>
+            </select>
+          </div>
+          <div
+            class="flex items-center h-10 bg-green-50 px-4 rounded border border-green-200 cursor-pointer hover:bg-green-100 transition">
+            <label class="flex items-center cursor-pointer gap-2 select-none"><input type="checkbox" x-model="isPaid"
+                class="w-5 h-5 text-green-600 rounded focus:ring-green-500 accent-green-600" /><span
+                class="text-sm font-bold text-green-800">✅ Tandai LUNAS</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Unpaid Invoices -->
+      <div x-show="invoiceTab === 'unpaid'" class="flex-1 overflow-y-auto pr-2">
+        <template x-for="inv in unpaidInvoices" :key="inv.id">
+          <div
+            class="border border-gray-200 p-3 rounded-lg mb-2 hover:bg-gray-50 transition flex justify-between items-center">
+            <div>
+              <div class="font-bold text-gray-800" x-text="inv.invoiceNote || inv.id"></div>
+              <div class="text-xs text-gray-500"
+                x-text="inv.customerName + ' • ' + new Date(inv.date).toLocaleDateString('id-ID')"></div>
+              <div class="text-sm font-mono text-blue-600 font-bold mt-1" x-text="formatRupiah(inv.total)"></div>
+            </div>
+            <button @click="markAsPaid(inv.id)"
+              class="bg-green-100 text-green-700 border border-green-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-200 transition flex items-center gap-1">
+              <span>✅ LUNAS</span>
+            </button>
+            <button @click="sendInvoiceReminder(inv.id)"
+              class="bg-yellow-100 text-yellow-700 border border-yellow-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-200 transition flex items-center gap-1 ml-2"
+              title="Kirim Reminder">
+              <span>🔔 Ingatkan</span>
+            </button>
+          </div>
+        </template>
+        <div x-show="unpaidInvoices.length === 0" class="text-center text-gray-400 py-8 italic">
+          Tidak ada tagihan belum lunas.
+        </div>
+      </div>
+
+      <div x-show="invoiceTab === 'new'" class="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
+        <button @click="showInvoiceModal = false" class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded-lg">
+          Batal
+        </button>
+        <button @click="sendInvoice" :disabled="cart.length === 0"
+          class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
+          id="btn-send-invoice">
+          Kirim Invoice PDF 🚀
+        </button>
       </div>
     </div>
+  </div>
 
-    <script src="/js/script-v2.js"></script>
-  </body>
+  <div x-show="showCRMModal" x-transition
+    class="fixed inset-0 z-[65] bg-black bg-opacity-50 flex items-center justify-center p-4" x-cloak>
+    <div class="bg-white rounded-xl w-full max-w-sm p-6 shadow-2xl relative">
+      <button @click="showCRMModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+        ✕
+      </button>
+      <h2 class="text-lg font-bold text-gray-800 mb-4">Edit Info Customer</h2>
+      <div class="mb-4">
+        <label class="block text-xs font-bold text-gray-600 mb-1">Label</label>
+        <select x-model="tempLabel" class="w-full border border-gray-300 rounded p-2 text-sm">
+          <option value="General">General</option>
+          <option value="Lead">Lead (Calon)</option>
+          <option value="Hot">Hot Prospect 🔥</option>
+          <option value="Pending">Pending Payment ⏳</option>
+          <option value="Lunas">Lunas ✅</option>
+          <option value="VIP">VIP 🌟</option>
+          <option value="Complain">Complain ⚠️</option>
+        </select>
+      </div>
+      <div class="mb-6">
+        <label class="block text-xs font-bold text-gray-600 mb-1">Catatan</label>
+        <textarea x-model="tempNote" rows="3" class="w-full border border-gray-300 rounded p-2 text-sm resize-none"
+          placeholder="Catatan khusus customer ini..."></textarea>
+      </div>
+      <button @click="saveCRM" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700">
+        Simpan Perubahan
+      </button>
+    </div>
+  </div>
+
+  <div x-show="showBroadcastModal" x-transition
+    class="fixed inset-0 z-[65] bg-black bg-opacity-50 flex items-center justify-center p-4" x-cloak>
+    <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl relative">
+      <button @click="showBroadcastModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+        ✕
+      </button>
+      <h2 class="text-lg font-bold text-gray-800 mb-1">Broadcast Pesan 📢</h2>
+      <p class="text-xs text-gray-500 mb-4">
+        Kirim pesan massal ke kontak berdasarkan label.
+      </p>
+      <div class="mb-4">
+        <label class="block text-xs font-bold text-gray-600 mb-1">Target Penerima</label>
+        <select x-model="broadcastTarget" class="w-full border border-gray-300 rounded p-2 text-sm">
+          <option value="all">Semua Kontak (Di CRM)</option>
+          <option value="manual">Input Manual (Nomor HP)</option>
+          <option value="Lead">Label: Lead</option>
+          <option value="Hot">Label: Hot Prospect</option>
+          <option value="Pending">Label: Pending Payment</option>
+          <option value="Lunas">Label: Lunas</option>
+          <option value="VIP">Label: VIP</option>
+        </select>
+      </div>
+      <div class="mb-4" x-show="broadcastTarget === 'manual'">
+        <label class="block text-xs font-bold text-gray-600 mb-1">Daftar Nomor (Pisahkan dengan Enter atau Koma)</label>
+        <textarea x-model="manualNumbers" rows="3" class="w-full border border-gray-300 rounded p-2 text-sm"
+          placeholder="081234567890&#10;6281234567890"></textarea>
+      </div>
+      <div class="mb-4">
+        <label class="block text-xs font-bold text-gray-600 mb-1">Isi Pesan</label>
+        <textarea x-model="broadcastMsg" rows="5" class="w-full border border-gray-300 rounded p-2 text-sm"
+          placeholder="Tulis pesan promo/info disini..."></textarea>
+      </div>
+      <button @click="sendBroadcast" :disabled="!broadcastMsg"
+        class="w-full bg-orange-600 text-white font-bold py-2 rounded hover:bg-orange-700 disabled:opacity-50">
+        Kirim Broadcast 🚀
+      </button>
+    </div>
+  </div>
+
+  <!-- Schedule Modal -->
+  <div x-show="showScheduleModal" x-transition
+    class="fixed inset-0 z-[70] bg-black bg-opacity-50 flex items-center justify-center p-4" x-cloak>
+    <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl relative">
+      <button @click="showScheduleModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+        ✕
+      </button>
+      <h2 class="text-lg font-bold text-gray-800 mb-4" x-text="scheduleForm.id ? 'Edit Jadwal' : 'Buat Jadwal Baru'">
+      </h2>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1">Judul</label>
+          <input type="text" x-model="scheduleForm.title" class="w-full border border-gray-300 rounded p-2 text-sm"
+            placeholder="Contoh: Follow Up Customer" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">Tanggal</label>
+            <input type="date" x-model="scheduleForm.date" class="w-full border border-gray-300 rounded p-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">Waktu</label>
+            <input type="time" x-model="scheduleForm.time" class="w-full border border-gray-300 rounded p-2 text-sm" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1">Deskripsi</label>
+          <textarea x-model="scheduleForm.description" rows="3"
+            class="w-full border border-gray-300 rounded p-2 text-sm resize-none"
+            placeholder="Detail kegiatan..."></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1">Customer (Opsional)</label>
+          <input type="text" x-model="scheduleForm.customerDisplay"
+            class="w-full border border-gray-300 rounded p-2 text-sm bg-gray-50" placeholder="Nomor HP Customer"
+            readonly />
+          <p class="text-[10px] text-gray-400 mt-1">
+            Otomatis terisi jika membuka dari chat.
+          </p>
+        </div>
+
+        <button @click="saveSchedule"
+          class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition">
+          Simpan Jadwal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/script-v2.js"></script>
+</body>
+
 </html>

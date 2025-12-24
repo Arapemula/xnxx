@@ -35,16 +35,24 @@ router.post("/register", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Free trial 7 hari untuk user baru
+    const trialExpiry = new Date();
+    trialExpiry.setDate(trialExpiry.getDate() + 7);
+    
     await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         waSessionId,
+        role: "USER",
+        expiryDate: trialExpiry,
+        hideCountdown: false,
       },
     });
     res.json({
       status: "success",
-      message: "Registrasi berhasil! Silakan login.",
+      message: "Registrasi berhasil! Anda mendapat free trial 7 hari.",
     });
   } catch (e) {
     console.error("Register Error:", e);
@@ -62,10 +70,20 @@ router.post("/login", async (req, res) => {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(401).json({ error: "Password salah." });
 
-    // Login sukses
+    // Cek apakah subscription sudah expired (untuk role USER)
+    let isExpired = false;
+    if (user.role === "USER" && user.expiryDate) {
+      isExpired = new Date() > new Date(user.expiryDate);
+    }
+
+    // Login sukses - return role dan subscription info
     res.json({
       status: "success",
       sessionId: user.waSessionId,
+      role: user.role,
+      expiryDate: user.expiryDate,
+      hideCountdown: user.hideCountdown,
+      isExpired: isExpired,
       message: "Login berhasil",
     });
   } catch (e) {

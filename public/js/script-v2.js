@@ -119,6 +119,14 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
     invoiceLogoFile: null,
     invoiceLogoPreview: null,
 
+    // SUBSCRIPTION STATE
+    userRole: localStorage.getItem("user_role") || "USER",
+    userExpiry: localStorage.getItem("user_expiry") || null,
+    hideCountdown: localStorage.getItem("hide_countdown") === "true",
+    remainingDays: 0,
+    subscriptionStatus: "ACTIVE",
+    isSubscriptionExpired: false, // For blocking modal
+
     init() {
       this.socket = io();
 
@@ -130,6 +138,9 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         window.location.href = "/login.html";
         return;
       }
+
+      // Check & fetch subscription status
+      this.fetchSubscriptionStatus();
 
       // Restore data dari localStorage jika ada
       const savedStats = localStorage.getItem(`stats_${this.sessionId}`);
@@ -1458,6 +1469,83 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         return chat.name;
       }
       return jid.replace("@s.whatsapp.net", "");
+    },
+
+    // ====== SUBSCRIPTION FUNCTIONS ======
+    async fetchSubscriptionStatus() {
+      if (!this.sessionId) return;
+      
+      try {
+        const res = await fetch(`/api/user/subscription/${encodeURIComponent(this.sessionId)}`);
+        const json = await res.json();
+        
+        if (json.status === "success") {
+          const data = json.data;
+          this.userRole = data.role;
+          this.userExpiry = data.expiryDate;
+          this.remainingDays = data.remainingDays || 0;
+          this.subscriptionStatus = data.subscriptionStatus;
+          this.hideCountdown = data.hideCountdown;
+          
+          // Update localStorage
+          localStorage.setItem("user_role", data.role);
+          localStorage.setItem("user_expiry", data.expiryDate || "");
+          localStorage.setItem("hide_countdown", data.hideCountdown?.toString() || "false");
+          
+          // Check if expired - BLOCK THE PAGE
+          if (data.isExpired && data.role === "USER") {
+            this.isSubscriptionExpired = true;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch subscription status:", e);
+        // Use cached data from localStorage
+        this.calculateRemainingDays();
+        
+        // Also check localStorage for expired status
+        if (this.userRole === "USER" && this.remainingDays <= 0 && this.userExpiry) {
+          this.isSubscriptionExpired = true;
+        }
+      }
+    },
+
+    calculateRemainingDays() {
+      if (this.userRole === "DEVELOPER" || !this.userExpiry) {
+        this.remainingDays = 999;
+        return;
+      }
+      
+      const now = new Date();
+      const expiry = new Date(this.userExpiry);
+      const diffTime = expiry - now;
+      this.remainingDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    },
+
+    async toggleCountdownVisibility() {
+      this.hideCountdown = !this.hideCountdown;
+      localStorage.setItem("hide_countdown", this.hideCountdown.toString());
+      
+      try {
+        await fetch("/api/user/toggle-countdown", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: this.sessionId,
+            hideCountdown: this.hideCountdown
+          })
+        });
+      } catch (e) {
+        console.error("Failed to save countdown preference:", e);
+      }
+    },
+
+    formatExpiryDate() {
+      if (!this.userExpiry) return "-";
+      return new Date(this.userExpiry).toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      });
     },
   };
 }

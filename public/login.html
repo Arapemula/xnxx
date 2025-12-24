@@ -258,9 +258,23 @@
               });
               const data = await res.json();
               if (data.status === "success") {
+                // Simpan session dan role info ke localStorage
                 localStorage.setItem("wa_session_id", data.sessionId);
-                // Redirect ke Dashboard Utama
-                window.location.href = "/index.html";
+                localStorage.setItem("user_role", data.role);
+                localStorage.setItem("user_expiry", data.expiryDate || "");
+                localStorage.setItem("hide_countdown", data.hideCountdown || "false");
+                
+                // Cek apakah subscription expired
+                if (data.isExpired && data.role === "USER") {
+                  alert("Langganan Anda telah berakhir! Silakan hubungi Developer untuk memperpanjang.");
+                }
+                
+                // Redirect berdasarkan role
+                if (data.role === "DEVELOPER") {
+                  window.location.href = "/developer.html";
+                } else {
+                  window.location.href = "/index.html";
+                }
               } else {
                 alert(data.error);
               }

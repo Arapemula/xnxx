@@ -301,5 +301,150 @@
       }
     ],
     "newCustomers": 2
+  },
+  "session-1766501889890": {
+    "incoming": 19,
+    "outgoing": 0,
+    "newCustomers": 0,
+    "aiCount": 0,
+    "mediaCount": 1,
+    "invoiceIssued": 0,
+    "invoicePaid": 0,
+    "logs": [
+      {
+        "time": "2025-12-24T05:30:50.010Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Indra"
+      },
+      {
+        "time": "2025-12-24T05:29:30.429Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Asep Haryana Saputra"
+      },
+      {
+        "time": "2025-12-24T05:28:53.243Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Indra"
+      },
+      {
+        "time": "2025-12-24T05:28:47.166Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Hadiid Andri Yulison"
+      },
+      {
+        "time": "2025-12-24T05:25:05.873Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Fd"
+      },
+      {
+        "time": "2025-12-24T05:25:02.237Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alif Ramadhan"
+      },
+      {
+        "time": "2025-12-24T05:24:50.675Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alif Ramadhan"
+      },
+      {
+        "time": "2025-12-24T05:24:41.224Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alif Ramadhan"
+      },
+      {
+        "time": "2025-12-24T05:24:32.356Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alif Ramadhan"
+      },
+      {
+        "time": "2025-12-24T05:24:22.295Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alif Ramadhan"
+      },
+      {
+        "time": "2025-12-24T05:24:20.173Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Alif Ramadhan"
+      },
+      {
+        "time": "2025-12-24T05:23:10.084Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "yudaaa"
+      },
+      {
+        "time": "2025-12-24T05:23:09.761Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Natasyha"
+      },
+      {
+        "time": "2025-12-24T05:23:09.661Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Dimas"
+      },
+      {
+        "time": "2025-12-24T05:23:09.616Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "rohimdev.com"
+      },
+      {
+        "time": "2025-12-24T05:23:09.581Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Dimas"
+      },
+      {
+        "time": "2025-12-24T05:23:09.551Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "rohimdev.com"
+      },
+      {
+        "time": "2025-12-24T05:23:09.493Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "rohimdev.com"
+      },
+      {
+        "time": "2025-12-24T05:23:09.469Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "."
+      }
+    ]
+  },
+  "asd": {
+    "incoming": 0,
+    "outgoing": 0,
+    "newCustomers": 0,
+    "aiCount": 0,
+    "mediaCount": 0,
+    "invoiceIssued": 0,
+    "invoicePaid": 0,
+    "logs": []
+  },
+  "mock_id": {
+    "incoming": 0,
+    "outgoing": 0,
+    "newCustomers": 0,
+    "aiCount": 0,
+    "mediaCount": 0,
+    "invoiceIssued": 0,
+    "invoicePaid": 0,
+    "logs": []
   }
 }

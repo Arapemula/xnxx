@@ -24,13 +24,16 @@ model Session {
 }
 
 model User {
-  id             Int       @id @default(autoincrement())
-  email          String    @unique
-  password       String
-  waSessionId    String    @unique // ID Tim/Sesi WA (ex: cs_pagi)
-  resetToken     String?
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  password         String
+  waSessionId      String    @unique // ID Tim/Sesi WA (ex: cs_pagi)
+  role             String    @default("USER") // USER atau DEVELOPER
+  expiryDate       DateTime? // null = unlimited (untuk developer)
+  hideCountdown    Boolean   @default(false) // preference untuk menyembunyikan countdown
+  resetToken       String?
   resetTokenExpiry DateTime?
-  createdAt      DateTime  @default(now())
+  createdAt        DateTime  @default(now())
 }
 
 model Chat {

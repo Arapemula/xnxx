@@ -28,6 +28,9 @@ model User {
   email            String    @unique
   password         String
   waSessionId      String    @unique // ID Tim/Sesi WA (ex: cs_pagi)
+  role             String    @default("USER") // USER atau DEVELOPER
+  expiryDate       DateTime? // null = unlimited (untuk developer)
+  hideCountdown    Boolean   @default(false) // preference untuk menyembunyikan countdown
   resetToken       String?
   resetTokenExpiry DateTime?
   createdAt        DateTime  @default(now())
