@@ -53,6 +53,8 @@ const {
   globalContactStore,
   lidToPhoneMap,
   processedMessages,
+  autoReplyStore,
+  loadAutoReplies,
 } = require("./wa_engine");
 
 const app = express();
@@ -533,6 +535,53 @@ app.get("/templates/list/:sessionId", (req, res) => {
   const { sessionId } = req.params;
   const templates = sessionAIStore[sessionId]?.templates || [];
   res.json({ status: "success", data: templates });
+  res.json({ status: "success", data: templates });
+});
+
+// --- API AUTO REPLIES ---
+app.get("/auto-replies/:sessionId", async (req, res) => {
+  const { sessionId } = req.params;
+  try {
+    const replies = await prisma.autoReply.findMany({ where: { sessionId } });
+    res.json({ status: "success", data: replies });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to fetch" });
+  }
+});
+
+app.post("/auto-replies", async (req, res) => {
+  const { sessionId, keyword, response } = req.body;
+  if (!sessionId || !keyword || !response)
+    return res.status(400).json({ error: "Missing fields" });
+  try {
+    await prisma.autoReply.upsert({
+      where: {
+        sessionId_keyword: { sessionId, keyword },
+      },
+      update: { response },
+      create: { sessionId, keyword, response },
+    });
+    // Refresh Cache
+    await loadAutoReplies(sessionId);
+    res.json({ status: "success" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to save" });
+  }
+});
+
+app.delete("/auto-replies/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deleted = await prisma.autoReply.delete({
+      where: { id: parseInt(id) },
+    });
+    // Refresh Cache
+    await loadAutoReplies(deleted.sessionId);
+    res.json({ status: "success" });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to delete" });
+  }
 });
 
 // --- API INVOICE ---

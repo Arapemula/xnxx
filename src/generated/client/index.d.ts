@@ -53,6 +53,11 @@ export type VerificationCode = $Result.DefaultSelection<Prisma.$VerificationCode
  * 
  */
 export type ScheduledBroadcast = $Result.DefaultSelection<Prisma.$ScheduledBroadcastPayload>
+/**
+ * Model AutoReply
+ * 
+ */
+export type AutoReply = $Result.DefaultSelection<Prisma.$AutoReplyPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -256,6 +261,16 @@ export class PrismaClient<
     * ```
     */
   get scheduledBroadcast(): Prisma.ScheduledBroadcastDelegate<ExtArgs>;
+
+  /**
+   * `prisma.autoReply`: Exposes CRUD operations for the **AutoReply** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AutoReplies
+    * const autoReplies = await prisma.autoReply.findMany()
+    * ```
+    */
+  get autoReply(): Prisma.AutoReplyDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -704,7 +719,8 @@ export namespace Prisma {
     Sale: 'Sale',
     Schedule: 'Schedule',
     VerificationCode: 'VerificationCode',
-    ScheduledBroadcast: 'ScheduledBroadcast'
+    ScheduledBroadcast: 'ScheduledBroadcast',
+    AutoReply: 'AutoReply'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -720,7 +736,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "session" | "user" | "chat" | "message" | "sale" | "schedule" | "verificationCode" | "scheduledBroadcast"
+      modelProps: "session" | "user" | "chat" | "message" | "sale" | "schedule" | "verificationCode" | "scheduledBroadcast" | "autoReply"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1249,6 +1265,72 @@ export namespace Prisma {
           count: {
             args: Prisma.ScheduledBroadcastCountArgs<ExtArgs>
             result: $Utils.Optional<ScheduledBroadcastCountAggregateOutputType> | number
+          }
+        }
+      }
+      AutoReply: {
+        payload: Prisma.$AutoReplyPayload<ExtArgs>
+        fields: Prisma.AutoReplyFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AutoReplyFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutoReplyPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AutoReplyFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutoReplyPayload>
+          }
+          findFirst: {
+            args: Prisma.AutoReplyFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutoReplyPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AutoReplyFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutoReplyPayload>
+          }
+          findMany: {
+            args: Prisma.AutoReplyFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutoReplyPayload>[]
+          }
+          create: {
+            args: Prisma.AutoReplyCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutoReplyPayload>
+          }
+          createMany: {
+            args: Prisma.AutoReplyCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.AutoReplyDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutoReplyPayload>
+          }
+          update: {
+            args: Prisma.AutoReplyUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutoReplyPayload>
+          }
+          deleteMany: {
+            args: Prisma.AutoReplyDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AutoReplyUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.AutoReplyUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutoReplyPayload>
+          }
+          aggregate: {
+            args: Prisma.AutoReplyAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAutoReply>
+          }
+          groupBy: {
+            args: Prisma.AutoReplyGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AutoReplyGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AutoReplyCountArgs<ExtArgs>
+            result: $Utils.Optional<AutoReplyCountAggregateOutputType> | number
           }
         }
       }
@@ -8812,6 +8894,883 @@ export namespace Prisma {
 
 
   /**
+   * Model AutoReply
+   */
+
+  export type AggregateAutoReply = {
+    _count: AutoReplyCountAggregateOutputType | null
+    _avg: AutoReplyAvgAggregateOutputType | null
+    _sum: AutoReplySumAggregateOutputType | null
+    _min: AutoReplyMinAggregateOutputType | null
+    _max: AutoReplyMaxAggregateOutputType | null
+  }
+
+  export type AutoReplyAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type AutoReplySumAggregateOutputType = {
+    id: number | null
+  }
+
+  export type AutoReplyMinAggregateOutputType = {
+    id: number | null
+    sessionId: string | null
+    keyword: string | null
+    response: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AutoReplyMaxAggregateOutputType = {
+    id: number | null
+    sessionId: string | null
+    keyword: string | null
+    response: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AutoReplyCountAggregateOutputType = {
+    id: number
+    sessionId: number
+    keyword: number
+    response: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type AutoReplyAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type AutoReplySumAggregateInputType = {
+    id?: true
+  }
+
+  export type AutoReplyMinAggregateInputType = {
+    id?: true
+    sessionId?: true
+    keyword?: true
+    response?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AutoReplyMaxAggregateInputType = {
+    id?: true
+    sessionId?: true
+    keyword?: true
+    response?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AutoReplyCountAggregateInputType = {
+    id?: true
+    sessionId?: true
+    keyword?: true
+    response?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type AutoReplyAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AutoReply to aggregate.
+     */
+    where?: AutoReplyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutoReplies to fetch.
+     */
+    orderBy?: AutoReplyOrderByWithRelationInput | AutoReplyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AutoReplyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutoReplies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutoReplies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AutoReplies
+    **/
+    _count?: true | AutoReplyCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AutoReplyAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AutoReplySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AutoReplyMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AutoReplyMaxAggregateInputType
+  }
+
+  export type GetAutoReplyAggregateType<T extends AutoReplyAggregateArgs> = {
+        [P in keyof T & keyof AggregateAutoReply]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAutoReply[P]>
+      : GetScalarType<T[P], AggregateAutoReply[P]>
+  }
+
+
+
+
+  export type AutoReplyGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AutoReplyWhereInput
+    orderBy?: AutoReplyOrderByWithAggregationInput | AutoReplyOrderByWithAggregationInput[]
+    by: AutoReplyScalarFieldEnum[] | AutoReplyScalarFieldEnum
+    having?: AutoReplyScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AutoReplyCountAggregateInputType | true
+    _avg?: AutoReplyAvgAggregateInputType
+    _sum?: AutoReplySumAggregateInputType
+    _min?: AutoReplyMinAggregateInputType
+    _max?: AutoReplyMaxAggregateInputType
+  }
+
+  export type AutoReplyGroupByOutputType = {
+    id: number
+    sessionId: string
+    keyword: string
+    response: string
+    createdAt: Date
+    updatedAt: Date
+    _count: AutoReplyCountAggregateOutputType | null
+    _avg: AutoReplyAvgAggregateOutputType | null
+    _sum: AutoReplySumAggregateOutputType | null
+    _min: AutoReplyMinAggregateOutputType | null
+    _max: AutoReplyMaxAggregateOutputType | null
+  }
+
+  type GetAutoReplyGroupByPayload<T extends AutoReplyGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AutoReplyGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AutoReplyGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AutoReplyGroupByOutputType[P]>
+            : GetScalarType<T[P], AutoReplyGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AutoReplySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sessionId?: boolean
+    keyword?: boolean
+    response?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["autoReply"]>
+
+
+  export type AutoReplySelectScalar = {
+    id?: boolean
+    sessionId?: boolean
+    keyword?: boolean
+    response?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $AutoReplyPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AutoReply"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      sessionId: string
+      keyword: string
+      response: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["autoReply"]>
+    composites: {}
+  }
+
+  type AutoReplyGetPayload<S extends boolean | null | undefined | AutoReplyDefaultArgs> = $Result.GetResult<Prisma.$AutoReplyPayload, S>
+
+  type AutoReplyCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<AutoReplyFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: AutoReplyCountAggregateInputType | true
+    }
+
+  export interface AutoReplyDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AutoReply'], meta: { name: 'AutoReply' } }
+    /**
+     * Find zero or one AutoReply that matches the filter.
+     * @param {AutoReplyFindUniqueArgs} args - Arguments to find a AutoReply
+     * @example
+     * // Get one AutoReply
+     * const autoReply = await prisma.autoReply.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AutoReplyFindUniqueArgs>(args: SelectSubset<T, AutoReplyFindUniqueArgs<ExtArgs>>): Prisma__AutoReplyClient<$Result.GetResult<Prisma.$AutoReplyPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one AutoReply that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {AutoReplyFindUniqueOrThrowArgs} args - Arguments to find a AutoReply
+     * @example
+     * // Get one AutoReply
+     * const autoReply = await prisma.autoReply.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AutoReplyFindUniqueOrThrowArgs>(args: SelectSubset<T, AutoReplyFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AutoReplyClient<$Result.GetResult<Prisma.$AutoReplyPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first AutoReply that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutoReplyFindFirstArgs} args - Arguments to find a AutoReply
+     * @example
+     * // Get one AutoReply
+     * const autoReply = await prisma.autoReply.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AutoReplyFindFirstArgs>(args?: SelectSubset<T, AutoReplyFindFirstArgs<ExtArgs>>): Prisma__AutoReplyClient<$Result.GetResult<Prisma.$AutoReplyPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first AutoReply that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutoReplyFindFirstOrThrowArgs} args - Arguments to find a AutoReply
+     * @example
+     * // Get one AutoReply
+     * const autoReply = await prisma.autoReply.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AutoReplyFindFirstOrThrowArgs>(args?: SelectSubset<T, AutoReplyFindFirstOrThrowArgs<ExtArgs>>): Prisma__AutoReplyClient<$Result.GetResult<Prisma.$AutoReplyPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more AutoReplies that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutoReplyFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AutoReplies
+     * const autoReplies = await prisma.autoReply.findMany()
+     * 
+     * // Get first 10 AutoReplies
+     * const autoReplies = await prisma.autoReply.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const autoReplyWithIdOnly = await prisma.autoReply.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AutoReplyFindManyArgs>(args?: SelectSubset<T, AutoReplyFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutoReplyPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a AutoReply.
+     * @param {AutoReplyCreateArgs} args - Arguments to create a AutoReply.
+     * @example
+     * // Create one AutoReply
+     * const AutoReply = await prisma.autoReply.create({
+     *   data: {
+     *     // ... data to create a AutoReply
+     *   }
+     * })
+     * 
+     */
+    create<T extends AutoReplyCreateArgs>(args: SelectSubset<T, AutoReplyCreateArgs<ExtArgs>>): Prisma__AutoReplyClient<$Result.GetResult<Prisma.$AutoReplyPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many AutoReplies.
+     * @param {AutoReplyCreateManyArgs} args - Arguments to create many AutoReplies.
+     * @example
+     * // Create many AutoReplies
+     * const autoReply = await prisma.autoReply.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AutoReplyCreateManyArgs>(args?: SelectSubset<T, AutoReplyCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a AutoReply.
+     * @param {AutoReplyDeleteArgs} args - Arguments to delete one AutoReply.
+     * @example
+     * // Delete one AutoReply
+     * const AutoReply = await prisma.autoReply.delete({
+     *   where: {
+     *     // ... filter to delete one AutoReply
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AutoReplyDeleteArgs>(args: SelectSubset<T, AutoReplyDeleteArgs<ExtArgs>>): Prisma__AutoReplyClient<$Result.GetResult<Prisma.$AutoReplyPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one AutoReply.
+     * @param {AutoReplyUpdateArgs} args - Arguments to update one AutoReply.
+     * @example
+     * // Update one AutoReply
+     * const autoReply = await prisma.autoReply.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AutoReplyUpdateArgs>(args: SelectSubset<T, AutoReplyUpdateArgs<ExtArgs>>): Prisma__AutoReplyClient<$Result.GetResult<Prisma.$AutoReplyPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more AutoReplies.
+     * @param {AutoReplyDeleteManyArgs} args - Arguments to filter AutoReplies to delete.
+     * @example
+     * // Delete a few AutoReplies
+     * const { count } = await prisma.autoReply.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AutoReplyDeleteManyArgs>(args?: SelectSubset<T, AutoReplyDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AutoReplies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutoReplyUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AutoReplies
+     * const autoReply = await prisma.autoReply.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AutoReplyUpdateManyArgs>(args: SelectSubset<T, AutoReplyUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one AutoReply.
+     * @param {AutoReplyUpsertArgs} args - Arguments to update or create a AutoReply.
+     * @example
+     * // Update or create a AutoReply
+     * const autoReply = await prisma.autoReply.upsert({
+     *   create: {
+     *     // ... data to create a AutoReply
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AutoReply we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AutoReplyUpsertArgs>(args: SelectSubset<T, AutoReplyUpsertArgs<ExtArgs>>): Prisma__AutoReplyClient<$Result.GetResult<Prisma.$AutoReplyPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of AutoReplies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutoReplyCountArgs} args - Arguments to filter AutoReplies to count.
+     * @example
+     * // Count the number of AutoReplies
+     * const count = await prisma.autoReply.count({
+     *   where: {
+     *     // ... the filter for the AutoReplies we want to count
+     *   }
+     * })
+    **/
+    count<T extends AutoReplyCountArgs>(
+      args?: Subset<T, AutoReplyCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AutoReplyCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AutoReply.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutoReplyAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AutoReplyAggregateArgs>(args: Subset<T, AutoReplyAggregateArgs>): Prisma.PrismaPromise<GetAutoReplyAggregateType<T>>
+
+    /**
+     * Group by AutoReply.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutoReplyGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AutoReplyGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AutoReplyGroupByArgs['orderBy'] }
+        : { orderBy?: AutoReplyGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AutoReplyGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAutoReplyGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AutoReply model
+   */
+  readonly fields: AutoReplyFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AutoReply.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AutoReplyClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AutoReply model
+   */ 
+  interface AutoReplyFieldRefs {
+    readonly id: FieldRef<"AutoReply", 'Int'>
+    readonly sessionId: FieldRef<"AutoReply", 'String'>
+    readonly keyword: FieldRef<"AutoReply", 'String'>
+    readonly response: FieldRef<"AutoReply", 'String'>
+    readonly createdAt: FieldRef<"AutoReply", 'DateTime'>
+    readonly updatedAt: FieldRef<"AutoReply", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AutoReply findUnique
+   */
+  export type AutoReplyFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutoReply
+     */
+    select?: AutoReplySelect<ExtArgs> | null
+    /**
+     * Filter, which AutoReply to fetch.
+     */
+    where: AutoReplyWhereUniqueInput
+  }
+
+  /**
+   * AutoReply findUniqueOrThrow
+   */
+  export type AutoReplyFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutoReply
+     */
+    select?: AutoReplySelect<ExtArgs> | null
+    /**
+     * Filter, which AutoReply to fetch.
+     */
+    where: AutoReplyWhereUniqueInput
+  }
+
+  /**
+   * AutoReply findFirst
+   */
+  export type AutoReplyFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutoReply
+     */
+    select?: AutoReplySelect<ExtArgs> | null
+    /**
+     * Filter, which AutoReply to fetch.
+     */
+    where?: AutoReplyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutoReplies to fetch.
+     */
+    orderBy?: AutoReplyOrderByWithRelationInput | AutoReplyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AutoReplies.
+     */
+    cursor?: AutoReplyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutoReplies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutoReplies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AutoReplies.
+     */
+    distinct?: AutoReplyScalarFieldEnum | AutoReplyScalarFieldEnum[]
+  }
+
+  /**
+   * AutoReply findFirstOrThrow
+   */
+  export type AutoReplyFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutoReply
+     */
+    select?: AutoReplySelect<ExtArgs> | null
+    /**
+     * Filter, which AutoReply to fetch.
+     */
+    where?: AutoReplyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutoReplies to fetch.
+     */
+    orderBy?: AutoReplyOrderByWithRelationInput | AutoReplyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AutoReplies.
+     */
+    cursor?: AutoReplyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutoReplies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutoReplies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AutoReplies.
+     */
+    distinct?: AutoReplyScalarFieldEnum | AutoReplyScalarFieldEnum[]
+  }
+
+  /**
+   * AutoReply findMany
+   */
+  export type AutoReplyFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutoReply
+     */
+    select?: AutoReplySelect<ExtArgs> | null
+    /**
+     * Filter, which AutoReplies to fetch.
+     */
+    where?: AutoReplyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutoReplies to fetch.
+     */
+    orderBy?: AutoReplyOrderByWithRelationInput | AutoReplyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AutoReplies.
+     */
+    cursor?: AutoReplyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutoReplies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutoReplies.
+     */
+    skip?: number
+    distinct?: AutoReplyScalarFieldEnum | AutoReplyScalarFieldEnum[]
+  }
+
+  /**
+   * AutoReply create
+   */
+  export type AutoReplyCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutoReply
+     */
+    select?: AutoReplySelect<ExtArgs> | null
+    /**
+     * The data needed to create a AutoReply.
+     */
+    data: XOR<AutoReplyCreateInput, AutoReplyUncheckedCreateInput>
+  }
+
+  /**
+   * AutoReply createMany
+   */
+  export type AutoReplyCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AutoReplies.
+     */
+    data: AutoReplyCreateManyInput | AutoReplyCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AutoReply update
+   */
+  export type AutoReplyUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutoReply
+     */
+    select?: AutoReplySelect<ExtArgs> | null
+    /**
+     * The data needed to update a AutoReply.
+     */
+    data: XOR<AutoReplyUpdateInput, AutoReplyUncheckedUpdateInput>
+    /**
+     * Choose, which AutoReply to update.
+     */
+    where: AutoReplyWhereUniqueInput
+  }
+
+  /**
+   * AutoReply updateMany
+   */
+  export type AutoReplyUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AutoReplies.
+     */
+    data: XOR<AutoReplyUpdateManyMutationInput, AutoReplyUncheckedUpdateManyInput>
+    /**
+     * Filter which AutoReplies to update
+     */
+    where?: AutoReplyWhereInput
+  }
+
+  /**
+   * AutoReply upsert
+   */
+  export type AutoReplyUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutoReply
+     */
+    select?: AutoReplySelect<ExtArgs> | null
+    /**
+     * The filter to search for the AutoReply to update in case it exists.
+     */
+    where: AutoReplyWhereUniqueInput
+    /**
+     * In case the AutoReply found by the `where` argument doesn't exist, create a new AutoReply with this data.
+     */
+    create: XOR<AutoReplyCreateInput, AutoReplyUncheckedCreateInput>
+    /**
+     * In case the AutoReply was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AutoReplyUpdateInput, AutoReplyUncheckedUpdateInput>
+  }
+
+  /**
+   * AutoReply delete
+   */
+  export type AutoReplyDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutoReply
+     */
+    select?: AutoReplySelect<ExtArgs> | null
+    /**
+     * Filter which AutoReply to delete.
+     */
+    where: AutoReplyWhereUniqueInput
+  }
+
+  /**
+   * AutoReply deleteMany
+   */
+  export type AutoReplyDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AutoReplies to delete
+     */
+    where?: AutoReplyWhereInput
+  }
+
+  /**
+   * AutoReply without action
+   */
+  export type AutoReplyDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutoReply
+     */
+    select?: AutoReplySelect<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -8939,6 +9898,18 @@ export namespace Prisma {
   };
 
   export type ScheduledBroadcastScalarFieldEnum = (typeof ScheduledBroadcastScalarFieldEnum)[keyof typeof ScheduledBroadcastScalarFieldEnum]
+
+
+  export const AutoReplyScalarFieldEnum: {
+    id: 'id',
+    sessionId: 'sessionId',
+    keyword: 'keyword',
+    response: 'response',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type AutoReplyScalarFieldEnum = (typeof AutoReplyScalarFieldEnum)[keyof typeof AutoReplyScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -9580,6 +10551,66 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"ScheduledBroadcast"> | Date | string
   }
 
+  export type AutoReplyWhereInput = {
+    AND?: AutoReplyWhereInput | AutoReplyWhereInput[]
+    OR?: AutoReplyWhereInput[]
+    NOT?: AutoReplyWhereInput | AutoReplyWhereInput[]
+    id?: IntFilter<"AutoReply"> | number
+    sessionId?: StringFilter<"AutoReply"> | string
+    keyword?: StringFilter<"AutoReply"> | string
+    response?: StringFilter<"AutoReply"> | string
+    createdAt?: DateTimeFilter<"AutoReply"> | Date | string
+    updatedAt?: DateTimeFilter<"AutoReply"> | Date | string
+  }
+
+  export type AutoReplyOrderByWithRelationInput = {
+    id?: SortOrder
+    sessionId?: SortOrder
+    keyword?: SortOrder
+    response?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AutoReplyWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    sessionId_keyword?: AutoReplySessionIdKeywordCompoundUniqueInput
+    AND?: AutoReplyWhereInput | AutoReplyWhereInput[]
+    OR?: AutoReplyWhereInput[]
+    NOT?: AutoReplyWhereInput | AutoReplyWhereInput[]
+    sessionId?: StringFilter<"AutoReply"> | string
+    keyword?: StringFilter<"AutoReply"> | string
+    response?: StringFilter<"AutoReply"> | string
+    createdAt?: DateTimeFilter<"AutoReply"> | Date | string
+    updatedAt?: DateTimeFilter<"AutoReply"> | Date | string
+  }, "id" | "sessionId_keyword">
+
+  export type AutoReplyOrderByWithAggregationInput = {
+    id?: SortOrder
+    sessionId?: SortOrder
+    keyword?: SortOrder
+    response?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: AutoReplyCountOrderByAggregateInput
+    _avg?: AutoReplyAvgOrderByAggregateInput
+    _max?: AutoReplyMaxOrderByAggregateInput
+    _min?: AutoReplyMinOrderByAggregateInput
+    _sum?: AutoReplySumOrderByAggregateInput
+  }
+
+  export type AutoReplyScalarWhereWithAggregatesInput = {
+    AND?: AutoReplyScalarWhereWithAggregatesInput | AutoReplyScalarWhereWithAggregatesInput[]
+    OR?: AutoReplyScalarWhereWithAggregatesInput[]
+    NOT?: AutoReplyScalarWhereWithAggregatesInput | AutoReplyScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"AutoReply"> | number
+    sessionId?: StringWithAggregatesFilter<"AutoReply"> | string
+    keyword?: StringWithAggregatesFilter<"AutoReply"> | string
+    response?: StringWithAggregatesFilter<"AutoReply"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"AutoReply"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"AutoReply"> | Date | string
+  }
+
   export type SessionCreateInput = {
     sessionId: string
     id: string
@@ -10203,6 +11234,66 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type AutoReplyCreateInput = {
+    sessionId: string
+    keyword: string
+    response: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AutoReplyUncheckedCreateInput = {
+    id?: number
+    sessionId: string
+    keyword: string
+    response: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AutoReplyUpdateInput = {
+    sessionId?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    response?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AutoReplyUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    sessionId?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    response?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AutoReplyCreateManyInput = {
+    id?: number
+    sessionId: string
+    keyword: string
+    response: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AutoReplyUpdateManyMutationInput = {
+    sessionId?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    response?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AutoReplyUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    sessionId?: StringFieldUpdateOperationsInput | string
+    keyword?: StringFieldUpdateOperationsInput | string
+    response?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[]
@@ -10787,6 +11878,46 @@ export namespace Prisma {
     _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
+  export type AutoReplySessionIdKeywordCompoundUniqueInput = {
+    sessionId: string
+    keyword: string
+  }
+
+  export type AutoReplyCountOrderByAggregateInput = {
+    id?: SortOrder
+    sessionId?: SortOrder
+    keyword?: SortOrder
+    response?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AutoReplyAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type AutoReplyMaxOrderByAggregateInput = {
+    id?: SortOrder
+    sessionId?: SortOrder
+    keyword?: SortOrder
+    response?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AutoReplyMinOrderByAggregateInput = {
+    id?: SortOrder
+    sessionId?: SortOrder
+    keyword?: SortOrder
+    response?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AutoReplySumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -11298,6 +12429,10 @@ export namespace Prisma {
      * @deprecated Use ScheduledBroadcastDefaultArgs instead
      */
     export type ScheduledBroadcastArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ScheduledBroadcastDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use AutoReplyDefaultArgs instead
+     */
+    export type AutoReplyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = AutoReplyDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

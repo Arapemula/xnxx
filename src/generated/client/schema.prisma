@@ -88,3 +88,50 @@ model Schedule {
 
   @@index([sessionId])
 }
+
+// Email Verification Codes
+model VerificationCode {
+  id        Int      @id @default(autoincrement())
+  email     String
+  code      String
+  type      String // "REGISTER" or "RESET_PASSWORD"
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, type])
+}
+
+// Scheduled Broadcasts
+model ScheduledBroadcast {
+  id            Int       @id @default(autoincrement())
+  sessionId     String
+  title         String
+  message       String    @db.Text
+  targetLabel   String    @default("all") // "all" or specific CRM label
+  manualNumbers String?   @db.Text // comma-separated numbers for manual target
+  scheduledAt   DateTime
+  status        String    @default("PENDING") // PENDING, SENT, FAILED, CANCELLED
+  sentAt        DateTime?
+  sentCount     Int? // how many messages sent
+  errorMessage  String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([sessionId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+// Auto Reply (Quick Reply)
+model AutoReply {
+  id        Int      @id @default(autoincrement())
+  sessionId String
+  keyword   String
+  response  String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sessionId, keyword])
+  @@index([sessionId])
+}

@@ -37,6 +37,21 @@ const productStore = {};
 const crmStore = {};
 const analyticsStore = {};
 const processedMessages = new Set();
+const autoReplyStore = {}; // sessionId -> [{keyword, response, id}]
+const complaintKeywords = [
+  /rusak/i,
+  /tidak bisa/i,
+  /gagal/i,
+  /kecewa/i,
+  /bohong/i,
+  /penipu/i,
+  /salah kirim/i,
+  /barang kurang/i,
+  /lama banget/i,
+  /lambat/i,
+  /pecah/i,
+  /pesanan belum/i,
+];
 
 // --- ANALYTICS STORE (PERSISTENCE) ---
 const analyticsFilePath = path.join(__dirname, "../analytics.json");
@@ -142,6 +157,18 @@ setInterval(() => {
   processedMessages.clear();
 }, 5 * 60 * 1000);
 
+const loadAutoReplies = async (sessionId) => {
+  try {
+    const replies = await prisma.autoReply.findMany({
+      where: { sessionId },
+    });
+    autoReplyStore[sessionId] = replies;
+  } catch (e) {
+    console.error("Error loading auto replies:", e);
+    autoReplyStore[sessionId] = [];
+  }
+};
+
 // --- HELPER FUNCTIONS ---
 const getSessionStats = (sessionId) => {
   if (!analyticsStore[sessionId]) {
@@ -153,6 +180,12 @@ const getSessionStats = (sessionId) => {
       mediaCount: 0,
       invoiceIssued: 0,
       invoicePaid: 0,
+      aiCount: 0,
+      mediaCount: 0,
+      invoiceIssued: 0,
+      invoicePaid: 0,
+      complaintCount: 0, // Added complaintCount
+      topComplaints: {}, // { keyword: count }
       logs: [],
     };
   }
@@ -320,6 +353,9 @@ const createSession = async (sessionId, io, webhookUrl = null, res = null) => {
       histories: {},
     };
   if (!crmStore[sessionId]) crmStore[sessionId] = {};
+
+  // Load Auto Replies
+  loadAutoReplies(sessionId);
 
   sock.ev.on("creds.update", saveCreds);
 
@@ -610,10 +646,60 @@ const createSession = async (sessionId, io, webhookUrl = null, res = null) => {
     io.to(sessionId).emit("message", payload);
     io.to(sessionId).emit("stats_update", stats);
 
+    io.to(sessionId).emit("stats_update", stats);
+
+    // --- COMPLAINT TRACKING ---
+    if (!isFromMe && text) {
+      complaintKeywords.forEach((regex) => {
+        if (regex.test(text)) {
+          stats.complaintCount = (stats.complaintCount || 0) + 1;
+          const match = text.match(regex)[0].toLowerCase();
+          if (!stats.topComplaints) stats.topComplaints = {};
+          stats.topComplaints[match] = (stats.topComplaints[match] || 0) + 1;
+          console.log(
+            `[COMPLAINT] Detected: ${match} from ${senderDisplayName}`
+          );
+        }
+      });
+    }
+
+    // --- AUTO REPLY LOGIC (QUICK REPLY) ---
+    let autoReplied = false;
+    if (!isFromMe && text) {
+      // Sort replies by keyword length descending (Longest first to avoid partial matches on shorter words)
+      const replies = (autoReplyStore[sessionId] || []).sort(
+        (a, b) => b.keyword.length - a.keyword.length
+      );
+
+      const match = replies.find((r) => {
+        const key = r.keyword.toLowerCase();
+        const msg = text.toLowerCase();
+        // LOOSE MATCH: Check if message contains keyword
+        return msg.includes(key);
+      });
+
+      if (match) {
+        await sock.sendPresenceUpdate("composing", chatId);
+        setTimeout(async () => {
+          await sock.sendMessage(chatId, { text: match.response });
+          // Log Auto Reply
+          stats.logs.unshift({
+            time: new Date(),
+            type: "AUTO",
+            msg: `Auto Reply: ${match.keyword}`,
+            user: "Bot",
+          });
+          io.to(sessionId).emit("stats_update", stats);
+        }, 1000);
+        autoReplied = true;
+      }
+    }
+
     // AI Reply
     const aiSession = sessionAIStore[sessionId];
 
     if (
+      !autoReplied && // Only AI if not auto replied
       aiSession?.isActive &&
       !isFromMe &&
       text &&
@@ -716,4 +802,6 @@ module.exports = {
   globalContactStore,
   lidToPhoneMap,
   processedMessages,
+  autoReplyStore,
+  loadAutoReplies,
 };

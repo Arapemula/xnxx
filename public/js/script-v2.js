@@ -1,3 +1,147 @@
+// ========================================
+// TOAST & CONFIRM UTILITY FUNCTIONS
+// ========================================
+
+/**
+ * Show toast notification
+ * @param {string} message - The message to display
+ * @param {string} type - Type: 'success', 'error', 'warning', 'info'
+ * @param {string} title - Optional title
+ * @param {number} duration - Duration in ms (default: 3000)
+ */
+function showToast(message, type = "info", title = "", duration = 3000) {
+  const container = document.getElementById("toast-container");
+  if (!container) {
+    console.warn("Toast container not found");
+    return;
+  }
+
+  const icons = {
+    success: "✓",
+    error: "✕",
+    warning: "⚠",
+    info: "ℹ",
+  };
+
+  const titles = {
+    success: "Berhasil!",
+    error: "Error!",
+    warning: "Perhatian!",
+    info: "Informasi",
+  };
+
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <div class="toast-icon">${icons[type] || icons.info}</div>
+    <div class="toast-content">
+      <div class="toast-title">${title || titles[type] || titles.info}</div>
+      <div class="toast-message">${message}</div>
+    </div>
+    <button class="toast-close" onclick="this.parentElement.classList.add('removing'); setTimeout(() => this.parentElement.remove(), 300)">✕</button>
+    <div class="toast-progress" style="animation-duration: ${duration}ms"></div>
+  `;
+
+  container.appendChild(toast);
+
+  // Auto remove
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.classList.add("removing");
+      setTimeout(() => toast.remove(), 300);
+    }
+  }, duration);
+}
+
+/**
+ * Show confirm modal
+ * @param {Object} options - Configuration options
+ * @param {string} options.title - Modal title
+ * @param {string} options.message - Modal message
+ * @param {string} options.type - Type: 'warning', 'danger', 'info' (default: 'warning')
+ * @param {string} options.confirmText - Confirm button text (default: 'Ya, Lanjutkan')
+ * @param {string} options.cancelText - Cancel button text (default: 'Batal')
+ * @param {string} options.icon - Custom icon emoji (optional)
+ * @returns {Promise<boolean>} - Resolves true if confirmed, false if cancelled
+ */
+function showConfirm(options = {}) {
+  return new Promise((resolve) => {
+    const {
+      title = "Konfirmasi",
+      message = "Apakah Anda yakin?",
+      type = "warning",
+      confirmText = "Ya, Lanjutkan",
+      cancelText = "Batal",
+      icon = null,
+    } = options;
+
+    const icons = {
+      warning: "⚠️",
+      danger: "🗑️",
+      info: "❓",
+    };
+
+    const overlay = document.createElement("div");
+    overlay.className = "confirm-modal-overlay";
+    overlay.innerHTML = `
+      <div class="confirm-modal">
+        <div class="confirm-modal-header">
+          <div class="confirm-modal-icon ${type}">
+            ${icon || icons[type] || icons.warning}
+          </div>
+          <div class="confirm-modal-title">${title}</div>
+          <div class="confirm-modal-message">${message}</div>
+        </div>
+        <div class="confirm-modal-actions">
+          <button class="confirm-modal-btn cancel">${cancelText}</button>
+          <button class="confirm-modal-btn confirm ${
+            type === "danger" ? "danger" : ""
+          }">${confirmText}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const closeModal = (result) => {
+      overlay.classList.add("removing");
+      overlay.querySelector(".confirm-modal").classList.add("removing");
+      setTimeout(() => {
+        overlay.remove();
+        resolve(result);
+      }, 250);
+    };
+
+    // Cancel button
+    overlay
+      .querySelector(".confirm-modal-btn.cancel")
+      .addEventListener("click", () => closeModal(false));
+
+    // Confirm button
+    overlay
+      .querySelector(".confirm-modal-btn.confirm")
+      .addEventListener("click", () => closeModal(true));
+
+    // Click outside to cancel
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeModal(false);
+    });
+
+    // ESC key to cancel
+    const handleEsc = (e) => {
+      if (e.key === "Escape") {
+        document.removeEventListener("keydown", handleEsc);
+        closeModal(false);
+      }
+    };
+    document.addEventListener("keydown", handleEsc);
+  });
+}
+
+// ========================================
+// MAIN APP FUNCTION
+// ========================================
+
 function app() {
   console.log("Script loaded: v2 (Cache check)");
   let chartInstance = null;
@@ -48,7 +192,11 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
     topProducts: [],
     topCustomers: [],
     topQuestions: [],
+    topQuestions: [],
+    topComplaints: {}, // Added
     labelDistribution: [],
+    autoReplies: [], // Added
+    newAutoReply: { keyword: "", response: "" }, // Added form state
     chart: null,
     analyticsInterval: null,
     showInvoiceModal: false,
@@ -168,7 +316,9 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         this.connectSocket();
         this.fetchCRM();
         this.fetchSchedules();
+        this.fetchSchedules();
         this.fetchSettings();
+        this.fetchAutoReplies(); // Added
       }
       this.socket.on("message", (d) => this.handleIncomingMessage(d));
       this.socket.on("qr", (qr) => this.renderQR(qr));
@@ -256,6 +406,9 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         if (json.status === "success") {
           this.stats = json.data;
           this.topQuestions = json.data.topQuestions || [];
+          this.stats = json.data;
+          this.topQuestions = json.data.topQuestions || [];
+          this.topComplaints = json.data.topComplaints || {}; // Added
           this.updateChart(json.data);
           if (!this.selectedMonth) {
             localStorage.setItem(
@@ -381,7 +534,16 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
     },
 
     async sendBroadcast() {
-      if (!confirm("Yakin ingin mengirim broadcast?")) return;
+      const confirmed = await showConfirm({
+        title: "Kirim Broadcast",
+        message: "Yakin ingin mengirim broadcast ke semua penerima?",
+        type: "warning",
+        icon: "📣",
+        confirmText: "Ya, Kirim",
+        cancelText: "Batal",
+      });
+      if (!confirmed) return;
+
       const payload = {
         sessionId: this.sessionId,
         targetLabel: this.broadcastTarget,
@@ -395,11 +557,11 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
           body: JSON.stringify(payload),
         });
         const json = await res.json();
-        alert(json.message);
+        showToast(json.message, "success", "Broadcast");
         this.showBroadcastModal = false;
         this.broadcastMsg = "";
       } catch (e) {
-        alert("Gagal mengirim broadcast");
+        showToast("Gagal mengirim broadcast", "error");
       }
     },
 
@@ -505,7 +667,10 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
     },
 
     async openInvoiceModal() {
-      if (!this.activeChat) return alert("Pilih chat customer dulu!");
+      if (!this.activeChat) {
+        showToast("Pilih chat customer dulu!", "warning");
+        return;
+      }
       this.cart = [];
       this.invoiceNote = `INV/${new Date().getTime().toString().slice(-6)}`;
       this.qtyInput = 1;
@@ -517,15 +682,17 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         if (json.status === "success") {
           this.products = json.data;
           if (this.products.length === 0) {
-            alert(
-              "Belum ada data produk! Silakan upload Excel Produk di panel kiri atas."
+            showToast(
+              "Belum ada data produk! Silakan upload Excel Produk di panel kiri atas.",
+              "warning",
+              "Data Kosong"
             );
             return;
           }
           this.showInvoiceModal = true;
         }
       } catch (e) {
-        alert("Gagal load produk");
+        showToast("Gagal load produk", "error");
       }
     },
     getDisplayName(prod) {
@@ -670,14 +837,18 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         if (data.status === "success") {
           this.showInvoiceModal = false;
           this.cart = [];
-          alert("Invoice PDF berhasil dikirim! 📄");
+          showToast(
+            "Invoice PDF berhasil dikirim! 📄",
+            "success",
+            "Invoice Terkirim"
+          );
           // Refresh Analytics & Top Products
           this.fetchAnalytics();
         } else {
-          alert("Gagal mengirim invoice.");
+          showToast("Gagal mengirim invoice.", "error");
         }
       } catch (e) {
-        alert("Terjadi kesalahan sistem.");
+        showToast("Terjadi kesalahan sistem.", "error");
       } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -700,10 +871,15 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
       const inv = this.unpaidInvoices.find((i) => i.id === invoiceId);
       if (!inv) return;
 
-      if (
-        !confirm(`Tandai invoice ${inv.invoiceNote || inv.id} sebagai LUNAS?`)
-      )
-        return;
+      const confirmed = await showConfirm({
+        title: "Konfirmasi Pelunasan",
+        message: `Tandai invoice ${inv.invoiceNote || inv.id} sebagai LUNAS?`,
+        type: "info",
+        icon: "✅",
+        confirmText: "Ya, Lunaskan",
+        cancelText: "Batal",
+      });
+      if (!confirmed) return;
 
       const payload = {
         sessionId: this.sessionId,
@@ -721,23 +897,33 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         });
         const data = await res.json();
         if (data.status === "success") {
-          alert("Invoice berhasil dilunaskan dan dikirim! 📄");
+          showToast(
+            "Invoice berhasil dilunaskan dan dikirim! 📄",
+            "success",
+            "Invoice Lunas"
+          );
           this.fetchUnpaidInvoices();
         } else {
-          alert("Gagal memproses invoice.");
+          showToast("Gagal memproses invoice.", "error");
         }
       } catch (e) {
-        alert("Error processing invoice.");
+        showToast("Error processing invoice.", "error");
       }
     },
 
     async sendInvoiceReminder(invoiceId) {
       const inv = this.unpaidInvoices.find((i) => i.id === invoiceId);
       if (!inv) return;
-      if (
-        !confirm(`Kirim reminder untuk invoice ${inv.invoiceNote || inv.id}?`)
-      )
-        return;
+
+      const confirmed = await showConfirm({
+        title: "Kirim Reminder",
+        message: `Kirim reminder untuk invoice ${inv.invoiceNote || inv.id}?`,
+        type: "info",
+        icon: "🔔",
+        confirmText: "Ya, Kirim",
+        cancelText: "Batal",
+      });
+      if (!confirmed) return;
 
       try {
         const res = await fetch("/chat/send-invoice-reminder", {
@@ -746,10 +932,11 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
           body: JSON.stringify({ sessionId: this.sessionId, invoiceId }),
         });
         const json = await res.json();
-        if (json.status === "success") alert("Reminder terkirim! 🔔");
-        else alert("Gagal mengirim reminder.");
+        if (json.status === "success")
+          showToast("Reminder terkirim! 🔔", "success", "Reminder");
+        else showToast("Gagal mengirim reminder.", "error");
       } catch (e) {
-        alert("Error sending reminder.");
+        showToast("Error sending reminder.", "error");
       }
     },
 
@@ -802,10 +989,72 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
           }),
         });
         const json = await res.json();
-        if (json.status === "success") alert("Template tersimpan!");
-        else alert("Gagal menyimpan template");
+        if (json.status === "success")
+          showToast("Template tersimpan!", "success");
+        else showToast("Gagal menyimpan template", "error");
       } catch (e) {
-        alert("Error saving templates");
+        showToast("Error saving templates", "error");
+      }
+    },
+
+    // --- AUTO REPLY LOGIC ---
+    async fetchAutoReplies() {
+      if (!this.sessionId) return;
+      try {
+        const res = await fetch(`/auto-replies/${this.sessionId}`);
+        const json = await res.json();
+        if (json.status === "success") {
+          this.autoReplies = json.data;
+        }
+      } catch (e) {
+        console.error("Failed to fetch auto replies");
+      }
+    },
+    async addAutoReply() {
+      if (!this.newAutoReply.keyword || !this.newAutoReply.response) {
+        showToast("Isi keyword dan response!", "warning");
+        return;
+      }
+      try {
+        const res = await fetch("/auto-replies", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: this.sessionId,
+            keyword: this.newAutoReply.keyword,
+            response: this.newAutoReply.response,
+          }),
+        });
+        const json = await res.json();
+        if (json.status === "success") {
+          this.newAutoReply.keyword = "";
+          this.newAutoReply.response = "";
+          this.fetchAutoReplies();
+          showToast("Auto Reply disimpan!", "success");
+        }
+      } catch (e) {
+        showToast("Gagal menyimpan Auto Reply", "error");
+      }
+    },
+    async deleteAutoReply(id) {
+      const confirmed = await showConfirm({
+        title: "Hapus Auto Reply",
+        message: "Hapus auto reply ini?",
+        type: "danger",
+        icon: "🗑️",
+        confirmText: "Ya, Hapus",
+        cancelText: "Batal",
+      });
+      if (!confirmed) return;
+      try {
+        const res = await fetch(`/auto-replies/${id}`, { method: "DELETE" });
+        const json = await res.json();
+        if (json.status === "success") {
+          this.fetchAutoReplies();
+          showToast("Auto Reply dihapus", "success");
+        }
+      } catch (e) {
+        showToast("Gagal menghapus", "error");
       }
     },
 
@@ -856,20 +1105,27 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         });
         const json = await res.json();
         if (json.status === "success") {
-          alert("Pengaturan Invoice Disimpan!");
+          showToast(
+            "Pengaturan Invoice Disimpan!",
+            "success",
+            "Invoice Settings"
+          );
           this.invoiceLogo = json.data.logo;
           this.invoiceLogoFile = null;
         } else {
-          alert("Gagal menyimpan settings");
+          showToast("Gagal menyimpan settings", "error");
         }
       } catch (e) {
         console.error(e);
-        alert("Error saving invoice settings");
+        showToast("Error saving invoice settings", "error");
       }
     },
 
     async saveInventoryUrl() {
-      if (!this.inventoryUrl) return alert("Masukkan URL Google Sheet CSV!");
+      if (!this.inventoryUrl) {
+        showToast("Masukkan URL Google Sheet CSV!", "warning");
+        return;
+      }
       try {
         const res = await fetch("/ai/save-inventory-url", {
           method: "POST",
@@ -880,16 +1136,19 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
           }),
         });
         const json = await res.json();
-        if (json.success) alert("URL Tersimpan!");
-        else alert("Gagal menyimpan URL");
+        if (json.success) showToast("URL Tersimpan!", "success");
+        else showToast("Gagal menyimpan URL", "error");
       } catch (e) {
         console.error(e);
-        alert("Error saving URL");
+        showToast("Error saving URL", "error");
       }
     },
 
     async syncInventory() {
-      if (!this.inventoryUrl) return alert("Simpan URL terlebih dahulu!");
+      if (!this.inventoryUrl) {
+        showToast("Simpan URL terlebih dahulu!", "warning");
+        return;
+      }
       try {
         const res = await fetch("/ai/sync-inventory", {
           method: "POST",
@@ -898,11 +1157,15 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         });
         const json = await res.json();
         if (json.success)
-          alert(`Sync Berhasil! ${json.count} produk terupdate.`);
-        else alert("Gagal Sync: " + json.error);
+          showToast(
+            `Sync Berhasil! ${json.count} produk terupdate.`,
+            "success",
+            "Sync Inventory"
+          );
+        else showToast("Gagal Sync: " + json.error, "error");
       } catch (e) {
         console.error(e);
-        alert("Error syncing inventory");
+        showToast("Error syncing inventory", "error");
       }
     },
 
@@ -919,10 +1182,14 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         .then((r) => r.json())
         .then((d) => {
           if (d.status === "success") {
-            alert("Inventory Master Berhasil Diupload!");
+            showToast(
+              "Inventory Master Berhasil Diupload!",
+              "success",
+              "Upload Inventory"
+            );
             this.inventoryFile = d.filename;
           } else {
-            alert("Gagal Upload Inventory");
+            showToast("Gagal Upload Inventory", "error");
           }
           fileInput.value = "";
         });
@@ -940,19 +1207,32 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         .then((r) => r.json())
         .then((d) => {
           if (d.status === "success") {
-            alert("Knowledge Base Berhasil Ditambahkan!");
+            showToast(
+              "Knowledge Base Berhasil Ditambahkan!",
+              "success",
+              "Knowledge Base"
+            );
             if (!this.knowledgeFiles.includes(d.filename)) {
               this.knowledgeFiles.push(d.filename);
             }
           } else {
-            alert("Gagal Upload Knowledge Base");
+            showToast("Gagal Upload Knowledge Base", "error");
           }
           fileInput.value = "";
         });
     },
 
-    deleteKnowledge(filename) {
-      if (!confirm(`Hapus file "${filename}" dari knowledge base?`)) return;
+    async deleteKnowledge(filename) {
+      const confirmed = await showConfirm({
+        title: "Hapus Knowledge Base",
+        message: `Hapus file "${filename}" dari knowledge base?`,
+        type: "danger",
+        icon: "🗑️",
+        confirmText: "Ya, Hapus",
+        cancelText: "Batal",
+      });
+      if (!confirmed) return;
+
       fetch(`/ai/knowledge/${this.sessionId}/${filename}`, { method: "DELETE" })
         .then((r) => r.json())
         .then((d) => {
@@ -960,8 +1240,9 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
             this.knowledgeFiles = this.knowledgeFiles.filter(
               (f) => f !== filename
             );
+            showToast("File berhasil dihapus", "success");
           } else {
-            alert("Gagal menghapus file");
+            showToast("Gagal menghapus file", "error");
           }
         });
     },
@@ -990,7 +1271,7 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
           prompt: this.aiPrompt,
         }),
       }).then(() => {
-        alert("Prompt disimpan!");
+        showToast("Prompt disimpan!", "success", "AI Prompt");
         this.showPromptModal = false;
       });
     },
@@ -1044,8 +1325,17 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
       c.innerHTML = "";
       new QRCode(c, { text: qr, width: 200, height: 200 });
     },
-    logout() {
-      if (!confirm("Logout?")) return;
+    async logout() {
+      const confirmed = await showConfirm({
+        title: "Logout",
+        message: "Apakah Anda yakin ingin logout dari dashboard ini?",
+        type: "warning",
+        icon: "🚪",
+        confirmText: "Ya, Logout",
+        cancelText: "Batal",
+      });
+      if (!confirmed) return;
+
       fetch("/session/stop", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
@@ -1112,13 +1402,13 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
           });
           const data = await res.json();
           if (data.error) {
-            alert("Gagal kirim: " + data.error);
+            showToast("Gagal kirim: " + data.error, "error");
             // Remove temp message if failed? (Optional)
           }
         }
       } catch (e) {
         console.error(e);
-        alert("Gagal kirim (Network Error)");
+        showToast("Gagal kirim (Network Error)", "error");
       }
     },
     handleIncomingMessage(data) {
@@ -1268,18 +1558,34 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
       }
     },
     async deleteMessage(id) {
-      if (!confirm("Hapus pesan ini?")) return;
+      const confirmed = await showConfirm({
+        title: "Hapus Pesan",
+        message: "Hapus pesan ini?",
+        type: "danger",
+        icon: "🗑️",
+        confirmText: "Ya, Hapus",
+        cancelText: "Batal",
+      });
+      if (!confirmed) return;
       try {
         await fetch(`/chat/message/${id}`, { method: "DELETE" });
         const chatMessages = this.messages[this.activeChat];
         const idx = chatMessages.findIndex((m) => m.id === id);
         if (idx !== -1) chatMessages.splice(idx, 1);
       } catch (e) {
-        alert("Gagal menghapus pesan");
+        showToast("Gagal menghapus pesan", "error");
       }
     },
     async deleteChat(chatId) {
-      if (!confirm("Hapus chat ini beserta semua pesannya?")) return;
+      const confirmed = await showConfirm({
+        title: "Hapus Chat",
+        message: "Hapus chat ini beserta semua pesannya?",
+        type: "danger",
+        icon: "🗑️",
+        confirmText: "Ya, Hapus Semua",
+        cancelText: "Batal",
+      });
+      if (!confirmed) return;
       try {
         const res = await fetch(`/chat/delete/${this.sessionId}/${chatId}`, {
           method: "DELETE",
@@ -1291,12 +1597,13 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
           if (this.activeChat === chatId) {
             this.activeChat = null;
           }
+          showToast("Chat berhasil dihapus", "success");
         } else {
-          alert("Gagal menghapus chat");
+          showToast("Gagal menghapus chat", "error");
         }
       } catch (e) {
         console.error(e);
-        alert("Gagal menghapus chat");
+        showToast("Gagal menghapus chat", "error");
       }
     },
 
@@ -1439,8 +1746,10 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
     async saveSchedule() {
       const { id, title, date, time, description, customerJid } =
         this.scheduleForm;
-      if (!title || !date || !time)
-        return alert("Judul, Tanggal, dan Waktu wajib diisi!");
+      if (!title || !date || !time) {
+        showToast("Judul, Tanggal, dan Waktu wajib diisi!", "warning");
+        return;
+      }
 
       const dateTime = new Date(`${date}T${time}`);
       const payload = {
@@ -1469,21 +1778,34 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         if (json.status === "success") {
           this.showScheduleModal = false;
           this.fetchSchedules();
-          alert(id ? "Jadwal diperbarui!" : "Jadwal dibuat!");
+          showToast(
+            id ? "Jadwal diperbarui!" : "Jadwal dibuat!",
+            "success",
+            "Jadwal"
+          );
         } else {
-          alert("Gagal menyimpan jadwal");
+          showToast("Gagal menyimpan jadwal", "error");
         }
       } catch (e) {
-        alert("Terjadi kesalahan");
+        showToast("Terjadi kesalahan", "error");
       }
     },
     async deleteSchedule(id) {
-      if (!confirm("Hapus jadwal ini?")) return;
+      const confirmed = await showConfirm({
+        title: "Hapus Jadwal",
+        message: "Hapus jadwal ini?",
+        type: "danger",
+        icon: "🗑️",
+        confirmText: "Ya, Hapus",
+        cancelText: "Batal",
+      });
+      if (!confirmed) return;
       try {
         await fetch(`/schedule/delete/${id}`, { method: "DELETE" });
         this.fetchSchedules();
+        showToast("Jadwal berhasil dihapus", "success");
       } catch (e) {
-        alert("Gagal menghapus jadwal");
+        showToast("Gagal menghapus jadwal", "error");
       }
     },
     formatDateTime(dateStr) {
@@ -1564,12 +1886,14 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
       } = this.broadcastScheduleForm;
 
       if (!title || !message || !scheduledDate || !scheduledTime) {
-        return alert("Judul, Pesan, Tanggal, dan Waktu wajib diisi!");
+        showToast("Judul, Pesan, Tanggal, dan Waktu wajib diisi!", "warning");
+        return;
       }
 
       const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`);
       if (scheduledAt <= new Date()) {
-        return alert("Waktu broadcast harus di masa depan!");
+        showToast("Waktu broadcast harus di masa depan!", "warning");
+        return;
       }
 
       const payload = {
@@ -1599,12 +1923,16 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         if (json.status === "success") {
           this.showBroadcastScheduleModal = false;
           this.fetchScheduledBroadcasts();
-          alert(id ? "Broadcast diperbarui!" : "Broadcast dijadwalkan!");
+          showToast(
+            id ? "Broadcast diperbarui!" : "Broadcast dijadwalkan!",
+            "success",
+            "Broadcast"
+          );
         } else {
-          alert(json.error || "Gagal menyimpan broadcast");
+          showToast(json.error || "Gagal menyimpan broadcast", "error");
         }
       } catch (e) {
-        alert("Terjadi kesalahan");
+        showToast("Terjadi kesalahan", "error");
       }
     },
 
@@ -1613,7 +1941,8 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         this.broadcastScheduleForm;
 
       if (!title || !message) {
-        return alert("Judul dan Pesan wajib diisi!");
+        showToast("Judul dan Pesan wajib diisi!", "warning");
+        return;
       }
 
       // Gunakan waktu sekarang + 2 detik agar langsung diproses oleh processor
@@ -1639,18 +1968,30 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         if (json.status === "success") {
           this.showBroadcastScheduleModal = false;
           this.fetchScheduledBroadcasts();
-          alert("Broadcast sedang diproses untuk dikirim sekarang!");
+          showToast(
+            "Broadcast sedang diproses untuk dikirim sekarang!",
+            "success",
+            "Broadcast"
+          );
         } else {
-          alert(json.error || "Gagal mengirim broadcast");
+          showToast(json.error || "Gagal mengirim broadcast", "error");
         }
       } catch (e) {
         console.error("Error sending broadcast now:", e);
-        alert("Gagal mengirim broadcast");
+        showToast("Gagal mengirim broadcast", "error");
       }
     },
 
     async cancelBroadcast(id) {
-      if (!confirm("Batalkan broadcast ini?")) return;
+      const confirmed = await showConfirm({
+        title: "Batalkan Broadcast",
+        message: "Batalkan broadcast ini?",
+        type: "warning",
+        icon: "⚠️",
+        confirmText: "Ya, Batalkan",
+        cancelText: "Tidak",
+      });
+      if (!confirmed) return;
       try {
         const res = await fetch(`/api/broadcasts/${id}/cancel`, {
           method: "POST",
@@ -1658,22 +1999,31 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         const json = await res.json();
         if (json.status === "success") {
           this.fetchScheduledBroadcasts();
-          alert("Broadcast dibatalkan");
+          showToast("Broadcast dibatalkan", "success");
         } else {
-          alert(json.error || "Gagal membatalkan");
+          showToast(json.error || "Gagal membatalkan", "error");
         }
       } catch (e) {
-        alert("Gagal membatalkan broadcast");
+        showToast("Gagal membatalkan broadcast", "error");
       }
     },
 
     async deleteBroadcast(id) {
-      if (!confirm("Hapus broadcast ini?")) return;
+      const confirmed = await showConfirm({
+        title: "Hapus Broadcast",
+        message: "Hapus broadcast ini?",
+        type: "danger",
+        icon: "🗑️",
+        confirmText: "Ya, Hapus",
+        cancelText: "Batal",
+      });
+      if (!confirmed) return;
       try {
         await fetch(`/api/broadcasts/${id}`, { method: "DELETE" });
         this.fetchScheduledBroadcasts();
+        showToast("Broadcast berhasil dihapus", "success");
       } catch (e) {
-        alert("Gagal menghapus broadcast");
+        showToast("Gagal menghapus broadcast", "error");
       }
     },
 

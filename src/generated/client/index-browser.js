@@ -214,6 +214,15 @@ exports.Prisma.ScheduledBroadcastScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.AutoReplyScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  keyword: 'keyword',
+  response: 'response',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -233,7 +242,8 @@ exports.Prisma.ModelName = {
   Sale: 'Sale',
   Schedule: 'Schedule',
   VerificationCode: 'VerificationCode',
-  ScheduledBroadcast: 'ScheduledBroadcast'
+  ScheduledBroadcast: 'ScheduledBroadcast',
+  AutoReply: 'AutoReply'
 };
 
 /**

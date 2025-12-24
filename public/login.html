@@ -46,6 +46,9 @@
     </style>
   </head>
   <body class="h-screen flex items-center justify-center p-4" x-data="auth()">
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
     <div
       class="glass-panel rounded-2xl shadow-2xl w-full max-w-md p-8 relative overflow-hidden"
     >
@@ -411,6 +414,39 @@
     </div>
 
     <script>
+      // Toast utility function
+      function showToast(message, type = "info", title = "", duration = 3000) {
+        const container = document.getElementById("toast-container");
+        if (!container) return;
+        const icons = { success: "✓", error: "✕", warning: "⚠", info: "ℹ" };
+        const titles = {
+          success: "Berhasil!",
+          error: "Error!",
+          warning: "Perhatian!",
+          info: "Informasi",
+        };
+        const toast = document.createElement("div");
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+          <div class="toast-icon">${icons[type] || icons.info}</div>
+          <div class="toast-content">
+            <div class="toast-title">${
+              title || titles[type] || titles.info
+            }</div>
+            <div class="toast-message">${message}</div>
+          </div>
+          <button class="toast-close" onclick="this.parentElement.classList.add('removing'); setTimeout(() => this.parentElement.remove(), 300)">✕</button>
+          <div class="toast-progress" style="animation-duration: ${duration}ms"></div>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => {
+          if (toast.parentElement) {
+            toast.classList.add("removing");
+            setTimeout(() => toast.remove(), 300);
+          }
+        }, duration);
+      }
+
       function auth() {
         return {
           mode: "login", // login, register, register-verify, forgot, forgot-verify, reset
@@ -517,8 +553,10 @@
                 );
 
                 if (data.isExpired && data.role === "USER") {
-                  alert(
-                    "Langganan Anda telah berakhir! Silakan hubungi Developer untuk memperpanjang."
+                  showToast(
+                    "Langganan Anda telah berakhir! Silakan hubungi Developer untuk memperpanjang.",
+                    "warning",
+                    "Langganan Habis"
                   );
                 }
 
@@ -528,10 +566,10 @@
                   window.location.href = "/index.html";
                 }
               } else {
-                alert(data.error);
+                showToast(data.error, "error");
               }
             } catch (e) {
-              alert("Error connecting to server");
+              showToast("Error connecting to server", "error");
             }
             this.loading = false;
           },
@@ -559,10 +597,10 @@
                   console.log("DEBUG CODE:", data.debugCode);
                 }
               } else {
-                alert(data.error);
+                showToast(data.error, "error");
               }
             } catch (e) {
-              alert("Gagal mengirim kode verifikasi");
+              showToast("Gagal mengirim kode verifikasi", "error");
             }
             this.loading = false;
           },
@@ -587,7 +625,11 @@
               });
               const data = await res.json();
               if (data.status === "success") {
-                alert("🎉 Registrasi Berhasil! Silakan Login.");
+                showToast(
+                  "🎉 Registrasi Berhasil! Silakan Login.",
+                  "success",
+                  "Berhasil"
+                );
                 this.mode = "login";
                 this.form.registerPassword = "";
                 this.form.waSessionId = "";
@@ -601,7 +643,7 @@
                 });
               }
             } catch (e) {
-              alert("Gagal verifikasi");
+              showToast("Gagal verifikasi", "error");
             }
             this.loading = false;
           },
@@ -624,10 +666,10 @@
                   console.log("DEBUG RESET CODE:", data.debugCode);
                 }
               } else {
-                alert(data.error);
+                showToast(data.error, "error");
               }
             } catch (e) {
-              alert("Gagal mengirim kode");
+              showToast("Gagal mengirim kode", "error");
             }
             this.loading = false;
           },
@@ -659,19 +701,19 @@
                 });
               }
             } catch (e) {
-              alert("Gagal verifikasi");
+              showToast("Gagal verifikasi", "error");
             }
             this.loading = false;
           },
 
           async doReset() {
             if (this.form.newPassword !== this.form.confirmPassword) {
-              alert("Password tidak cocok!");
+              showToast("Password tidak cocok!", "warning");
               return;
             }
 
             if (this.form.newPassword.length < 6) {
-              alert("Password minimal 6 karakter!");
+              showToast("Password minimal 6 karakter!", "warning");
               return;
             }
 
@@ -688,16 +730,20 @@
               });
               const data = await res.json();
               if (data.status === "success") {
-                alert("🎉 Password berhasil diubah. Silakan login.");
+                showToast(
+                  "🎉 Password berhasil diubah. Silakan login.",
+                  "success",
+                  "Berhasil"
+                );
                 this.mode = "login";
                 this.form.newPassword = "";
                 this.form.confirmPassword = "";
                 this.resetDigits();
               } else {
-                alert(data.error);
+                showToast(data.error, "error");
               }
             } catch (e) {
-              alert("Gagal reset password");
+              showToast("Gagal reset password", "error");
             }
             this.loading = false;
           },
