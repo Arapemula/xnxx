@@ -1983,25 +1983,35 @@ app.get("/api/top-products/:sessionId", async (req, res) => {
 // Middleware to verify developer role
 const verifyDeveloperRole = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  const sessionId = authHeader?.replace("Bearer ", "") || req.query.sessionId || req.body?.sessionId;
-  
+  const sessionId =
+    authHeader?.replace("Bearer ", "") ||
+    req.query.sessionId ||
+    req.body?.sessionId;
+
   if (!sessionId) {
-    return res.status(401).json({ error: "Authorization required", code: "NO_AUTH" });
+    return res
+      .status(401)
+      .json({ error: "Authorization required", code: "NO_AUTH" });
   }
-  
+
   try {
     const user = await prisma.user.findUnique({
-      where: { waSessionId: sessionId }
+      where: { waSessionId: sessionId },
     });
-    
+
     if (!user) {
-      return res.status(401).json({ error: "User not found", code: "USER_NOT_FOUND" });
+      return res
+        .status(401)
+        .json({ error: "User not found", code: "USER_NOT_FOUND" });
     }
-    
+
     if (user.role !== "DEVELOPER") {
-      return res.status(403).json({ error: "Access denied. Developer role required.", code: "FORBIDDEN" });
+      return res.status(403).json({
+        error: "Access denied. Developer role required.",
+        code: "FORBIDDEN",
+      });
     }
-    
+
     req.user = user;
     next();
   } catch (e) {
@@ -2062,91 +2072,99 @@ app.get("/api/developer/users", verifyDeveloperRole, async (req, res) => {
 });
 
 // UPDATE user subscription (add/remove days)
-app.post("/api/developer/update-subscription", verifyDeveloperRole, async (req, res) => {
-  const { userId, action, days } = req.body;
+app.post(
+  "/api/developer/update-subscription",
+  verifyDeveloperRole,
+  async (req, res) => {
+    const { userId, action, days } = req.body;
 
-  if (!userId || !action || days === undefined) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
-
-  try {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    if (!userId || !action || days === undefined) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    let newExpiryDate;
-
-    if (action === "set_unlimited") {
-      // Set to unlimited (null expiryDate)
-      newExpiryDate = null;
-    } else {
-      // Calculate from current expiry or now if expired
-      const baseDate =
-        user.expiryDate && new Date(user.expiryDate) > new Date()
-          ? new Date(user.expiryDate)
-          : new Date();
-
-      if (action === "add") {
-        baseDate.setDate(baseDate.getDate() + Number(days));
-      } else if (action === "subtract") {
-        baseDate.setDate(baseDate.getDate() - Number(days));
-      } else if (action === "set") {
-        // Set specific expiry date
-        baseDate.setDate(new Date().getDate() + Number(days));
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
       }
 
-      newExpiryDate = baseDate;
+      let newExpiryDate;
+
+      if (action === "set_unlimited") {
+        // Set to unlimited (null expiryDate)
+        newExpiryDate = null;
+      } else {
+        // Calculate from current expiry or now if expired
+        const baseDate =
+          user.expiryDate && new Date(user.expiryDate) > new Date()
+            ? new Date(user.expiryDate)
+            : new Date();
+
+        if (action === "add") {
+          baseDate.setDate(baseDate.getDate() + Number(days));
+        } else if (action === "subtract") {
+          baseDate.setDate(baseDate.getDate() - Number(days));
+        } else if (action === "set") {
+          // Set specific expiry date
+          baseDate.setDate(new Date().getDate() + Number(days));
+        }
+
+        newExpiryDate = baseDate;
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { expiryDate: newExpiryDate },
+      });
+
+      res.json({
+        status: "success",
+        message: `Subscription updated for ${user.email}`,
+        expiryDate: updatedUser.expiryDate,
+      });
+    } catch (e) {
+      console.error("Error updating subscription:", e);
+      res.status(500).json({ error: "Failed to update subscription" });
     }
-
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { expiryDate: newExpiryDate },
-    });
-
-    res.json({
-      status: "success",
-      message: `Subscription updated for ${user.email}`,
-      expiryDate: updatedUser.expiryDate,
-    });
-  } catch (e) {
-    console.error("Error updating subscription:", e);
-    res.status(500).json({ error: "Failed to update subscription" });
   }
-});
+);
 
 // UPDATE user role (promote to developer or demote to user)
-app.post("/api/developer/update-role", verifyDeveloperRole, async (req, res) => {
-  const { userId, role } = req.body;
+app.post(
+  "/api/developer/update-role",
+  verifyDeveloperRole,
+  async (req, res) => {
+    const { userId, role } = req.body;
 
-  if (!userId || !role) {
-    return res.status(400).json({ error: "Missing required fields" });
+    if (!userId || !role) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    if (!["USER", "DEVELOPER"].includes(role)) {
+      return res.status(400).json({ error: "Invalid role" });
+    }
+
+    try {
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          role: role,
+          // If promoting to DEVELOPER, set unlimited subscription
+          expiryDate: role === "DEVELOPER" ? null : undefined,
+        },
+      });
+
+      res.json({
+        status: "success",
+        message: `User role updated to ${role}`,
+        user: updatedUser,
+      });
+    } catch (e) {
+      console.error("Error updating role:", e);
+      res.status(500).json({ error: "Failed to update role" });
+    }
   }
-
-  if (!["USER", "DEVELOPER"].includes(role)) {
-    return res.status(400).json({ error: "Invalid role" });
-  }
-
-  try {
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        role: role,
-        // If promoting to DEVELOPER, set unlimited subscription
-        expiryDate: role === "DEVELOPER" ? null : undefined,
-      },
-    });
-
-    res.json({
-      status: "success",
-      message: `User role updated to ${role}`,
-      user: updatedUser,
-    });
-  } catch (e) {
-    console.error("Error updating role:", e);
-    res.status(500).json({ error: "Failed to update role" });
-  }
-});
+);
 
 // GET user subscription info (for logged-in user)
 app.get("/api/user/subscription/:sessionId", async (req, res) => {
@@ -2226,34 +2244,309 @@ app.post("/api/user/toggle-countdown", async (req, res) => {
 });
 
 // DELETE user account (for Developer only)
-app.delete("/api/developer/delete-user/:userId", verifyDeveloperRole, async (req, res) => {
-  const { userId } = req.params;
+app.delete(
+  "/api/developer/delete-user/:userId",
+  verifyDeveloperRole,
+  async (req, res) => {
+    const { userId } = req.params;
 
-  try {
-    // First check if user exists
-    const user = await prisma.user.findUnique({
-      where: { id: Number(userId) },
-    });
+    try {
+      // First check if user exists
+      const user = await prisma.user.findUnique({
+        where: { id: Number(userId) },
+      });
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Delete related data first (cascading)
+      await prisma.chat.deleteMany({ where: { sessionId: user.waSessionId } });
+      await prisma.sale.deleteMany({ where: { sessionId: user.waSessionId } });
+      await prisma.schedule.deleteMany({
+        where: { sessionId: user.waSessionId },
+      });
+      await prisma.session.deleteMany({
+        where: { sessionId: user.waSessionId },
+      });
+
+      // Delete user
+      await prisma.user.delete({ where: { id: Number(userId) } });
+
+      res.json({ status: "success", message: "User deleted successfully" });
+    } catch (e) {
+      console.error("Error deleting user:", e);
+      res.status(500).json({ error: "Failed to delete user" });
     }
+  }
+);
 
-    // Delete related data first (cascading)
-    await prisma.chat.deleteMany({ where: { sessionId: user.waSessionId } });
-    await prisma.sale.deleteMany({ where: { sessionId: user.waSessionId } });
-    await prisma.schedule.deleteMany({ where: { sessionId: user.waSessionId } });
-    await prisma.session.deleteMany({ where: { sessionId: user.waSessionId } });
+// =============================================
+// SCHEDULED BROADCAST API
+// =============================================
 
-    // Delete user
-    await prisma.user.delete({ where: { id: Number(userId) } });
-
-    res.json({ status: "success", message: "User deleted successfully" });
+// Get all scheduled broadcasts for a session
+app.get("/api/broadcasts/:sessionId", async (req, res) => {
+  const { sessionId } = req.params;
+  try {
+    const broadcasts = await prisma.scheduledBroadcast.findMany({
+      where: { sessionId },
+      orderBy: { scheduledAt: "asc" },
+    });
+    res.json({ status: "success", data: broadcasts });
   } catch (e) {
-    console.error("Error deleting user:", e);
-    res.status(500).json({ error: "Failed to delete user" });
+    console.error("Error fetching broadcasts:", e);
+    res.status(500).json({ error: "Failed to fetch broadcasts" });
   }
 });
+
+// Create a new scheduled broadcast
+app.post("/api/broadcasts", async (req, res) => {
+  const { sessionId, title, message, targetLabel, manualNumbers, scheduledAt } =
+    req.body;
+
+  try {
+    // Validate scheduledAt is in the future
+    const scheduleDate = new Date(scheduledAt);
+    if (scheduleDate <= new Date()) {
+      return res
+        .status(400)
+        .json({ error: "Waktu broadcast harus di masa depan" });
+    }
+
+    const broadcast = await prisma.scheduledBroadcast.create({
+      data: {
+        sessionId,
+        title,
+        message,
+        targetLabel: targetLabel || "all",
+        manualNumbers: manualNumbers || null,
+        scheduledAt: scheduleDate,
+        status: "PENDING",
+      },
+    });
+
+    res.json({ status: "success", data: broadcast });
+  } catch (e) {
+    console.error("Error creating broadcast:", e);
+    res.status(500).json({ error: "Failed to create broadcast" });
+  }
+});
+
+// Update a scheduled broadcast
+app.put("/api/broadcasts/:id", async (req, res) => {
+  const { id } = req.params;
+  const { title, message, targetLabel, manualNumbers, scheduledAt } = req.body;
+
+  try {
+    const existing = await prisma.scheduledBroadcast.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: "Broadcast not found" });
+    }
+
+    if (existing.status !== "PENDING") {
+      return res
+        .status(400)
+        .json({ error: "Hanya broadcast PENDING yang bisa diedit" });
+    }
+
+    const broadcast = await prisma.scheduledBroadcast.update({
+      where: { id: Number(id) },
+      data: {
+        title,
+        message,
+        targetLabel,
+        manualNumbers,
+        scheduledAt: new Date(scheduledAt),
+      },
+    });
+
+    res.json({ status: "success", data: broadcast });
+  } catch (e) {
+    console.error("Error updating broadcast:", e);
+    res.status(500).json({ error: "Failed to update broadcast" });
+  }
+});
+
+// Cancel a scheduled broadcast
+app.post("/api/broadcasts/:id/cancel", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const existing = await prisma.scheduledBroadcast.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: "Broadcast not found" });
+    }
+
+    if (existing.status !== "PENDING") {
+      return res
+        .status(400)
+        .json({ error: "Hanya broadcast PENDING yang bisa dibatalkan" });
+    }
+
+    await prisma.scheduledBroadcast.update({
+      where: { id: Number(id) },
+      data: { status: "CANCELLED" },
+    });
+
+    res.json({ status: "success", message: "Broadcast cancelled" });
+  } catch (e) {
+    console.error("Error cancelling broadcast:", e);
+    res.status(500).json({ error: "Failed to cancel broadcast" });
+  }
+});
+
+// Delete a scheduled broadcast
+app.delete("/api/broadcasts/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await prisma.scheduledBroadcast.delete({
+      where: { id: Number(id) },
+    });
+
+    res.json({ status: "success", message: "Broadcast deleted" });
+  } catch (e) {
+    console.error("Error deleting broadcast:", e);
+    res.status(500).json({ error: "Failed to delete broadcast" });
+  }
+});
+
+// Clear Broadcast History (Delete all NON-PENDING)
+app.delete("/api/broadcasts/history/:sessionId", async (req, res) => {
+  const { sessionId } = req.params;
+  try {
+    const deleted = await prisma.scheduledBroadcast.deleteMany({
+      where: {
+        sessionId,
+        status: { not: "PENDING" },
+      },
+    });
+    res.json({
+      status: "success",
+      message: `${deleted.count} riwayat broadcast dihapus`,
+    });
+  } catch (e) {
+    console.error("Error clearing broadcast history:", e);
+    res.status(500).json({ error: "Failed to clear history" });
+  }
+});
+
+// Broadcast Processing Function
+async function processPendingBroadcasts() {
+  try {
+    const now = new Date();
+
+    // Find broadcasts that should be sent now
+    const pendingBroadcasts = await prisma.scheduledBroadcast.findMany({
+      where: {
+        status: "PENDING",
+        scheduledAt: { lte: now },
+      },
+    });
+
+    for (const broadcast of pendingBroadcasts) {
+      console.log(`[BROADCAST] Processing: ${broadcast.title}`);
+
+      try {
+        const session = sessions.get(broadcast.sessionId);
+        if (!session || !session.sock) {
+          await prisma.scheduledBroadcast.update({
+            where: { id: broadcast.id },
+            data: {
+              status: "FAILED",
+              errorMessage: "Session WhatsApp tidak aktif",
+            },
+          });
+          continue;
+        }
+
+        const sock = session.sock;
+
+        let targets = [];
+
+        // Determine targets
+        if (broadcast.manualNumbers) {
+          // Manual numbers (comma separated)
+          targets = broadcast.manualNumbers
+            .split(/[\n,]+/)
+            .map((n) => n.trim())
+            .filter((n) => n)
+            .map((n) => formatPhone(n));
+        } else if (broadcast.targetLabel === "all") {
+          // All chats
+          const chats = await prisma.chat.findMany({
+            where: { sessionId: broadcast.sessionId },
+            select: { remoteJid: true },
+          });
+          targets = chats.map((c) => c.remoteJid);
+        } else {
+          // Specific label
+          const chats = await prisma.chat.findMany({
+            where: {
+              sessionId: broadcast.sessionId,
+              label: broadcast.targetLabel,
+            },
+            select: { remoteJid: true },
+          });
+          targets = chats.map((c) => c.remoteJid);
+        }
+
+        // Filter only @s.whatsapp.net (individual chats)
+        targets = targets.filter((jid) => jid.endsWith("@s.whatsapp.net"));
+
+        let sentCount = 0;
+        const errors = [];
+
+        // Send messages with delay to avoid spam detection
+        for (const jid of targets) {
+          try {
+            await sock.sendMessage(jid, { text: broadcast.message });
+            sentCount++;
+            // Add delay between messages (1-2 seconds)
+            await new Promise((r) =>
+              setTimeout(r, 1000 + Math.random() * 1000)
+            );
+          } catch (sendErr) {
+            errors.push(`${jid}: ${sendErr.message}`);
+          }
+        }
+
+        // Update broadcast status
+        await prisma.scheduledBroadcast.update({
+          where: { id: broadcast.id },
+          data: {
+            status: sentCount > 0 ? "SENT" : "FAILED",
+            sentAt: new Date(),
+            sentCount,
+            errorMessage: errors.length > 0 ? errors.join("; ") : null,
+          },
+        });
+
+        console.log(
+          `[BROADCAST] Completed: ${broadcast.title} - Sent to ${sentCount}/${targets.length}`
+        );
+      } catch (broadcastErr) {
+        console.error(`[BROADCAST ERROR] ${broadcast.title}:`, broadcastErr);
+        await prisma.scheduledBroadcast.update({
+          where: { id: broadcast.id },
+          data: {
+            status: "FAILED",
+            errorMessage: broadcastErr.message,
+          },
+        });
+      }
+    }
+  } catch (error) {
+    console.error("[BROADCAST PROCESSOR ERROR]", error);
+  }
+}
 
 // --- CLEANUP JOB ---
 async function cleanupOldMessages() {
@@ -2289,4 +2582,8 @@ server.listen(PORT, async () => {
 
   // Schedule cleanup every 24 hours
   setInterval(cleanupOldMessages, 24 * 60 * 60 * 1000);
+
+  // Run broadcast processor every 30 seconds
+  setInterval(processPendingBroadcasts, 30 * 1000);
+  console.log("[BROADCAST] Processor started - checking every 30 seconds");
 });

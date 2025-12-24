@@ -188,6 +188,32 @@ exports.Prisma.ScheduleScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.VerificationCodeScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  code: 'code',
+  type: 'type',
+  expiresAt: 'expiresAt',
+  verified: 'verified',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ScheduledBroadcastScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  title: 'title',
+  message: 'message',
+  targetLabel: 'targetLabel',
+  manualNumbers: 'manualNumbers',
+  scheduledAt: 'scheduledAt',
+  status: 'status',
+  sentAt: 'sentAt',
+  sentCount: 'sentCount',
+  errorMessage: 'errorMessage',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -205,7 +231,9 @@ exports.Prisma.ModelName = {
   Chat: 'Chat',
   Message: 'Message',
   Sale: 'Sale',
-  Schedule: 'Schedule'
+  Schedule: 'Schedule',
+  VerificationCode: 'VerificationCode',
+  ScheduledBroadcast: 'ScheduledBroadcast'
 };
 
 /**

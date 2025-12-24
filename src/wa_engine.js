@@ -354,20 +354,43 @@ const createSession = async (sessionId, io, webhookUrl = null, res = null) => {
     }
   });
 
-  sock.ev.on("contacts.upsert", (contacts) => {
+  sock.ev.on("contacts.upsert", async (contacts) => {
     for (const c of contacts) {
       if (c.id && (c.name || c.notify)) {
         globalContactStore[jidNormalizedUser(c.id)] = c.name || c.notify;
       }
       // Map LID to Phone if available
       if (c.id && c.lid) {
-        // If id is phone (s.whatsapp.net) and lid is present
         if (c.id.endsWith("@s.whatsapp.net")) {
           lidToPhoneMap[c.lid] = c.id;
         }
       }
-      // Sometimes id IS the LID, and we might not have the phone link directly here unless we already have it.
-      // But usually contacts sync sends phone JID as ID and includes LID.
+
+      // Sync to Database (Chat Table)
+      if (c.id.endsWith("@s.whatsapp.net")) {
+        try {
+          const name = c.name || c.notify || c.verifiedName;
+          // Gunakan upsert agar data tetap update
+          await prisma.chat.upsert({
+            where: {
+              sessionId_remoteJid: {
+                sessionId,
+                remoteJid: c.id,
+              },
+            },
+            update: {
+              name: name || undefined, // Hanya update nama jika ada
+            },
+            create: {
+              sessionId,
+              remoteJid: c.id,
+              name: name || "Unknown",
+            },
+          });
+        } catch (e) {
+          // Ignore duplicate errors silently
+        }
+      }
     }
   });
 

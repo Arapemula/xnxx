@@ -127,6 +127,20 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
     subscriptionStatus: "ACTIVE",
     isSubscriptionExpired: false, // For blocking modal
 
+    // SCHEDULED BROADCAST STATE
+    scheduledBroadcasts: [],
+    showBroadcastScheduleModal: false,
+    broadcastScheduleForm: {
+      id: null,
+      title: "",
+      message: "",
+      targetLabel: "all",
+      manualNumbers: "",
+      scheduledDate: "",
+      scheduledTime: "",
+    },
+    broadcastTab: "scheduled", // 'scheduled' or 'history'
+
     init() {
       this.socket = io();
 
@@ -216,6 +230,7 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
       this.mobileMenu = false;
       if (page === "schedule") {
         this.fetchSchedules();
+        this.fetchScheduledBroadcasts();
       }
     },
 
@@ -411,14 +426,14 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            scales: { 
-                y: { 
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0,0,0,0.05)' } 
-                },
-                x: {
-                    grid: { display: false }
-                }
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { color: "rgba(0,0,0,0.05)" },
+              },
+              x: {
+                grid: { display: false },
+              },
             },
             plugins: { legend: { display: false } },
           },
@@ -444,11 +459,11 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
                 pointBorderColor: "#ec4899",
                 pointBorderWidth: 2,
                 backgroundColor: (context) => {
-                    const ctx = context.chart.ctx;
-                    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                    gradient.addColorStop(0, "rgba(236, 72, 153, 0.4)");
-                    gradient.addColorStop(1, "rgba(236, 72, 153, 0.0)");
-                    return gradient;
+                  const ctx = context.chart.ctx;
+                  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                  gradient.addColorStop(0, "rgba(236, 72, 153, 0.4)");
+                  gradient.addColorStop(1, "rgba(236, 72, 153, 0.0)");
+                  return gradient;
                 },
               },
             ],
@@ -457,7 +472,11 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.05)' } },
+              y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 },
+                grid: { color: "rgba(0,0,0,0.05)" },
+              },
               x: { grid: { display: false } },
             },
             plugins: { legend: { display: false } },
@@ -1298,30 +1317,43 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
 
     // --- CALENDAR LOGIC ---
     generateCalendar() {
-      const firstDay = new Date(this.calendarYear, this.calendarMonth, 1);
-      const lastDay = new Date(this.calendarYear, this.calendarMonth + 1, 0);
+      const year = this.calendarYear;
+      const month = this.calendarMonth;
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
       const daysInMonth = lastDay.getDate();
-      const startingDay = firstDay.getDay(); // 0 = Sunday
+      const startDay = firstDay.getDay();
 
-      let days = [];
-
-      // Previous month padding
-      for (let i = 0; i < startingDay; i++) {
-        days.push({ date: null });
-      }
-
-      // Current month days
-      for (let i = 1; i <= daysInMonth; i++) {
-        const dateStr = `${this.calendarYear}-${String(
-          this.calendarMonth + 1
-        ).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+      const days = [];
+      for (let i = 0; i < startDay; i++) {
         days.push({
-          date: i,
-          fullDate: dateStr,
-          hasSchedule: this.schedules.some((s) => s.date.startsWith(dateStr)),
+          date: "",
+          fullDate: "",
+          hasSchedule: false,
+          hasBroadcast: false,
         });
       }
 
+      for (let i = 1; i <= daysInMonth; i++) {
+        // Format Date YYYY-MM-DD manually to avoid timezone shifts
+        const m = String(month + 1).padStart(2, "0");
+        const d = String(i).padStart(2, "0");
+        const dateStr = `${year}-${m}-${d}`;
+
+        const hasSchedule = this.schedules.some((s) =>
+          s.date.startsWith(dateStr)
+        );
+        const hasBroadcast = this.scheduledBroadcasts.some(
+          (b) => b.scheduledAt.startsWith(dateStr) && b.status === "PENDING"
+        );
+
+        days.push({
+          date: i,
+          fullDate: dateStr,
+          hasSchedule,
+          hasBroadcast,
+        });
+      }
       this.calendarDays = days;
     },
     changeMonth(offset) {
@@ -1345,10 +1377,7 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
       );
     },
     selectDate(day) {
-      if (!day.date) return;
-      if (this.selectedDate === day.fullDate) {
-        this.selectedDate = null; // Deselect if clicked again
-      } else {
+      if (day.date) {
         this.selectedDate = day.fullDate;
       }
     },
@@ -1357,6 +1386,12 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         return this.schedules;
       }
       return this.schedules.filter((s) => s.date.startsWith(this.selectedDate));
+    },
+    get filteredBroadcasts() {
+      if (!this.selectedDate) return [];
+      return this.scheduledBroadcasts.filter((b) =>
+        b.scheduledAt.startsWith(this.selectedDate)
+      );
     },
 
     openScheduleModal(schedule = null) {
@@ -1471,14 +1506,231 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
       return jid.replace("@s.whatsapp.net", "");
     },
 
+    // ====== SCHEDULED BROADCAST FUNCTIONS ======
+    async fetchScheduledBroadcasts() {
+      if (!this.sessionId) return;
+      try {
+        const res = await fetch(`/api/broadcasts/${this.sessionId}`);
+        const json = await res.json();
+        if (json.status === "success") {
+          this.scheduledBroadcasts = json.data;
+        }
+      } catch (e) {
+        console.error("Failed to fetch broadcasts", e);
+      }
+    },
+
+    openBroadcastScheduleModal(broadcast = null) {
+      if (broadcast) {
+        // Edit mode
+        const d = new Date(broadcast.scheduledAt);
+        this.broadcastScheduleForm = {
+          id: broadcast.id,
+          title: broadcast.title,
+          message: broadcast.message,
+          targetLabel: broadcast.targetLabel,
+          manualNumbers: broadcast.manualNumbers || "",
+          scheduledDate: d.toISOString().split("T")[0],
+          scheduledTime: d.toTimeString().slice(0, 5),
+          sendNow: "schedule",
+        };
+      } else {
+        // Create mode
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        this.broadcastScheduleForm = {
+          id: null,
+          title: "",
+          message: "",
+          targetLabel: "all",
+          manualNumbers: "",
+          scheduledDate: tomorrow.toISOString().split("T")[0],
+          scheduledTime: "09:00",
+          sendNow: "schedule",
+        };
+      }
+      this.showBroadcastScheduleModal = true;
+    },
+
+    async saveBroadcastSchedule() {
+      const {
+        id,
+        title,
+        message,
+        targetLabel,
+        manualNumbers,
+        scheduledDate,
+        scheduledTime,
+      } = this.broadcastScheduleForm;
+
+      if (!title || !message || !scheduledDate || !scheduledTime) {
+        return alert("Judul, Pesan, Tanggal, dan Waktu wajib diisi!");
+      }
+
+      const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`);
+      if (scheduledAt <= new Date()) {
+        return alert("Waktu broadcast harus di masa depan!");
+      }
+
+      const payload = {
+        sessionId: this.sessionId,
+        title,
+        message,
+        targetLabel,
+        manualNumbers: manualNumbers || null,
+        scheduledAt,
+      };
+
+      try {
+        let url = "/api/broadcasts";
+        let method = "POST";
+        if (id) {
+          url = `/api/broadcasts/${id}`;
+          method = "PUT";
+        }
+
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+
+        if (json.status === "success") {
+          this.showBroadcastScheduleModal = false;
+          this.fetchScheduledBroadcasts();
+          alert(id ? "Broadcast diperbarui!" : "Broadcast dijadwalkan!");
+        } else {
+          alert(json.error || "Gagal menyimpan broadcast");
+        }
+      } catch (e) {
+        alert("Terjadi kesalahan");
+      }
+    },
+
+    async sendBroadcastNow() {
+      const { title, message, targetLabel, manualNumbers } =
+        this.broadcastScheduleForm;
+
+      if (!title || !message) {
+        return alert("Judul dan Pesan wajib diisi!");
+      }
+
+      // Gunakan waktu sekarang + 2 detik agar langsung diproses oleh processor
+      const now = new Date();
+      now.setSeconds(now.getSeconds() + 2);
+
+      const payload = {
+        sessionId: this.sessionId,
+        title,
+        message,
+        targetLabel,
+        manualNumbers: manualNumbers || null,
+        scheduledAt: now,
+      };
+
+      try {
+        const res = await fetch("/api/broadcasts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        if (json.status === "success") {
+          this.showBroadcastScheduleModal = false;
+          this.fetchScheduledBroadcasts();
+          alert("Broadcast sedang diproses untuk dikirim sekarang!");
+        } else {
+          alert(json.error || "Gagal mengirim broadcast");
+        }
+      } catch (e) {
+        console.error("Error sending broadcast now:", e);
+        alert("Gagal mengirim broadcast");
+      }
+    },
+
+    async cancelBroadcast(id) {
+      if (!confirm("Batalkan broadcast ini?")) return;
+      try {
+        const res = await fetch(`/api/broadcasts/${id}/cancel`, {
+          method: "POST",
+        });
+        const json = await res.json();
+        if (json.status === "success") {
+          this.fetchScheduledBroadcasts();
+          alert("Broadcast dibatalkan");
+        } else {
+          alert(json.error || "Gagal membatalkan");
+        }
+      } catch (e) {
+        alert("Gagal membatalkan broadcast");
+      }
+    },
+
+    async deleteBroadcast(id) {
+      if (!confirm("Hapus broadcast ini?")) return;
+      try {
+        await fetch(`/api/broadcasts/${id}`, { method: "DELETE" });
+        this.fetchScheduledBroadcasts();
+      } catch (e) {
+        alert("Gagal menghapus broadcast");
+      }
+    },
+
+    get pendingBroadcasts() {
+      return this.scheduledBroadcasts.filter((b) => b.status === "PENDING");
+    },
+
+    get historyBroadcasts() {
+      return this.scheduledBroadcasts.filter((b) => b.status !== "PENDING");
+    },
+
+    getBroadcastStatusColor(status) {
+      const colors = {
+        PENDING: "bg-yellow-100 text-yellow-700 border-yellow-200",
+        SENT: "bg-green-100 text-green-700 border-green-200",
+        FAILED: "bg-red-100 text-red-700 border-red-200",
+        CANCELLED: "bg-gray-100 text-gray-600 border-gray-200",
+      };
+      return colors[status] || "bg-gray-100 text-gray-600 border-gray-200";
+    },
+
+    getBroadcastStatusIcon(status) {
+      const icons = {
+        PENDING: "⏳",
+        SENT: "✅",
+        FAILED: "❌",
+        CANCELLED: "🚫",
+      };
+      return icons[status] || "❓";
+    },
+
+    getTargetLabelDisplay(label) {
+      const labels = {
+        all: "📱 Semua Kontak",
+        Lead: "📋 Lead",
+        Hot: "🔥 Hot",
+        Pending: "⏳ Pending",
+        Lunas: "✅ Lunas",
+        VIP: "👑 VIP",
+        Complain: "⚠️ Complain",
+        General: "📌 General",
+        manual: "✍️ Nomor Manual",
+        label: "🏷️ Label CRM",
+      };
+      return labels[label] || label;
+    },
+
     // ====== SUBSCRIPTION FUNCTIONS ======
     async fetchSubscriptionStatus() {
       if (!this.sessionId) return;
-      
+
       try {
-        const res = await fetch(`/api/user/subscription/${encodeURIComponent(this.sessionId)}`);
+        const res = await fetch(
+          `/api/user/subscription/${encodeURIComponent(this.sessionId)}`
+        );
         const json = await res.json();
-        
+
         if (json.status === "success") {
           const data = json.data;
           this.userRole = data.role;
@@ -1486,12 +1738,15 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
           this.remainingDays = data.remainingDays || 0;
           this.subscriptionStatus = data.subscriptionStatus;
           this.hideCountdown = data.hideCountdown;
-          
+
           // Update localStorage
           localStorage.setItem("user_role", data.role);
           localStorage.setItem("user_expiry", data.expiryDate || "");
-          localStorage.setItem("hide_countdown", data.hideCountdown?.toString() || "false");
-          
+          localStorage.setItem(
+            "hide_countdown",
+            data.hideCountdown?.toString() || "false"
+          );
+
           // Check if expired - BLOCK THE PAGE
           if (data.isExpired && data.role === "USER") {
             this.isSubscriptionExpired = true;
@@ -1501,9 +1756,13 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         console.error("Failed to fetch subscription status:", e);
         // Use cached data from localStorage
         this.calculateRemainingDays();
-        
+
         // Also check localStorage for expired status
-        if (this.userRole === "USER" && this.remainingDays <= 0 && this.userExpiry) {
+        if (
+          this.userRole === "USER" &&
+          this.remainingDays <= 0 &&
+          this.userExpiry
+        ) {
           this.isSubscriptionExpired = true;
         }
       }
@@ -1514,25 +1773,28 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         this.remainingDays = 999;
         return;
       }
-      
+
       const now = new Date();
       const expiry = new Date(this.userExpiry);
       const diffTime = expiry - now;
-      this.remainingDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+      this.remainingDays = Math.max(
+        0,
+        Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      );
     },
 
     async toggleCountdownVisibility() {
       this.hideCountdown = !this.hideCountdown;
       localStorage.setItem("hide_countdown", this.hideCountdown.toString());
-      
+
       try {
         await fetch("/api/user/toggle-countdown", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             sessionId: this.sessionId,
-            hideCountdown: this.hideCountdown
-          })
+            hideCountdown: this.hideCountdown,
+          }),
         });
       } catch (e) {
         console.error("Failed to save countdown preference:", e);
@@ -1544,7 +1806,7 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
       return new Date(this.userExpiry).toLocaleDateString("id-ID", {
         day: "numeric",
         month: "short",
-        year: "numeric"
+        year: "numeric",
       });
     },
   };

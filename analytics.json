@@ -446,5 +446,28 @@
     "invoiceIssued": 0,
     "invoicePaid": 0,
     "logs": []
+  },
+  "tim makreatif": {
+    "incoming": 0,
+    "outgoing": 14,
+    "newCustomers": 1,
+    "aiCount": 0,
+    "mediaCount": 0,
+    "invoiceIssued": 0,
+    "invoicePaid": 0,
+    "logs": [
+      {
+        "time": "2025-12-24T08:10:09.580Z",
+        "type": "OUT",
+        "msg": "Manual Send",
+        "user": ""
+      },
+      {
+        "time": "2025-12-24T08:05:13.989Z",
+        "type": "OUT",
+        "msg": "Manual Send",
+        "user": ""
+      }
+    ]
   }
 }

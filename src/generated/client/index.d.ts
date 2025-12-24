@@ -43,6 +43,16 @@ export type Sale = $Result.DefaultSelection<Prisma.$SalePayload>
  * 
  */
 export type Schedule = $Result.DefaultSelection<Prisma.$SchedulePayload>
+/**
+ * Model VerificationCode
+ * 
+ */
+export type VerificationCode = $Result.DefaultSelection<Prisma.$VerificationCodePayload>
+/**
+ * Model ScheduledBroadcast
+ * 
+ */
+export type ScheduledBroadcast = $Result.DefaultSelection<Prisma.$ScheduledBroadcastPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -226,6 +236,26 @@ export class PrismaClient<
     * ```
     */
   get schedule(): Prisma.ScheduleDelegate<ExtArgs>;
+
+  /**
+   * `prisma.verificationCode`: Exposes CRUD operations for the **VerificationCode** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more VerificationCodes
+    * const verificationCodes = await prisma.verificationCode.findMany()
+    * ```
+    */
+  get verificationCode(): Prisma.VerificationCodeDelegate<ExtArgs>;
+
+  /**
+   * `prisma.scheduledBroadcast`: Exposes CRUD operations for the **ScheduledBroadcast** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ScheduledBroadcasts
+    * const scheduledBroadcasts = await prisma.scheduledBroadcast.findMany()
+    * ```
+    */
+  get scheduledBroadcast(): Prisma.ScheduledBroadcastDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -672,7 +702,9 @@ export namespace Prisma {
     Chat: 'Chat',
     Message: 'Message',
     Sale: 'Sale',
-    Schedule: 'Schedule'
+    Schedule: 'Schedule',
+    VerificationCode: 'VerificationCode',
+    ScheduledBroadcast: 'ScheduledBroadcast'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -688,7 +720,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "session" | "user" | "chat" | "message" | "sale" | "schedule"
+      modelProps: "session" | "user" | "chat" | "message" | "sale" | "schedule" | "verificationCode" | "scheduledBroadcast"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1085,6 +1117,138 @@ export namespace Prisma {
           count: {
             args: Prisma.ScheduleCountArgs<ExtArgs>
             result: $Utils.Optional<ScheduleCountAggregateOutputType> | number
+          }
+        }
+      }
+      VerificationCode: {
+        payload: Prisma.$VerificationCodePayload<ExtArgs>
+        fields: Prisma.VerificationCodeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.VerificationCodeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerificationCodePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.VerificationCodeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerificationCodePayload>
+          }
+          findFirst: {
+            args: Prisma.VerificationCodeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerificationCodePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.VerificationCodeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerificationCodePayload>
+          }
+          findMany: {
+            args: Prisma.VerificationCodeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerificationCodePayload>[]
+          }
+          create: {
+            args: Prisma.VerificationCodeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerificationCodePayload>
+          }
+          createMany: {
+            args: Prisma.VerificationCodeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.VerificationCodeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerificationCodePayload>
+          }
+          update: {
+            args: Prisma.VerificationCodeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerificationCodePayload>
+          }
+          deleteMany: {
+            args: Prisma.VerificationCodeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.VerificationCodeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.VerificationCodeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerificationCodePayload>
+          }
+          aggregate: {
+            args: Prisma.VerificationCodeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVerificationCode>
+          }
+          groupBy: {
+            args: Prisma.VerificationCodeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<VerificationCodeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.VerificationCodeCountArgs<ExtArgs>
+            result: $Utils.Optional<VerificationCodeCountAggregateOutputType> | number
+          }
+        }
+      }
+      ScheduledBroadcast: {
+        payload: Prisma.$ScheduledBroadcastPayload<ExtArgs>
+        fields: Prisma.ScheduledBroadcastFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ScheduledBroadcastFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledBroadcastPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ScheduledBroadcastFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledBroadcastPayload>
+          }
+          findFirst: {
+            args: Prisma.ScheduledBroadcastFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledBroadcastPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ScheduledBroadcastFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledBroadcastPayload>
+          }
+          findMany: {
+            args: Prisma.ScheduledBroadcastFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledBroadcastPayload>[]
+          }
+          create: {
+            args: Prisma.ScheduledBroadcastCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledBroadcastPayload>
+          }
+          createMany: {
+            args: Prisma.ScheduledBroadcastCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.ScheduledBroadcastDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledBroadcastPayload>
+          }
+          update: {
+            args: Prisma.ScheduledBroadcastUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledBroadcastPayload>
+          }
+          deleteMany: {
+            args: Prisma.ScheduledBroadcastDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ScheduledBroadcastUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ScheduledBroadcastUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledBroadcastPayload>
+          }
+          aggregate: {
+            args: Prisma.ScheduledBroadcastAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateScheduledBroadcast>
+          }
+          groupBy: {
+            args: Prisma.ScheduledBroadcastGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ScheduledBroadcastGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ScheduledBroadcastCountArgs<ExtArgs>
+            result: $Utils.Optional<ScheduledBroadcastCountAggregateOutputType> | number
           }
         }
       }
@@ -6802,6 +6966,1852 @@ export namespace Prisma {
 
 
   /**
+   * Model VerificationCode
+   */
+
+  export type AggregateVerificationCode = {
+    _count: VerificationCodeCountAggregateOutputType | null
+    _avg: VerificationCodeAvgAggregateOutputType | null
+    _sum: VerificationCodeSumAggregateOutputType | null
+    _min: VerificationCodeMinAggregateOutputType | null
+    _max: VerificationCodeMaxAggregateOutputType | null
+  }
+
+  export type VerificationCodeAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type VerificationCodeSumAggregateOutputType = {
+    id: number | null
+  }
+
+  export type VerificationCodeMinAggregateOutputType = {
+    id: number | null
+    email: string | null
+    code: string | null
+    type: string | null
+    expiresAt: Date | null
+    verified: boolean | null
+    createdAt: Date | null
+  }
+
+  export type VerificationCodeMaxAggregateOutputType = {
+    id: number | null
+    email: string | null
+    code: string | null
+    type: string | null
+    expiresAt: Date | null
+    verified: boolean | null
+    createdAt: Date | null
+  }
+
+  export type VerificationCodeCountAggregateOutputType = {
+    id: number
+    email: number
+    code: number
+    type: number
+    expiresAt: number
+    verified: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type VerificationCodeAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type VerificationCodeSumAggregateInputType = {
+    id?: true
+  }
+
+  export type VerificationCodeMinAggregateInputType = {
+    id?: true
+    email?: true
+    code?: true
+    type?: true
+    expiresAt?: true
+    verified?: true
+    createdAt?: true
+  }
+
+  export type VerificationCodeMaxAggregateInputType = {
+    id?: true
+    email?: true
+    code?: true
+    type?: true
+    expiresAt?: true
+    verified?: true
+    createdAt?: true
+  }
+
+  export type VerificationCodeCountAggregateInputType = {
+    id?: true
+    email?: true
+    code?: true
+    type?: true
+    expiresAt?: true
+    verified?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type VerificationCodeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VerificationCode to aggregate.
+     */
+    where?: VerificationCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VerificationCodes to fetch.
+     */
+    orderBy?: VerificationCodeOrderByWithRelationInput | VerificationCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: VerificationCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VerificationCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VerificationCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned VerificationCodes
+    **/
+    _count?: true | VerificationCodeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: VerificationCodeAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: VerificationCodeSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: VerificationCodeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: VerificationCodeMaxAggregateInputType
+  }
+
+  export type GetVerificationCodeAggregateType<T extends VerificationCodeAggregateArgs> = {
+        [P in keyof T & keyof AggregateVerificationCode]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVerificationCode[P]>
+      : GetScalarType<T[P], AggregateVerificationCode[P]>
+  }
+
+
+
+
+  export type VerificationCodeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VerificationCodeWhereInput
+    orderBy?: VerificationCodeOrderByWithAggregationInput | VerificationCodeOrderByWithAggregationInput[]
+    by: VerificationCodeScalarFieldEnum[] | VerificationCodeScalarFieldEnum
+    having?: VerificationCodeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: VerificationCodeCountAggregateInputType | true
+    _avg?: VerificationCodeAvgAggregateInputType
+    _sum?: VerificationCodeSumAggregateInputType
+    _min?: VerificationCodeMinAggregateInputType
+    _max?: VerificationCodeMaxAggregateInputType
+  }
+
+  export type VerificationCodeGroupByOutputType = {
+    id: number
+    email: string
+    code: string
+    type: string
+    expiresAt: Date
+    verified: boolean
+    createdAt: Date
+    _count: VerificationCodeCountAggregateOutputType | null
+    _avg: VerificationCodeAvgAggregateOutputType | null
+    _sum: VerificationCodeSumAggregateOutputType | null
+    _min: VerificationCodeMinAggregateOutputType | null
+    _max: VerificationCodeMaxAggregateOutputType | null
+  }
+
+  type GetVerificationCodeGroupByPayload<T extends VerificationCodeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<VerificationCodeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof VerificationCodeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], VerificationCodeGroupByOutputType[P]>
+            : GetScalarType<T[P], VerificationCodeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type VerificationCodeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    email?: boolean
+    code?: boolean
+    type?: boolean
+    expiresAt?: boolean
+    verified?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["verificationCode"]>
+
+
+  export type VerificationCodeSelectScalar = {
+    id?: boolean
+    email?: boolean
+    code?: boolean
+    type?: boolean
+    expiresAt?: boolean
+    verified?: boolean
+    createdAt?: boolean
+  }
+
+
+  export type $VerificationCodePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "VerificationCode"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      email: string
+      code: string
+      type: string
+      expiresAt: Date
+      verified: boolean
+      createdAt: Date
+    }, ExtArgs["result"]["verificationCode"]>
+    composites: {}
+  }
+
+  type VerificationCodeGetPayload<S extends boolean | null | undefined | VerificationCodeDefaultArgs> = $Result.GetResult<Prisma.$VerificationCodePayload, S>
+
+  type VerificationCodeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<VerificationCodeFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: VerificationCodeCountAggregateInputType | true
+    }
+
+  export interface VerificationCodeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['VerificationCode'], meta: { name: 'VerificationCode' } }
+    /**
+     * Find zero or one VerificationCode that matches the filter.
+     * @param {VerificationCodeFindUniqueArgs} args - Arguments to find a VerificationCode
+     * @example
+     * // Get one VerificationCode
+     * const verificationCode = await prisma.verificationCode.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends VerificationCodeFindUniqueArgs>(args: SelectSubset<T, VerificationCodeFindUniqueArgs<ExtArgs>>): Prisma__VerificationCodeClient<$Result.GetResult<Prisma.$VerificationCodePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one VerificationCode that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {VerificationCodeFindUniqueOrThrowArgs} args - Arguments to find a VerificationCode
+     * @example
+     * // Get one VerificationCode
+     * const verificationCode = await prisma.verificationCode.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends VerificationCodeFindUniqueOrThrowArgs>(args: SelectSubset<T, VerificationCodeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__VerificationCodeClient<$Result.GetResult<Prisma.$VerificationCodePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first VerificationCode that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerificationCodeFindFirstArgs} args - Arguments to find a VerificationCode
+     * @example
+     * // Get one VerificationCode
+     * const verificationCode = await prisma.verificationCode.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends VerificationCodeFindFirstArgs>(args?: SelectSubset<T, VerificationCodeFindFirstArgs<ExtArgs>>): Prisma__VerificationCodeClient<$Result.GetResult<Prisma.$VerificationCodePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first VerificationCode that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerificationCodeFindFirstOrThrowArgs} args - Arguments to find a VerificationCode
+     * @example
+     * // Get one VerificationCode
+     * const verificationCode = await prisma.verificationCode.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends VerificationCodeFindFirstOrThrowArgs>(args?: SelectSubset<T, VerificationCodeFindFirstOrThrowArgs<ExtArgs>>): Prisma__VerificationCodeClient<$Result.GetResult<Prisma.$VerificationCodePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more VerificationCodes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerificationCodeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all VerificationCodes
+     * const verificationCodes = await prisma.verificationCode.findMany()
+     * 
+     * // Get first 10 VerificationCodes
+     * const verificationCodes = await prisma.verificationCode.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const verificationCodeWithIdOnly = await prisma.verificationCode.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends VerificationCodeFindManyArgs>(args?: SelectSubset<T, VerificationCodeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerificationCodePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a VerificationCode.
+     * @param {VerificationCodeCreateArgs} args - Arguments to create a VerificationCode.
+     * @example
+     * // Create one VerificationCode
+     * const VerificationCode = await prisma.verificationCode.create({
+     *   data: {
+     *     // ... data to create a VerificationCode
+     *   }
+     * })
+     * 
+     */
+    create<T extends VerificationCodeCreateArgs>(args: SelectSubset<T, VerificationCodeCreateArgs<ExtArgs>>): Prisma__VerificationCodeClient<$Result.GetResult<Prisma.$VerificationCodePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many VerificationCodes.
+     * @param {VerificationCodeCreateManyArgs} args - Arguments to create many VerificationCodes.
+     * @example
+     * // Create many VerificationCodes
+     * const verificationCode = await prisma.verificationCode.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends VerificationCodeCreateManyArgs>(args?: SelectSubset<T, VerificationCodeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a VerificationCode.
+     * @param {VerificationCodeDeleteArgs} args - Arguments to delete one VerificationCode.
+     * @example
+     * // Delete one VerificationCode
+     * const VerificationCode = await prisma.verificationCode.delete({
+     *   where: {
+     *     // ... filter to delete one VerificationCode
+     *   }
+     * })
+     * 
+     */
+    delete<T extends VerificationCodeDeleteArgs>(args: SelectSubset<T, VerificationCodeDeleteArgs<ExtArgs>>): Prisma__VerificationCodeClient<$Result.GetResult<Prisma.$VerificationCodePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one VerificationCode.
+     * @param {VerificationCodeUpdateArgs} args - Arguments to update one VerificationCode.
+     * @example
+     * // Update one VerificationCode
+     * const verificationCode = await prisma.verificationCode.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends VerificationCodeUpdateArgs>(args: SelectSubset<T, VerificationCodeUpdateArgs<ExtArgs>>): Prisma__VerificationCodeClient<$Result.GetResult<Prisma.$VerificationCodePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more VerificationCodes.
+     * @param {VerificationCodeDeleteManyArgs} args - Arguments to filter VerificationCodes to delete.
+     * @example
+     * // Delete a few VerificationCodes
+     * const { count } = await prisma.verificationCode.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends VerificationCodeDeleteManyArgs>(args?: SelectSubset<T, VerificationCodeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more VerificationCodes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerificationCodeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many VerificationCodes
+     * const verificationCode = await prisma.verificationCode.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends VerificationCodeUpdateManyArgs>(args: SelectSubset<T, VerificationCodeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one VerificationCode.
+     * @param {VerificationCodeUpsertArgs} args - Arguments to update or create a VerificationCode.
+     * @example
+     * // Update or create a VerificationCode
+     * const verificationCode = await prisma.verificationCode.upsert({
+     *   create: {
+     *     // ... data to create a VerificationCode
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the VerificationCode we want to update
+     *   }
+     * })
+     */
+    upsert<T extends VerificationCodeUpsertArgs>(args: SelectSubset<T, VerificationCodeUpsertArgs<ExtArgs>>): Prisma__VerificationCodeClient<$Result.GetResult<Prisma.$VerificationCodePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of VerificationCodes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerificationCodeCountArgs} args - Arguments to filter VerificationCodes to count.
+     * @example
+     * // Count the number of VerificationCodes
+     * const count = await prisma.verificationCode.count({
+     *   where: {
+     *     // ... the filter for the VerificationCodes we want to count
+     *   }
+     * })
+    **/
+    count<T extends VerificationCodeCountArgs>(
+      args?: Subset<T, VerificationCodeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], VerificationCodeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a VerificationCode.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerificationCodeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends VerificationCodeAggregateArgs>(args: Subset<T, VerificationCodeAggregateArgs>): Prisma.PrismaPromise<GetVerificationCodeAggregateType<T>>
+
+    /**
+     * Group by VerificationCode.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerificationCodeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends VerificationCodeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: VerificationCodeGroupByArgs['orderBy'] }
+        : { orderBy?: VerificationCodeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, VerificationCodeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVerificationCodeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the VerificationCode model
+   */
+  readonly fields: VerificationCodeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for VerificationCode.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__VerificationCodeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the VerificationCode model
+   */ 
+  interface VerificationCodeFieldRefs {
+    readonly id: FieldRef<"VerificationCode", 'Int'>
+    readonly email: FieldRef<"VerificationCode", 'String'>
+    readonly code: FieldRef<"VerificationCode", 'String'>
+    readonly type: FieldRef<"VerificationCode", 'String'>
+    readonly expiresAt: FieldRef<"VerificationCode", 'DateTime'>
+    readonly verified: FieldRef<"VerificationCode", 'Boolean'>
+    readonly createdAt: FieldRef<"VerificationCode", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * VerificationCode findUnique
+   */
+  export type VerificationCodeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerificationCode
+     */
+    select?: VerificationCodeSelect<ExtArgs> | null
+    /**
+     * Filter, which VerificationCode to fetch.
+     */
+    where: VerificationCodeWhereUniqueInput
+  }
+
+  /**
+   * VerificationCode findUniqueOrThrow
+   */
+  export type VerificationCodeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerificationCode
+     */
+    select?: VerificationCodeSelect<ExtArgs> | null
+    /**
+     * Filter, which VerificationCode to fetch.
+     */
+    where: VerificationCodeWhereUniqueInput
+  }
+
+  /**
+   * VerificationCode findFirst
+   */
+  export type VerificationCodeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerificationCode
+     */
+    select?: VerificationCodeSelect<ExtArgs> | null
+    /**
+     * Filter, which VerificationCode to fetch.
+     */
+    where?: VerificationCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VerificationCodes to fetch.
+     */
+    orderBy?: VerificationCodeOrderByWithRelationInput | VerificationCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VerificationCodes.
+     */
+    cursor?: VerificationCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VerificationCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VerificationCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VerificationCodes.
+     */
+    distinct?: VerificationCodeScalarFieldEnum | VerificationCodeScalarFieldEnum[]
+  }
+
+  /**
+   * VerificationCode findFirstOrThrow
+   */
+  export type VerificationCodeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerificationCode
+     */
+    select?: VerificationCodeSelect<ExtArgs> | null
+    /**
+     * Filter, which VerificationCode to fetch.
+     */
+    where?: VerificationCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VerificationCodes to fetch.
+     */
+    orderBy?: VerificationCodeOrderByWithRelationInput | VerificationCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VerificationCodes.
+     */
+    cursor?: VerificationCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VerificationCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VerificationCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VerificationCodes.
+     */
+    distinct?: VerificationCodeScalarFieldEnum | VerificationCodeScalarFieldEnum[]
+  }
+
+  /**
+   * VerificationCode findMany
+   */
+  export type VerificationCodeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerificationCode
+     */
+    select?: VerificationCodeSelect<ExtArgs> | null
+    /**
+     * Filter, which VerificationCodes to fetch.
+     */
+    where?: VerificationCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VerificationCodes to fetch.
+     */
+    orderBy?: VerificationCodeOrderByWithRelationInput | VerificationCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing VerificationCodes.
+     */
+    cursor?: VerificationCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VerificationCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VerificationCodes.
+     */
+    skip?: number
+    distinct?: VerificationCodeScalarFieldEnum | VerificationCodeScalarFieldEnum[]
+  }
+
+  /**
+   * VerificationCode create
+   */
+  export type VerificationCodeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerificationCode
+     */
+    select?: VerificationCodeSelect<ExtArgs> | null
+    /**
+     * The data needed to create a VerificationCode.
+     */
+    data: XOR<VerificationCodeCreateInput, VerificationCodeUncheckedCreateInput>
+  }
+
+  /**
+   * VerificationCode createMany
+   */
+  export type VerificationCodeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many VerificationCodes.
+     */
+    data: VerificationCodeCreateManyInput | VerificationCodeCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * VerificationCode update
+   */
+  export type VerificationCodeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerificationCode
+     */
+    select?: VerificationCodeSelect<ExtArgs> | null
+    /**
+     * The data needed to update a VerificationCode.
+     */
+    data: XOR<VerificationCodeUpdateInput, VerificationCodeUncheckedUpdateInput>
+    /**
+     * Choose, which VerificationCode to update.
+     */
+    where: VerificationCodeWhereUniqueInput
+  }
+
+  /**
+   * VerificationCode updateMany
+   */
+  export type VerificationCodeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update VerificationCodes.
+     */
+    data: XOR<VerificationCodeUpdateManyMutationInput, VerificationCodeUncheckedUpdateManyInput>
+    /**
+     * Filter which VerificationCodes to update
+     */
+    where?: VerificationCodeWhereInput
+  }
+
+  /**
+   * VerificationCode upsert
+   */
+  export type VerificationCodeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerificationCode
+     */
+    select?: VerificationCodeSelect<ExtArgs> | null
+    /**
+     * The filter to search for the VerificationCode to update in case it exists.
+     */
+    where: VerificationCodeWhereUniqueInput
+    /**
+     * In case the VerificationCode found by the `where` argument doesn't exist, create a new VerificationCode with this data.
+     */
+    create: XOR<VerificationCodeCreateInput, VerificationCodeUncheckedCreateInput>
+    /**
+     * In case the VerificationCode was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<VerificationCodeUpdateInput, VerificationCodeUncheckedUpdateInput>
+  }
+
+  /**
+   * VerificationCode delete
+   */
+  export type VerificationCodeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerificationCode
+     */
+    select?: VerificationCodeSelect<ExtArgs> | null
+    /**
+     * Filter which VerificationCode to delete.
+     */
+    where: VerificationCodeWhereUniqueInput
+  }
+
+  /**
+   * VerificationCode deleteMany
+   */
+  export type VerificationCodeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VerificationCodes to delete
+     */
+    where?: VerificationCodeWhereInput
+  }
+
+  /**
+   * VerificationCode without action
+   */
+  export type VerificationCodeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerificationCode
+     */
+    select?: VerificationCodeSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ScheduledBroadcast
+   */
+
+  export type AggregateScheduledBroadcast = {
+    _count: ScheduledBroadcastCountAggregateOutputType | null
+    _avg: ScheduledBroadcastAvgAggregateOutputType | null
+    _sum: ScheduledBroadcastSumAggregateOutputType | null
+    _min: ScheduledBroadcastMinAggregateOutputType | null
+    _max: ScheduledBroadcastMaxAggregateOutputType | null
+  }
+
+  export type ScheduledBroadcastAvgAggregateOutputType = {
+    id: number | null
+    sentCount: number | null
+  }
+
+  export type ScheduledBroadcastSumAggregateOutputType = {
+    id: number | null
+    sentCount: number | null
+  }
+
+  export type ScheduledBroadcastMinAggregateOutputType = {
+    id: number | null
+    sessionId: string | null
+    title: string | null
+    message: string | null
+    targetLabel: string | null
+    manualNumbers: string | null
+    scheduledAt: Date | null
+    status: string | null
+    sentAt: Date | null
+    sentCount: number | null
+    errorMessage: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ScheduledBroadcastMaxAggregateOutputType = {
+    id: number | null
+    sessionId: string | null
+    title: string | null
+    message: string | null
+    targetLabel: string | null
+    manualNumbers: string | null
+    scheduledAt: Date | null
+    status: string | null
+    sentAt: Date | null
+    sentCount: number | null
+    errorMessage: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ScheduledBroadcastCountAggregateOutputType = {
+    id: number
+    sessionId: number
+    title: number
+    message: number
+    targetLabel: number
+    manualNumbers: number
+    scheduledAt: number
+    status: number
+    sentAt: number
+    sentCount: number
+    errorMessage: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ScheduledBroadcastAvgAggregateInputType = {
+    id?: true
+    sentCount?: true
+  }
+
+  export type ScheduledBroadcastSumAggregateInputType = {
+    id?: true
+    sentCount?: true
+  }
+
+  export type ScheduledBroadcastMinAggregateInputType = {
+    id?: true
+    sessionId?: true
+    title?: true
+    message?: true
+    targetLabel?: true
+    manualNumbers?: true
+    scheduledAt?: true
+    status?: true
+    sentAt?: true
+    sentCount?: true
+    errorMessage?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ScheduledBroadcastMaxAggregateInputType = {
+    id?: true
+    sessionId?: true
+    title?: true
+    message?: true
+    targetLabel?: true
+    manualNumbers?: true
+    scheduledAt?: true
+    status?: true
+    sentAt?: true
+    sentCount?: true
+    errorMessage?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ScheduledBroadcastCountAggregateInputType = {
+    id?: true
+    sessionId?: true
+    title?: true
+    message?: true
+    targetLabel?: true
+    manualNumbers?: true
+    scheduledAt?: true
+    status?: true
+    sentAt?: true
+    sentCount?: true
+    errorMessage?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ScheduledBroadcastAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ScheduledBroadcast to aggregate.
+     */
+    where?: ScheduledBroadcastWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ScheduledBroadcasts to fetch.
+     */
+    orderBy?: ScheduledBroadcastOrderByWithRelationInput | ScheduledBroadcastOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ScheduledBroadcastWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ScheduledBroadcasts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ScheduledBroadcasts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ScheduledBroadcasts
+    **/
+    _count?: true | ScheduledBroadcastCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ScheduledBroadcastAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ScheduledBroadcastSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ScheduledBroadcastMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ScheduledBroadcastMaxAggregateInputType
+  }
+
+  export type GetScheduledBroadcastAggregateType<T extends ScheduledBroadcastAggregateArgs> = {
+        [P in keyof T & keyof AggregateScheduledBroadcast]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateScheduledBroadcast[P]>
+      : GetScalarType<T[P], AggregateScheduledBroadcast[P]>
+  }
+
+
+
+
+  export type ScheduledBroadcastGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ScheduledBroadcastWhereInput
+    orderBy?: ScheduledBroadcastOrderByWithAggregationInput | ScheduledBroadcastOrderByWithAggregationInput[]
+    by: ScheduledBroadcastScalarFieldEnum[] | ScheduledBroadcastScalarFieldEnum
+    having?: ScheduledBroadcastScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ScheduledBroadcastCountAggregateInputType | true
+    _avg?: ScheduledBroadcastAvgAggregateInputType
+    _sum?: ScheduledBroadcastSumAggregateInputType
+    _min?: ScheduledBroadcastMinAggregateInputType
+    _max?: ScheduledBroadcastMaxAggregateInputType
+  }
+
+  export type ScheduledBroadcastGroupByOutputType = {
+    id: number
+    sessionId: string
+    title: string
+    message: string
+    targetLabel: string
+    manualNumbers: string | null
+    scheduledAt: Date
+    status: string
+    sentAt: Date | null
+    sentCount: number | null
+    errorMessage: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ScheduledBroadcastCountAggregateOutputType | null
+    _avg: ScheduledBroadcastAvgAggregateOutputType | null
+    _sum: ScheduledBroadcastSumAggregateOutputType | null
+    _min: ScheduledBroadcastMinAggregateOutputType | null
+    _max: ScheduledBroadcastMaxAggregateOutputType | null
+  }
+
+  type GetScheduledBroadcastGroupByPayload<T extends ScheduledBroadcastGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ScheduledBroadcastGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ScheduledBroadcastGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ScheduledBroadcastGroupByOutputType[P]>
+            : GetScalarType<T[P], ScheduledBroadcastGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ScheduledBroadcastSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sessionId?: boolean
+    title?: boolean
+    message?: boolean
+    targetLabel?: boolean
+    manualNumbers?: boolean
+    scheduledAt?: boolean
+    status?: boolean
+    sentAt?: boolean
+    sentCount?: boolean
+    errorMessage?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["scheduledBroadcast"]>
+
+
+  export type ScheduledBroadcastSelectScalar = {
+    id?: boolean
+    sessionId?: boolean
+    title?: boolean
+    message?: boolean
+    targetLabel?: boolean
+    manualNumbers?: boolean
+    scheduledAt?: boolean
+    status?: boolean
+    sentAt?: boolean
+    sentCount?: boolean
+    errorMessage?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $ScheduledBroadcastPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ScheduledBroadcast"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      sessionId: string
+      title: string
+      message: string
+      targetLabel: string
+      manualNumbers: string | null
+      scheduledAt: Date
+      status: string
+      sentAt: Date | null
+      sentCount: number | null
+      errorMessage: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["scheduledBroadcast"]>
+    composites: {}
+  }
+
+  type ScheduledBroadcastGetPayload<S extends boolean | null | undefined | ScheduledBroadcastDefaultArgs> = $Result.GetResult<Prisma.$ScheduledBroadcastPayload, S>
+
+  type ScheduledBroadcastCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<ScheduledBroadcastFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: ScheduledBroadcastCountAggregateInputType | true
+    }
+
+  export interface ScheduledBroadcastDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ScheduledBroadcast'], meta: { name: 'ScheduledBroadcast' } }
+    /**
+     * Find zero or one ScheduledBroadcast that matches the filter.
+     * @param {ScheduledBroadcastFindUniqueArgs} args - Arguments to find a ScheduledBroadcast
+     * @example
+     * // Get one ScheduledBroadcast
+     * const scheduledBroadcast = await prisma.scheduledBroadcast.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ScheduledBroadcastFindUniqueArgs>(args: SelectSubset<T, ScheduledBroadcastFindUniqueArgs<ExtArgs>>): Prisma__ScheduledBroadcastClient<$Result.GetResult<Prisma.$ScheduledBroadcastPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one ScheduledBroadcast that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {ScheduledBroadcastFindUniqueOrThrowArgs} args - Arguments to find a ScheduledBroadcast
+     * @example
+     * // Get one ScheduledBroadcast
+     * const scheduledBroadcast = await prisma.scheduledBroadcast.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ScheduledBroadcastFindUniqueOrThrowArgs>(args: SelectSubset<T, ScheduledBroadcastFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ScheduledBroadcastClient<$Result.GetResult<Prisma.$ScheduledBroadcastPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first ScheduledBroadcast that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledBroadcastFindFirstArgs} args - Arguments to find a ScheduledBroadcast
+     * @example
+     * // Get one ScheduledBroadcast
+     * const scheduledBroadcast = await prisma.scheduledBroadcast.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ScheduledBroadcastFindFirstArgs>(args?: SelectSubset<T, ScheduledBroadcastFindFirstArgs<ExtArgs>>): Prisma__ScheduledBroadcastClient<$Result.GetResult<Prisma.$ScheduledBroadcastPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first ScheduledBroadcast that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledBroadcastFindFirstOrThrowArgs} args - Arguments to find a ScheduledBroadcast
+     * @example
+     * // Get one ScheduledBroadcast
+     * const scheduledBroadcast = await prisma.scheduledBroadcast.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ScheduledBroadcastFindFirstOrThrowArgs>(args?: SelectSubset<T, ScheduledBroadcastFindFirstOrThrowArgs<ExtArgs>>): Prisma__ScheduledBroadcastClient<$Result.GetResult<Prisma.$ScheduledBroadcastPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more ScheduledBroadcasts that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledBroadcastFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ScheduledBroadcasts
+     * const scheduledBroadcasts = await prisma.scheduledBroadcast.findMany()
+     * 
+     * // Get first 10 ScheduledBroadcasts
+     * const scheduledBroadcasts = await prisma.scheduledBroadcast.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const scheduledBroadcastWithIdOnly = await prisma.scheduledBroadcast.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ScheduledBroadcastFindManyArgs>(args?: SelectSubset<T, ScheduledBroadcastFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScheduledBroadcastPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a ScheduledBroadcast.
+     * @param {ScheduledBroadcastCreateArgs} args - Arguments to create a ScheduledBroadcast.
+     * @example
+     * // Create one ScheduledBroadcast
+     * const ScheduledBroadcast = await prisma.scheduledBroadcast.create({
+     *   data: {
+     *     // ... data to create a ScheduledBroadcast
+     *   }
+     * })
+     * 
+     */
+    create<T extends ScheduledBroadcastCreateArgs>(args: SelectSubset<T, ScheduledBroadcastCreateArgs<ExtArgs>>): Prisma__ScheduledBroadcastClient<$Result.GetResult<Prisma.$ScheduledBroadcastPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many ScheduledBroadcasts.
+     * @param {ScheduledBroadcastCreateManyArgs} args - Arguments to create many ScheduledBroadcasts.
+     * @example
+     * // Create many ScheduledBroadcasts
+     * const scheduledBroadcast = await prisma.scheduledBroadcast.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ScheduledBroadcastCreateManyArgs>(args?: SelectSubset<T, ScheduledBroadcastCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a ScheduledBroadcast.
+     * @param {ScheduledBroadcastDeleteArgs} args - Arguments to delete one ScheduledBroadcast.
+     * @example
+     * // Delete one ScheduledBroadcast
+     * const ScheduledBroadcast = await prisma.scheduledBroadcast.delete({
+     *   where: {
+     *     // ... filter to delete one ScheduledBroadcast
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ScheduledBroadcastDeleteArgs>(args: SelectSubset<T, ScheduledBroadcastDeleteArgs<ExtArgs>>): Prisma__ScheduledBroadcastClient<$Result.GetResult<Prisma.$ScheduledBroadcastPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one ScheduledBroadcast.
+     * @param {ScheduledBroadcastUpdateArgs} args - Arguments to update one ScheduledBroadcast.
+     * @example
+     * // Update one ScheduledBroadcast
+     * const scheduledBroadcast = await prisma.scheduledBroadcast.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ScheduledBroadcastUpdateArgs>(args: SelectSubset<T, ScheduledBroadcastUpdateArgs<ExtArgs>>): Prisma__ScheduledBroadcastClient<$Result.GetResult<Prisma.$ScheduledBroadcastPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more ScheduledBroadcasts.
+     * @param {ScheduledBroadcastDeleteManyArgs} args - Arguments to filter ScheduledBroadcasts to delete.
+     * @example
+     * // Delete a few ScheduledBroadcasts
+     * const { count } = await prisma.scheduledBroadcast.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ScheduledBroadcastDeleteManyArgs>(args?: SelectSubset<T, ScheduledBroadcastDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ScheduledBroadcasts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledBroadcastUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ScheduledBroadcasts
+     * const scheduledBroadcast = await prisma.scheduledBroadcast.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ScheduledBroadcastUpdateManyArgs>(args: SelectSubset<T, ScheduledBroadcastUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ScheduledBroadcast.
+     * @param {ScheduledBroadcastUpsertArgs} args - Arguments to update or create a ScheduledBroadcast.
+     * @example
+     * // Update or create a ScheduledBroadcast
+     * const scheduledBroadcast = await prisma.scheduledBroadcast.upsert({
+     *   create: {
+     *     // ... data to create a ScheduledBroadcast
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ScheduledBroadcast we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ScheduledBroadcastUpsertArgs>(args: SelectSubset<T, ScheduledBroadcastUpsertArgs<ExtArgs>>): Prisma__ScheduledBroadcastClient<$Result.GetResult<Prisma.$ScheduledBroadcastPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of ScheduledBroadcasts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledBroadcastCountArgs} args - Arguments to filter ScheduledBroadcasts to count.
+     * @example
+     * // Count the number of ScheduledBroadcasts
+     * const count = await prisma.scheduledBroadcast.count({
+     *   where: {
+     *     // ... the filter for the ScheduledBroadcasts we want to count
+     *   }
+     * })
+    **/
+    count<T extends ScheduledBroadcastCountArgs>(
+      args?: Subset<T, ScheduledBroadcastCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ScheduledBroadcastCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ScheduledBroadcast.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledBroadcastAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ScheduledBroadcastAggregateArgs>(args: Subset<T, ScheduledBroadcastAggregateArgs>): Prisma.PrismaPromise<GetScheduledBroadcastAggregateType<T>>
+
+    /**
+     * Group by ScheduledBroadcast.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledBroadcastGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ScheduledBroadcastGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ScheduledBroadcastGroupByArgs['orderBy'] }
+        : { orderBy?: ScheduledBroadcastGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ScheduledBroadcastGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetScheduledBroadcastGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ScheduledBroadcast model
+   */
+  readonly fields: ScheduledBroadcastFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ScheduledBroadcast.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ScheduledBroadcastClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ScheduledBroadcast model
+   */ 
+  interface ScheduledBroadcastFieldRefs {
+    readonly id: FieldRef<"ScheduledBroadcast", 'Int'>
+    readonly sessionId: FieldRef<"ScheduledBroadcast", 'String'>
+    readonly title: FieldRef<"ScheduledBroadcast", 'String'>
+    readonly message: FieldRef<"ScheduledBroadcast", 'String'>
+    readonly targetLabel: FieldRef<"ScheduledBroadcast", 'String'>
+    readonly manualNumbers: FieldRef<"ScheduledBroadcast", 'String'>
+    readonly scheduledAt: FieldRef<"ScheduledBroadcast", 'DateTime'>
+    readonly status: FieldRef<"ScheduledBroadcast", 'String'>
+    readonly sentAt: FieldRef<"ScheduledBroadcast", 'DateTime'>
+    readonly sentCount: FieldRef<"ScheduledBroadcast", 'Int'>
+    readonly errorMessage: FieldRef<"ScheduledBroadcast", 'String'>
+    readonly createdAt: FieldRef<"ScheduledBroadcast", 'DateTime'>
+    readonly updatedAt: FieldRef<"ScheduledBroadcast", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ScheduledBroadcast findUnique
+   */
+  export type ScheduledBroadcastFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledBroadcast
+     */
+    select?: ScheduledBroadcastSelect<ExtArgs> | null
+    /**
+     * Filter, which ScheduledBroadcast to fetch.
+     */
+    where: ScheduledBroadcastWhereUniqueInput
+  }
+
+  /**
+   * ScheduledBroadcast findUniqueOrThrow
+   */
+  export type ScheduledBroadcastFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledBroadcast
+     */
+    select?: ScheduledBroadcastSelect<ExtArgs> | null
+    /**
+     * Filter, which ScheduledBroadcast to fetch.
+     */
+    where: ScheduledBroadcastWhereUniqueInput
+  }
+
+  /**
+   * ScheduledBroadcast findFirst
+   */
+  export type ScheduledBroadcastFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledBroadcast
+     */
+    select?: ScheduledBroadcastSelect<ExtArgs> | null
+    /**
+     * Filter, which ScheduledBroadcast to fetch.
+     */
+    where?: ScheduledBroadcastWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ScheduledBroadcasts to fetch.
+     */
+    orderBy?: ScheduledBroadcastOrderByWithRelationInput | ScheduledBroadcastOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ScheduledBroadcasts.
+     */
+    cursor?: ScheduledBroadcastWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ScheduledBroadcasts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ScheduledBroadcasts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ScheduledBroadcasts.
+     */
+    distinct?: ScheduledBroadcastScalarFieldEnum | ScheduledBroadcastScalarFieldEnum[]
+  }
+
+  /**
+   * ScheduledBroadcast findFirstOrThrow
+   */
+  export type ScheduledBroadcastFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledBroadcast
+     */
+    select?: ScheduledBroadcastSelect<ExtArgs> | null
+    /**
+     * Filter, which ScheduledBroadcast to fetch.
+     */
+    where?: ScheduledBroadcastWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ScheduledBroadcasts to fetch.
+     */
+    orderBy?: ScheduledBroadcastOrderByWithRelationInput | ScheduledBroadcastOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ScheduledBroadcasts.
+     */
+    cursor?: ScheduledBroadcastWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ScheduledBroadcasts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ScheduledBroadcasts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ScheduledBroadcasts.
+     */
+    distinct?: ScheduledBroadcastScalarFieldEnum | ScheduledBroadcastScalarFieldEnum[]
+  }
+
+  /**
+   * ScheduledBroadcast findMany
+   */
+  export type ScheduledBroadcastFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledBroadcast
+     */
+    select?: ScheduledBroadcastSelect<ExtArgs> | null
+    /**
+     * Filter, which ScheduledBroadcasts to fetch.
+     */
+    where?: ScheduledBroadcastWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ScheduledBroadcasts to fetch.
+     */
+    orderBy?: ScheduledBroadcastOrderByWithRelationInput | ScheduledBroadcastOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ScheduledBroadcasts.
+     */
+    cursor?: ScheduledBroadcastWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ScheduledBroadcasts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ScheduledBroadcasts.
+     */
+    skip?: number
+    distinct?: ScheduledBroadcastScalarFieldEnum | ScheduledBroadcastScalarFieldEnum[]
+  }
+
+  /**
+   * ScheduledBroadcast create
+   */
+  export type ScheduledBroadcastCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledBroadcast
+     */
+    select?: ScheduledBroadcastSelect<ExtArgs> | null
+    /**
+     * The data needed to create a ScheduledBroadcast.
+     */
+    data: XOR<ScheduledBroadcastCreateInput, ScheduledBroadcastUncheckedCreateInput>
+  }
+
+  /**
+   * ScheduledBroadcast createMany
+   */
+  export type ScheduledBroadcastCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ScheduledBroadcasts.
+     */
+    data: ScheduledBroadcastCreateManyInput | ScheduledBroadcastCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ScheduledBroadcast update
+   */
+  export type ScheduledBroadcastUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledBroadcast
+     */
+    select?: ScheduledBroadcastSelect<ExtArgs> | null
+    /**
+     * The data needed to update a ScheduledBroadcast.
+     */
+    data: XOR<ScheduledBroadcastUpdateInput, ScheduledBroadcastUncheckedUpdateInput>
+    /**
+     * Choose, which ScheduledBroadcast to update.
+     */
+    where: ScheduledBroadcastWhereUniqueInput
+  }
+
+  /**
+   * ScheduledBroadcast updateMany
+   */
+  export type ScheduledBroadcastUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ScheduledBroadcasts.
+     */
+    data: XOR<ScheduledBroadcastUpdateManyMutationInput, ScheduledBroadcastUncheckedUpdateManyInput>
+    /**
+     * Filter which ScheduledBroadcasts to update
+     */
+    where?: ScheduledBroadcastWhereInput
+  }
+
+  /**
+   * ScheduledBroadcast upsert
+   */
+  export type ScheduledBroadcastUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledBroadcast
+     */
+    select?: ScheduledBroadcastSelect<ExtArgs> | null
+    /**
+     * The filter to search for the ScheduledBroadcast to update in case it exists.
+     */
+    where: ScheduledBroadcastWhereUniqueInput
+    /**
+     * In case the ScheduledBroadcast found by the `where` argument doesn't exist, create a new ScheduledBroadcast with this data.
+     */
+    create: XOR<ScheduledBroadcastCreateInput, ScheduledBroadcastUncheckedCreateInput>
+    /**
+     * In case the ScheduledBroadcast was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ScheduledBroadcastUpdateInput, ScheduledBroadcastUncheckedUpdateInput>
+  }
+
+  /**
+   * ScheduledBroadcast delete
+   */
+  export type ScheduledBroadcastDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledBroadcast
+     */
+    select?: ScheduledBroadcastSelect<ExtArgs> | null
+    /**
+     * Filter which ScheduledBroadcast to delete.
+     */
+    where: ScheduledBroadcastWhereUniqueInput
+  }
+
+  /**
+   * ScheduledBroadcast deleteMany
+   */
+  export type ScheduledBroadcastDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ScheduledBroadcasts to delete
+     */
+    where?: ScheduledBroadcastWhereInput
+  }
+
+  /**
+   * ScheduledBroadcast without action
+   */
+  export type ScheduledBroadcastDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledBroadcast
+     */
+    select?: ScheduledBroadcastSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -6897,6 +8907,38 @@ export namespace Prisma {
   };
 
   export type ScheduleScalarFieldEnum = (typeof ScheduleScalarFieldEnum)[keyof typeof ScheduleScalarFieldEnum]
+
+
+  export const VerificationCodeScalarFieldEnum: {
+    id: 'id',
+    email: 'email',
+    code: 'code',
+    type: 'type',
+    expiresAt: 'expiresAt',
+    verified: 'verified',
+    createdAt: 'createdAt'
+  };
+
+  export type VerificationCodeScalarFieldEnum = (typeof VerificationCodeScalarFieldEnum)[keyof typeof VerificationCodeScalarFieldEnum]
+
+
+  export const ScheduledBroadcastScalarFieldEnum: {
+    id: 'id',
+    sessionId: 'sessionId',
+    title: 'title',
+    message: 'message',
+    targetLabel: 'targetLabel',
+    manualNumbers: 'manualNumbers',
+    scheduledAt: 'scheduledAt',
+    status: 'status',
+    sentAt: 'sentAt',
+    sentCount: 'sentCount',
+    errorMessage: 'errorMessage',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ScheduledBroadcastScalarFieldEnum = (typeof ScheduledBroadcastScalarFieldEnum)[keyof typeof ScheduledBroadcastScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -7380,6 +9422,164 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"Schedule"> | Date | string
   }
 
+  export type VerificationCodeWhereInput = {
+    AND?: VerificationCodeWhereInput | VerificationCodeWhereInput[]
+    OR?: VerificationCodeWhereInput[]
+    NOT?: VerificationCodeWhereInput | VerificationCodeWhereInput[]
+    id?: IntFilter<"VerificationCode"> | number
+    email?: StringFilter<"VerificationCode"> | string
+    code?: StringFilter<"VerificationCode"> | string
+    type?: StringFilter<"VerificationCode"> | string
+    expiresAt?: DateTimeFilter<"VerificationCode"> | Date | string
+    verified?: BoolFilter<"VerificationCode"> | boolean
+    createdAt?: DateTimeFilter<"VerificationCode"> | Date | string
+  }
+
+  export type VerificationCodeOrderByWithRelationInput = {
+    id?: SortOrder
+    email?: SortOrder
+    code?: SortOrder
+    type?: SortOrder
+    expiresAt?: SortOrder
+    verified?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type VerificationCodeWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: VerificationCodeWhereInput | VerificationCodeWhereInput[]
+    OR?: VerificationCodeWhereInput[]
+    NOT?: VerificationCodeWhereInput | VerificationCodeWhereInput[]
+    email?: StringFilter<"VerificationCode"> | string
+    code?: StringFilter<"VerificationCode"> | string
+    type?: StringFilter<"VerificationCode"> | string
+    expiresAt?: DateTimeFilter<"VerificationCode"> | Date | string
+    verified?: BoolFilter<"VerificationCode"> | boolean
+    createdAt?: DateTimeFilter<"VerificationCode"> | Date | string
+  }, "id">
+
+  export type VerificationCodeOrderByWithAggregationInput = {
+    id?: SortOrder
+    email?: SortOrder
+    code?: SortOrder
+    type?: SortOrder
+    expiresAt?: SortOrder
+    verified?: SortOrder
+    createdAt?: SortOrder
+    _count?: VerificationCodeCountOrderByAggregateInput
+    _avg?: VerificationCodeAvgOrderByAggregateInput
+    _max?: VerificationCodeMaxOrderByAggregateInput
+    _min?: VerificationCodeMinOrderByAggregateInput
+    _sum?: VerificationCodeSumOrderByAggregateInput
+  }
+
+  export type VerificationCodeScalarWhereWithAggregatesInput = {
+    AND?: VerificationCodeScalarWhereWithAggregatesInput | VerificationCodeScalarWhereWithAggregatesInput[]
+    OR?: VerificationCodeScalarWhereWithAggregatesInput[]
+    NOT?: VerificationCodeScalarWhereWithAggregatesInput | VerificationCodeScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"VerificationCode"> | number
+    email?: StringWithAggregatesFilter<"VerificationCode"> | string
+    code?: StringWithAggregatesFilter<"VerificationCode"> | string
+    type?: StringWithAggregatesFilter<"VerificationCode"> | string
+    expiresAt?: DateTimeWithAggregatesFilter<"VerificationCode"> | Date | string
+    verified?: BoolWithAggregatesFilter<"VerificationCode"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"VerificationCode"> | Date | string
+  }
+
+  export type ScheduledBroadcastWhereInput = {
+    AND?: ScheduledBroadcastWhereInput | ScheduledBroadcastWhereInput[]
+    OR?: ScheduledBroadcastWhereInput[]
+    NOT?: ScheduledBroadcastWhereInput | ScheduledBroadcastWhereInput[]
+    id?: IntFilter<"ScheduledBroadcast"> | number
+    sessionId?: StringFilter<"ScheduledBroadcast"> | string
+    title?: StringFilter<"ScheduledBroadcast"> | string
+    message?: StringFilter<"ScheduledBroadcast"> | string
+    targetLabel?: StringFilter<"ScheduledBroadcast"> | string
+    manualNumbers?: StringNullableFilter<"ScheduledBroadcast"> | string | null
+    scheduledAt?: DateTimeFilter<"ScheduledBroadcast"> | Date | string
+    status?: StringFilter<"ScheduledBroadcast"> | string
+    sentAt?: DateTimeNullableFilter<"ScheduledBroadcast"> | Date | string | null
+    sentCount?: IntNullableFilter<"ScheduledBroadcast"> | number | null
+    errorMessage?: StringNullableFilter<"ScheduledBroadcast"> | string | null
+    createdAt?: DateTimeFilter<"ScheduledBroadcast"> | Date | string
+    updatedAt?: DateTimeFilter<"ScheduledBroadcast"> | Date | string
+  }
+
+  export type ScheduledBroadcastOrderByWithRelationInput = {
+    id?: SortOrder
+    sessionId?: SortOrder
+    title?: SortOrder
+    message?: SortOrder
+    targetLabel?: SortOrder
+    manualNumbers?: SortOrderInput | SortOrder
+    scheduledAt?: SortOrder
+    status?: SortOrder
+    sentAt?: SortOrderInput | SortOrder
+    sentCount?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ScheduledBroadcastWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: ScheduledBroadcastWhereInput | ScheduledBroadcastWhereInput[]
+    OR?: ScheduledBroadcastWhereInput[]
+    NOT?: ScheduledBroadcastWhereInput | ScheduledBroadcastWhereInput[]
+    sessionId?: StringFilter<"ScheduledBroadcast"> | string
+    title?: StringFilter<"ScheduledBroadcast"> | string
+    message?: StringFilter<"ScheduledBroadcast"> | string
+    targetLabel?: StringFilter<"ScheduledBroadcast"> | string
+    manualNumbers?: StringNullableFilter<"ScheduledBroadcast"> | string | null
+    scheduledAt?: DateTimeFilter<"ScheduledBroadcast"> | Date | string
+    status?: StringFilter<"ScheduledBroadcast"> | string
+    sentAt?: DateTimeNullableFilter<"ScheduledBroadcast"> | Date | string | null
+    sentCount?: IntNullableFilter<"ScheduledBroadcast"> | number | null
+    errorMessage?: StringNullableFilter<"ScheduledBroadcast"> | string | null
+    createdAt?: DateTimeFilter<"ScheduledBroadcast"> | Date | string
+    updatedAt?: DateTimeFilter<"ScheduledBroadcast"> | Date | string
+  }, "id">
+
+  export type ScheduledBroadcastOrderByWithAggregationInput = {
+    id?: SortOrder
+    sessionId?: SortOrder
+    title?: SortOrder
+    message?: SortOrder
+    targetLabel?: SortOrder
+    manualNumbers?: SortOrderInput | SortOrder
+    scheduledAt?: SortOrder
+    status?: SortOrder
+    sentAt?: SortOrderInput | SortOrder
+    sentCount?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ScheduledBroadcastCountOrderByAggregateInput
+    _avg?: ScheduledBroadcastAvgOrderByAggregateInput
+    _max?: ScheduledBroadcastMaxOrderByAggregateInput
+    _min?: ScheduledBroadcastMinOrderByAggregateInput
+    _sum?: ScheduledBroadcastSumOrderByAggregateInput
+  }
+
+  export type ScheduledBroadcastScalarWhereWithAggregatesInput = {
+    AND?: ScheduledBroadcastScalarWhereWithAggregatesInput | ScheduledBroadcastScalarWhereWithAggregatesInput[]
+    OR?: ScheduledBroadcastScalarWhereWithAggregatesInput[]
+    NOT?: ScheduledBroadcastScalarWhereWithAggregatesInput | ScheduledBroadcastScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"ScheduledBroadcast"> | number
+    sessionId?: StringWithAggregatesFilter<"ScheduledBroadcast"> | string
+    title?: StringWithAggregatesFilter<"ScheduledBroadcast"> | string
+    message?: StringWithAggregatesFilter<"ScheduledBroadcast"> | string
+    targetLabel?: StringWithAggregatesFilter<"ScheduledBroadcast"> | string
+    manualNumbers?: StringNullableWithAggregatesFilter<"ScheduledBroadcast"> | string | null
+    scheduledAt?: DateTimeWithAggregatesFilter<"ScheduledBroadcast"> | Date | string
+    status?: StringWithAggregatesFilter<"ScheduledBroadcast"> | string
+    sentAt?: DateTimeNullableWithAggregatesFilter<"ScheduledBroadcast"> | Date | string | null
+    sentCount?: IntNullableWithAggregatesFilter<"ScheduledBroadcast"> | number | null
+    errorMessage?: StringNullableWithAggregatesFilter<"ScheduledBroadcast"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ScheduledBroadcast"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ScheduledBroadcast"> | Date | string
+  }
+
   export type SessionCreateInput = {
     sessionId: string
     id: string
@@ -7823,6 +10023,182 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     customerJid?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VerificationCodeCreateInput = {
+    email: string
+    code: string
+    type: string
+    expiresAt: Date | string
+    verified?: boolean
+    createdAt?: Date | string
+  }
+
+  export type VerificationCodeUncheckedCreateInput = {
+    id?: number
+    email: string
+    code: string
+    type: string
+    expiresAt: Date | string
+    verified?: boolean
+    createdAt?: Date | string
+  }
+
+  export type VerificationCodeUpdateInput = {
+    email?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    verified?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VerificationCodeUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    email?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    verified?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VerificationCodeCreateManyInput = {
+    id?: number
+    email: string
+    code: string
+    type: string
+    expiresAt: Date | string
+    verified?: boolean
+    createdAt?: Date | string
+  }
+
+  export type VerificationCodeUpdateManyMutationInput = {
+    email?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    verified?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VerificationCodeUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    email?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    verified?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ScheduledBroadcastCreateInput = {
+    sessionId: string
+    title: string
+    message: string
+    targetLabel?: string
+    manualNumbers?: string | null
+    scheduledAt: Date | string
+    status?: string
+    sentAt?: Date | string | null
+    sentCount?: number | null
+    errorMessage?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ScheduledBroadcastUncheckedCreateInput = {
+    id?: number
+    sessionId: string
+    title: string
+    message: string
+    targetLabel?: string
+    manualNumbers?: string | null
+    scheduledAt: Date | string
+    status?: string
+    sentAt?: Date | string | null
+    sentCount?: number | null
+    errorMessage?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ScheduledBroadcastUpdateInput = {
+    sessionId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    targetLabel?: StringFieldUpdateOperationsInput | string
+    manualNumbers?: NullableStringFieldUpdateOperationsInput | string | null
+    scheduledAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sentCount?: NullableIntFieldUpdateOperationsInput | number | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ScheduledBroadcastUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    sessionId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    targetLabel?: StringFieldUpdateOperationsInput | string
+    manualNumbers?: NullableStringFieldUpdateOperationsInput | string | null
+    scheduledAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sentCount?: NullableIntFieldUpdateOperationsInput | number | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ScheduledBroadcastCreateManyInput = {
+    id?: number
+    sessionId: string
+    title: string
+    message: string
+    targetLabel?: string
+    manualNumbers?: string | null
+    scheduledAt: Date | string
+    status?: string
+    sentAt?: Date | string | null
+    sentCount?: number | null
+    errorMessage?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ScheduledBroadcastUpdateManyMutationInput = {
+    sessionId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    targetLabel?: StringFieldUpdateOperationsInput | string
+    manualNumbers?: NullableStringFieldUpdateOperationsInput | string | null
+    scheduledAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sentCount?: NullableIntFieldUpdateOperationsInput | number | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ScheduledBroadcastUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    sessionId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    targetLabel?: StringFieldUpdateOperationsInput | string
+    manualNumbers?: NullableStringFieldUpdateOperationsInput | string | null
+    scheduledAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sentCount?: NullableIntFieldUpdateOperationsInput | number | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -8288,6 +10664,129 @@ export namespace Prisma {
     id?: SortOrder
   }
 
+  export type VerificationCodeCountOrderByAggregateInput = {
+    id?: SortOrder
+    email?: SortOrder
+    code?: SortOrder
+    type?: SortOrder
+    expiresAt?: SortOrder
+    verified?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type VerificationCodeAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type VerificationCodeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    email?: SortOrder
+    code?: SortOrder
+    type?: SortOrder
+    expiresAt?: SortOrder
+    verified?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type VerificationCodeMinOrderByAggregateInput = {
+    id?: SortOrder
+    email?: SortOrder
+    code?: SortOrder
+    type?: SortOrder
+    expiresAt?: SortOrder
+    verified?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type VerificationCodeSumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type ScheduledBroadcastCountOrderByAggregateInput = {
+    id?: SortOrder
+    sessionId?: SortOrder
+    title?: SortOrder
+    message?: SortOrder
+    targetLabel?: SortOrder
+    manualNumbers?: SortOrder
+    scheduledAt?: SortOrder
+    status?: SortOrder
+    sentAt?: SortOrder
+    sentCount?: SortOrder
+    errorMessage?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ScheduledBroadcastAvgOrderByAggregateInput = {
+    id?: SortOrder
+    sentCount?: SortOrder
+  }
+
+  export type ScheduledBroadcastMaxOrderByAggregateInput = {
+    id?: SortOrder
+    sessionId?: SortOrder
+    title?: SortOrder
+    message?: SortOrder
+    targetLabel?: SortOrder
+    manualNumbers?: SortOrder
+    scheduledAt?: SortOrder
+    status?: SortOrder
+    sentAt?: SortOrder
+    sentCount?: SortOrder
+    errorMessage?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ScheduledBroadcastMinOrderByAggregateInput = {
+    id?: SortOrder
+    sessionId?: SortOrder
+    title?: SortOrder
+    message?: SortOrder
+    targetLabel?: SortOrder
+    manualNumbers?: SortOrder
+    scheduledAt?: SortOrder
+    status?: SortOrder
+    sentAt?: SortOrder
+    sentCount?: SortOrder
+    errorMessage?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ScheduledBroadcastSumOrderByAggregateInput = {
+    id?: SortOrder
+    sentCount?: SortOrder
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -8374,6 +10873,14 @@ export namespace Prisma {
 
   export type FloatFieldUpdateOperationsInput = {
     set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
     increment?: number
     decrement?: number
     multiply?: number
@@ -8570,6 +11077,33 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
   export type MessageCreateWithoutChatInput = {
     keyId?: string | null
     fromMe: boolean
@@ -8756,6 +11290,14 @@ export namespace Prisma {
      * @deprecated Use ScheduleDefaultArgs instead
      */
     export type ScheduleArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ScheduleDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use VerificationCodeDefaultArgs instead
+     */
+    export type VerificationCodeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = VerificationCodeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ScheduledBroadcastDefaultArgs instead
+     */
+    export type ScheduledBroadcastArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ScheduledBroadcastDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany
