@@ -115,6 +115,24 @@ function saveInvoices() {
   fs.writeFileSync(invoicesPath, JSON.stringify(invoicesStore, null, 2));
 }
 
+// --- HEALTHCHECK ENDPOINTS (Must be BEFORE other middlewares/routes) ---
+// Railway pings "/" to verify the server is up
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "NayooAI WhatsApp Bot",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "healthy",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // --- MIDDLEWARES ---
 app.use(cors());
 app.use((req, res, next) => {
