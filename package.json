@@ -1,4 +1,29 @@
 {
+  "name": "nayoo-ai-whatsapp-bot",
+  "version": "1.0.0",
+  "description": "NayooAI WhatsApp CRM Bot with AI-powered auto-reply",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "npx prisma generate && node src/server.js",
+    "dev": "node src/server.js",
+    "db:generate": "npx prisma generate",
+    "db:push": "npx prisma db push",
+    "db:migrate": "npx prisma migrate deploy",
+    "postinstall": "npx prisma generate"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "crm",
+    "ai",
+    "chatbot"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@heyputer/puter.js": "^2.2.2",
@@ -19,17 +44,6 @@
     "uuid": "^13.0.0",
     "xlsx": "^0.18.5"
   },
-  "name": "bismillah-sukses-ya-allah",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
     "prisma": "^5.22.0"
   }
