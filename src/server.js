@@ -2857,34 +2857,32 @@ app.get("/api/developer/ai-status", verifyDeveloperRole, (req, res) => {
     // Format status for frontend with calculated remaining cooldown
     const providerStatus = {};
 
-    ["groq", "sambanova", "gemini", "openrouter", "puter"].forEach(
-      (provider) => {
-        const status = aiProviderStatus[provider];
-        let remainingCooldown = 0;
-        let isAvailable = status?.available ?? true;
+    ["groq", "sambanova", "gemini", "openrouter"].forEach((provider) => {
+      const status = aiProviderStatus[provider];
+      let remainingCooldown = 0;
+      let isAvailable = status?.available ?? true;
 
-        if (!isAvailable && status?.retryAfter) {
-          remainingCooldown = Math.max(
-            0,
-            Math.ceil((status.retryAfter - now) / 1000)
-          );
-          // If cooldown expired, mark as available
-          if (remainingCooldown <= 0) {
-            isAvailable = true;
-            remainingCooldown = 0;
-          }
+      if (!isAvailable && status?.retryAfter) {
+        remainingCooldown = Math.max(
+          0,
+          Math.ceil((status.retryAfter - now) / 1000)
+        );
+        // If cooldown expired, mark as available
+        if (remainingCooldown <= 0) {
+          isAvailable = true;
+          remainingCooldown = 0;
         }
-
-        providerStatus[provider] = {
-          available: isAvailable,
-          lastError: status?.lastError || null,
-          remainingCooldownSeconds: remainingCooldown,
-          retryAt: status?.retryAfter
-            ? new Date(status.retryAfter).toISOString()
-            : null,
-        };
       }
-    );
+
+      providerStatus[provider] = {
+        available: isAvailable,
+        lastError: status?.lastError || null,
+        remainingCooldownSeconds: remainingCooldown,
+        retryAt: status?.retryAfter
+          ? new Date(status.retryAfter).toISOString()
+          : null,
+      };
+    });
 
     res.json({
       status: "success",
@@ -2903,19 +2901,17 @@ app.post("/api/developer/ai-status/reset", verifyDeveloperRole, (req, res) => {
 
   if (
     !provider ||
-    !["groq", "sambanova", "gemini", "openrouter", "puter", "all"].includes(
-      provider
-    )
+    !["groq", "sambanova", "gemini", "openrouter", "all"].includes(provider)
   ) {
     return res.status(400).json({
       error:
-        "Invalid provider. Use: groq, sambanova, gemini, openrouter, puter, or all",
+        "Invalid provider. Use: groq, sambanova, gemini, openrouter, or all",
     });
   }
 
   try {
     if (provider === "all") {
-      ["groq", "sambanova", "gemini", "openrouter", "puter"].forEach((p) => {
+      ["groq", "sambanova", "gemini", "openrouter"].forEach((p) => {
         aiProviderStatus[p] = {
           available: true,
           lastError: null,
@@ -2970,7 +2966,7 @@ app.post("/api/developer/ai-provider", verifyDeveloperRole, (req, res) => {
   if (provider === undefined) {
     return res.status(400).json({
       error:
-        "Provider is required. Use: auto, groq, sambanova, gemini, openrouter, or puter",
+        "Provider is required. Use: auto, groq, sambanova, gemini, or openrouter",
     });
   }
 
@@ -2979,7 +2975,7 @@ app.post("/api/developer/ai-provider", verifyDeveloperRole, (req, res) => {
 
     if (!success) {
       return res.status(400).json({
-        error: `Invalid provider "${provider}". Use: auto, groq, sambanova, gemini, openrouter, or puter`,
+        error: `Invalid provider "${provider}". Use: auto, groq, sambanova, gemini, or openrouter`,
       });
     }
 

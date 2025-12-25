@@ -26,7 +26,6 @@
   "type": "commonjs",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@heyputer/puter.js": "^2.2.2",
     "@prisma/client": "^5.22.0",
     "@whiskeysockets/baileys": "^6.5.0",
     "axios": "^1.13.2",

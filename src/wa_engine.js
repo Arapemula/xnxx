@@ -88,7 +88,7 @@ const mediaPath = path.join(__dirname, "../public/media");
 // --- AI PROVIDERS SETUP ---
 const Groq = require("groq-sdk");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const Puter = require("@heyputer/puter.js").default;
+// Note: Puter removed due to ESM compatibility issues
 
 // Initialize AI Providers
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -102,11 +102,10 @@ const aiProviderStatus = {
   sambanova: { available: true, lastError: null, retryAfter: null },
   gemini: { available: true, lastError: null, retryAfter: null },
   openrouter: { available: true, lastError: null, retryAfter: null },
-  puter: { available: true, lastError: null, retryAfter: null },
 };
 
 // Provider priority order (will fallback in this order)
-const AI_PROVIDERS = ["groq", "sambanova", "gemini", "openrouter", "puter"];
+const AI_PROVIDERS = ["groq", "sambanova", "gemini", "openrouter"];
 
 // Manual provider selection (null = auto fallback, string = use specific provider first)
 let preferredProvider = null;
@@ -537,27 +536,7 @@ GUIDELINES:
     return response.data.choices[0]?.message?.content || "";
   };
 
-  const callPuter = async () => {
-    // Puter.js - Free AI with no API key required
-    const puter = new Puter();
-
-    // Build messages in Puter-compatible format
-    const messages = [
-      { role: "system", content: systemPrompt },
-      ...conversationHistory,
-    ];
-
-    // Use puter.ai.chat with free model
-    const response = await puter.ai.chat(messages, {
-      model: "claude-3-5-sonnet", // Best free model available on Puter
-      max_tokens: 300,
-    });
-
-    // Response can be string or object with text property
-    return typeof response === "string"
-      ? response
-      : response?.text || response?.message?.content || "";
-  };
+  // Note: callPuter removed due to ESM compatibility issues
 
   // Check if error is rate limit
   const isRateLimitError = (error) => {
@@ -614,9 +593,7 @@ GUIDELINES:
         case "openrouter":
           reply = await callOpenRouter();
           break;
-        case "puter":
-          reply = await callPuter();
-          break;
+        // Note: puter case removed due to ESM compatibility
       }
 
       if (reply) {
