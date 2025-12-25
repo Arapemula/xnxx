@@ -725,8 +725,8 @@ app.post("/chat/send-invoice-pdf", async (req, res) => {
     let y = 240;
     doc.font("Helvetica-Bold");
     doc.text("Item", 50, y);
-    doc.text("Qty", 300, y, { align: "right", width: 40 });
-    doc.text("Price", 350, y, { align: "right", width: 90 });
+    doc.text("Qty", 260, y, { align: "right", width: 40 });
+    doc.text("Harga", 310, y, { align: "right", width: 80 });
     doc.text("Total", 450, y, { align: "right", width: 100 });
 
     doc
@@ -737,22 +737,164 @@ app.post("/chat/send-invoice-pdf", async (req, res) => {
     doc.font("Helvetica");
     y += 25;
 
+    // Calculate total discount for summary
+    let totalDiscount = 0;
+    let totalFreeItems = 0;
+
     finalInvoiceData.cart.forEach((item) => {
       const price = Number(item.price) || 0;
+      const originalPrice = Number(item.originalPrice) || price;
       const qty = Number(item.qty) || 1;
+      const effectiveQty = Number(item.effectiveQty) || qty;
+      const freeItems = Number(item.freeItems) || 0;
       const subtotal = Number(item.subtotal) || 0;
+      const promoApplied = item.promoApplied === true;
+      const hasPromo = item.hasPromo === true;
+      const promoLabel = item.promoLabel || "";
+      const promoType = item.promoType || "";
+      const promoDiscount = Number(item.promoDiscount) || 0;
 
-      doc.text(item.name, 50, y, { width: 240 });
-      doc.text(qty.toString(), 300, y, { align: "right", width: 40 });
-      doc.text(price.toLocaleString("id-ID"), 350, y, {
-        align: "right",
-        width: 90,
-      });
-      doc.text(subtotal.toLocaleString("id-ID"), 450, y, {
-        align: "right",
-        width: 100,
-      });
-      y += 20;
+      if (promoApplied && promoDiscount > 0) {
+        totalDiscount += promoDiscount;
+      }
+      if (freeItems > 0) {
+        totalFreeItems += freeItems;
+      }
+
+      // Item Name
+      doc.font("Helvetica").fillColor("black");
+      doc.text(item.name, 50, y, { width: 200 });
+
+      // Promo Badge (if promo applied)
+      if (promoApplied && promoLabel) {
+        y += 12;
+        // Draw promo badge box
+        doc
+          .roundedRect(50, y - 2, doc.widthOfString(promoLabel) + 20, 14, 3)
+          .fillAndStroke("#059669", "#059669");
+        doc.font("Helvetica-Bold").fontSize(8).fillColor("white");
+        doc.text("[PROMO] " + promoLabel, 55, y, { width: 150 });
+        doc.font("Helvetica").fontSize(10).fillColor("black");
+        y += 2;
+      } else if (hasPromo && !promoApplied && promoLabel) {
+        // Promo available but not applied
+        y += 12;
+        doc
+          .roundedRect(
+            50,
+            y - 2,
+            doc.widthOfString(promoLabel + " (belum)") + 20,
+            14,
+            3
+          )
+          .fillAndStroke("#f59e0b", "#f59e0b");
+        doc.font("Helvetica-Bold").fontSize(8).fillColor("white");
+        doc.text(promoLabel + " (syarat belum terpenuhi)", 55, y, {
+          width: 180,
+        });
+        doc.font("Helvetica").fontSize(10).fillColor("black");
+        y += 2;
+      }
+
+      // Qty Column - Show free items info if applicable
+      doc.font("Helvetica").fillColor("black");
+      const qtyY = y - (promoApplied || (hasPromo && !promoApplied) ? 14 : 0);
+
+      if (promoType === "buyXgetY" && freeItems > 0) {
+        // Show "3 (bayar 2)" format for buy X get Y promo
+        doc.text(`${qty}`, 260, qtyY, { align: "right", width: 40 });
+        doc.fontSize(8).fillColor("#059669");
+        doc.text(`(bayar ${effectiveQty})`, 260, qtyY + 10, {
+          align: "right",
+          width: 40,
+        });
+        doc.fontSize(10).fillColor("black");
+      } else {
+        doc.text(qty.toString(), 260, qtyY, { align: "right", width: 40 });
+      }
+
+      // Price Column
+      if (promoApplied && price !== originalPrice) {
+        // Original price (strikethrough effect)
+        doc.fontSize(8).fillColor("gray");
+        const origPriceText = "Rp " + originalPrice.toLocaleString("id-ID");
+        doc.text(origPriceText, 310, qtyY - 2, { align: "right", width: 80 });
+        // Draw strikethrough
+        const origPriceWidth = doc.widthOfString(origPriceText);
+        doc
+          .moveTo(390 - origPriceWidth, qtyY + 2)
+          .lineTo(390, qtyY + 2)
+          .lineWidth(0.5)
+          .stroke();
+
+        // Final price (green, bold)
+        doc.fontSize(10).font("Helvetica-Bold").fillColor("#059669");
+        doc.text("Rp " + price.toLocaleString("id-ID"), 310, qtyY + 8, {
+          align: "right",
+          width: 80,
+        });
+        doc.font("Helvetica").fillColor("black");
+      } else {
+        doc.text("Rp " + price.toLocaleString("id-ID"), 310, qtyY, {
+          align: "right",
+          width: 80,
+        });
+      }
+
+      // Subtotal Column
+      const origSubtotal = originalPrice * qty;
+      if (promoApplied && subtotal < origSubtotal) {
+        // Original subtotal (strikethrough)
+        doc.fontSize(8).fillColor("gray");
+        const origSubtotalText = "Rp " + origSubtotal.toLocaleString("id-ID");
+        doc.text(origSubtotalText, 450, qtyY - 2, {
+          align: "right",
+          width: 100,
+        });
+        // Draw strikethrough
+        const origSubtotalWidth = doc.widthOfString(origSubtotalText);
+        doc
+          .moveTo(550 - origSubtotalWidth, qtyY + 2)
+          .lineTo(550, qtyY + 2)
+          .lineWidth(0.5)
+          .stroke();
+
+        // Final subtotal (green, bold)
+        doc.fontSize(10).font("Helvetica-Bold").fillColor("#059669");
+        doc.text("Rp " + subtotal.toLocaleString("id-ID"), 450, qtyY + 8, {
+          align: "right",
+          width: 100,
+        });
+        doc.font("Helvetica").fillColor("black");
+
+        // Show savings for this item
+        const itemSaving = origSubtotal - subtotal;
+        if (itemSaving > 0) {
+          doc.fontSize(7).fillColor("#059669");
+          doc.text(
+            `hemat Rp ${itemSaving.toLocaleString("id-ID")}`,
+            450,
+            qtyY + 18,
+            {
+              align: "right",
+              width: 100,
+            }
+          );
+          doc.fontSize(10).fillColor("black");
+          y += 8;
+        }
+
+        y += 20;
+      } else {
+        doc.text("Rp " + subtotal.toLocaleString("id-ID"), 450, qtyY, {
+          align: "right",
+          width: 100,
+        });
+        y += 18;
+      }
+
+      // Add spacing between items
+      y += 5;
     });
 
     doc
@@ -762,6 +904,38 @@ app.post("/chat/send-invoice-pdf", async (req, res) => {
 
     let finalTotal = Number(finalInvoiceData.total) || 0;
     let summaryY = y + 20;
+
+    // Show total free items if any
+    if (totalFreeItems > 0) {
+      doc.font("Helvetica").fillColor("#059669");
+      doc.text("[BONUS] Total Item Gratis:", 280, summaryY, {
+        align: "right",
+        width: 160,
+      });
+      doc.font("Helvetica-Bold");
+      doc.text(`${totalFreeItems} pcs`, 450, summaryY, {
+        align: "right",
+        width: 100,
+      });
+      doc.fillColor("black").font("Helvetica");
+      summaryY += 18;
+    }
+
+    // Show total discount/savings if any promo applied
+    if (totalDiscount > 0) {
+      doc.font("Helvetica").fillColor("#059669");
+      doc.text("Total Hemat:", 280, summaryY, {
+        align: "right",
+        width: 160,
+      });
+      doc.font("Helvetica-Bold");
+      doc.text(`- Rp ${totalDiscount.toLocaleString("id-ID")}`, 450, summaryY, {
+        align: "right",
+        width: 100,
+      });
+      doc.fillColor("black").font("Helvetica");
+      summaryY += 18;
+    }
 
     // Shipping Cost
     if (finalInvoiceData.shipping && finalInvoiceData.shipping.cost > 0) {
@@ -1216,7 +1390,7 @@ app.get("/api/analytics/:sessionId", async (req, res) => {
       });
 
       // 2. Top Questions (Incoming Messages)
-      // Note: GroupBy on LongText might fail or be slow. We fetch recent messages and process in JS.
+      // Filter untuk mengambil pertanyaan yang relevan saja
       const recentIncoming = await prisma.message.findMany({
         where: {
           chat: { sessionId },
@@ -1225,20 +1399,144 @@ app.get("/api/analytics/:sessionId", async (req, res) => {
           createdAt: { gte: startDate, lte: endDate },
         },
         select: { text: true },
-        take: 1000, // Limit sample size for performance
+        take: 2000, // Increased for better analysis
       });
+
+      // Keywords yang menandakan pertanyaan
+      const questionKeywords = [
+        "apa",
+        "apakah",
+        "bagaimana",
+        "gimana",
+        "berapa",
+        "kapan",
+        "dimana",
+        "mana",
+        "siapa",
+        "mengapa",
+        "kenapa",
+        "boleh",
+        "bisa",
+        "dapat",
+        "ada",
+        "punya",
+        "ready",
+        "stok",
+        "stock",
+        "harga",
+        "price",
+        "ongkir",
+        "kirim",
+        "cod",
+        "transfer",
+        "bayar",
+        "payment",
+        "garansi",
+        "warranty",
+        "ukuran",
+        "size",
+        "warna",
+        "color",
+        "varian",
+        "variant",
+        "model",
+        "tipe",
+        "type",
+        "jual",
+        "order",
+        "pesan",
+        "beli",
+        "cara",
+        "promo",
+        "diskon",
+        "discount",
+        "free",
+        "gratis",
+        "min",
+        "kak",
+        "gan",
+        "sis",
+        "bro",
+        "tersedia",
+        "available",
+      ];
+
+      // Kata-kata yang menandakan pesan tidak relevan (greeting, dll)
+      const excludeWords = [
+        "halo",
+        "hai",
+        "hello",
+        "hi",
+        "pagi",
+        "siang",
+        "sore",
+        "malam",
+        "assalamualaikum",
+        "assalamu",
+        "salam",
+        "ok",
+        "oke",
+        "okay",
+        "ya",
+        "yaa",
+        "baik",
+        "siap",
+        "makasih",
+        "terima kasih",
+        "thanks",
+        "thank",
+        "thx",
+      ];
 
       const questionMap = {};
       recentIncoming.forEach((msg) => {
         if (!msg.text) return;
-        const text = msg.text.trim();
-        if (text.length < 4) return; // Ignore short texts
-        if (questionMap[text]) questionMap[text]++;
-        else questionMap[text] = 1;
+        let text = msg.text.trim().toLowerCase();
+
+        // Ignore pesan terlalu pendek (kurang dari 5 karakter)
+        if (text.length < 5) return;
+
+        // Ignore pesan terlalu panjang (lebih dari 200 karakter - kemungkinan bukan pertanyaan)
+        if (text.length > 200) return;
+
+        // Cek apakah ini pesan tidak relevan (greeting/response singkat)
+        const isExcluded = excludeWords.some((word) => {
+          const normalizedText = text.replace(/[^a-z\s]/g, "").trim();
+          return (
+            normalizedText === word ||
+            normalizedText.startsWith(word + " ") ||
+            normalizedText.endsWith(" " + word)
+          );
+        });
+        if (isExcluded && text.length < 20) return; // Hanya exclude jika pendek
+
+        // Prioritaskan pesan yang mengandung tanda tanya
+        const hasQuestionMark = text.includes("?");
+
+        // Cek apakah mengandung keyword pertanyaan
+        const hasQuestionKeyword = questionKeywords.some((keyword) =>
+          text.includes(keyword)
+        );
+
+        // Hanya proses jika mengandung ? atau keyword pertanyaan
+        if (!hasQuestionMark && !hasQuestionKeyword) return;
+
+        // Normalisasi teks untuk grouping (huruf kecil, hapus extra spaces)
+        const normalizedText = text.replace(/\s+/g, " ").trim();
+
+        // Truncate jika terlalu panjang untuk display
+        const displayText =
+          normalizedText.length > 80
+            ? normalizedText.substring(0, 77) + "..."
+            : normalizedText;
+
+        if (questionMap[displayText]) questionMap[displayText]++;
+        else questionMap[displayText] = 1;
       });
 
       const topQuestions = Object.keys(questionMap)
         .map((key) => ({ question: key, count: questionMap[key] }))
+        .filter((q) => q.count >= 1) // Minimal muncul 1 kali
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
 
@@ -1299,17 +1597,132 @@ app.get("/api/analytics/:sessionId", async (req, res) => {
         take: 2000,
       });
 
+      // Keywords yang menandakan pertanyaan
+      const questionKeywords = [
+        "apa",
+        "apakah",
+        "bagaimana",
+        "gimana",
+        "berapa",
+        "kapan",
+        "dimana",
+        "mana",
+        "siapa",
+        "mengapa",
+        "kenapa",
+        "boleh",
+        "bisa",
+        "dapat",
+        "ada",
+        "punya",
+        "ready",
+        "stok",
+        "stock",
+        "harga",
+        "price",
+        "ongkir",
+        "kirim",
+        "cod",
+        "transfer",
+        "bayar",
+        "payment",
+        "garansi",
+        "warranty",
+        "ukuran",
+        "size",
+        "warna",
+        "color",
+        "varian",
+        "variant",
+        "model",
+        "tipe",
+        "type",
+        "jual",
+        "order",
+        "pesan",
+        "beli",
+        "cara",
+        "promo",
+        "diskon",
+        "discount",
+        "free",
+        "gratis",
+        "min",
+        "kak",
+        "gan",
+        "sis",
+        "bro",
+        "tersedia",
+        "available",
+      ];
+
+      // Kata-kata yang menandakan pesan tidak relevan (greeting, dll)
+      const excludeWords = [
+        "halo",
+        "hai",
+        "hello",
+        "hi",
+        "pagi",
+        "siang",
+        "sore",
+        "malam",
+        "assalamualaikum",
+        "assalamu",
+        "salam",
+        "ok",
+        "oke",
+        "okay",
+        "ya",
+        "yaa",
+        "baik",
+        "siap",
+        "makasih",
+        "terima kasih",
+        "thanks",
+        "thank",
+        "thx",
+      ];
+
       const questionMap = {};
       recentIncoming.forEach((msg) => {
         if (!msg.text) return;
-        const text = msg.text.trim();
-        if (text.length < 4) return;
-        if (questionMap[text]) questionMap[text]++;
-        else questionMap[text] = 1;
+        let text = msg.text.trim().toLowerCase();
+
+        // Ignore pesan terlalu pendek atau panjang
+        if (text.length < 5 || text.length > 200) return;
+
+        // Cek apakah ini pesan tidak relevan
+        const isExcluded = excludeWords.some((word) => {
+          const normalizedText = text.replace(/[^a-z\s]/g, "").trim();
+          return (
+            normalizedText === word ||
+            normalizedText.startsWith(word + " ") ||
+            normalizedText.endsWith(" " + word)
+          );
+        });
+        if (isExcluded && text.length < 20) return;
+
+        // Cek apakah pertanyaan
+        const hasQuestionMark = text.includes("?");
+        const hasQuestionKeyword = questionKeywords.some((keyword) =>
+          text.includes(keyword)
+        );
+        if (!hasQuestionMark && !hasQuestionKeyword) return;
+
+        // Normalisasi dan truncate
+        const normalizedText = text.replace(/\s+/g, " ").trim();
+        const displayText =
+          normalizedText.length > 80
+            ? normalizedText.substring(0, 77) + "..."
+            : normalizedText;
+
+        if (questionMap[displayText]) questionMap[displayText]++;
+        else questionMap[displayText] = 1;
       });
 
       const topQuestions = Object.keys(questionMap)
         .map((key) => ({ question: key, count: questionMap[key] }))
+        .filter((q) => q.count >= 1)
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
 

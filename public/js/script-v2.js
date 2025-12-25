@@ -703,6 +703,9 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
       const priceKey = keys.find((k) =>
         /harga|price|rp|jual|cost|nilai/i.test(k)
       );
+      const promoKey = keys.find((k) =>
+        /promo|diskon|discount|potongan|sale|off|hemat/i.test(k)
+      );
 
       const cleanPrice = (val) => {
         if (typeof val === "number") return val;
@@ -711,10 +714,22 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         return 0;
       };
 
+      let hasPromo = false;
+      if (promoKey && prod[promoKey]) {
+        const promoVal = prod[promoKey];
+        if (typeof promoVal === "string") {
+          hasPromo = promoVal.trim() !== "" && promoVal !== "0";
+        } else if (typeof promoVal === "number") {
+          hasPromo = promoVal > 0;
+        }
+      }
+
+      const promoLabel = hasPromo ? " 🏷️PROMO" : "";
+
       if (nameKey && priceKey)
         return `${prod[nameKey]} - ${this.formatRupiah(
           cleanPrice(prod[priceKey])
-        )}`;
+        )}${promoLabel}`;
 
       // Fallback: Try to find any string and any number
       const stringVal = Object.values(prod).find(
@@ -723,10 +738,169 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
       const numberVal = Object.values(prod).find((v) => typeof v === "number");
 
       if (stringVal && numberVal)
-        return `${stringVal} - ${this.formatRupiah(numberVal)}`;
+        return `${stringVal} - ${this.formatRupiah(numberVal)}${promoLabel}`;
 
       return Object.values(prod).join(" - ");
     },
+    /**
+     * Parse promo rule from string/number value
+     * Supports:
+     * - Simple percentage: "50%", "20%", 0.5 (Google Sheets), 50 (integer)
+     * - Fixed amount: 5000, "5000"
+     * - Buy X Get Y Free: "Beli 2 Gratis 1", "Buy 3 Get 1", "B2G1"
+     * - Buy X Discount Y%: "Beli 4 Diskon 10%", "Buy 5 Disc 20%", "B4D10"
+     * - Min Qty Discount: "Min 3 Disc 15%", "Min3D15"
+     */
+    parsePromoRule(promoVal, originalPrice, qty) {
+      let result = {
+        hasPromo: false,
+        promoType: null, // 'percentage', 'fixed', 'buyXgetY', 'buyXdiscY', 'minQtyDisc'
+        promoLabel: "",
+        discountPerItem: 0,
+        totalDiscount: 0,
+        freeItems: 0,
+        finalPricePerItem: originalPrice,
+        effectiveQty: qty, // Qty that customer pays for
+        promoApplied: false, // Whether promo condition is met
+      };
+
+      if (!promoVal) return result;
+
+      const promoStr = String(promoVal).trim().toLowerCase();
+
+      // Pattern 1: Buy X Get Y Free - "beli 2 gratis 1", "buy 3 get 1", "b2g1"
+      const buyGetPattern =
+        /(?:beli|buy|b)\s*(\d+)\s*(?:gratis|get|free|g)\s*(\d+)/i;
+      const buyGetMatch = promoStr.match(buyGetPattern);
+      if (buyGetMatch) {
+        const buyQty = parseInt(buyGetMatch[1]);
+        const freeQty = parseInt(buyGetMatch[2]);
+        const totalRequired = buyQty + freeQty;
+
+        result.promoType = "buyXgetY";
+        result.promoLabel = `Beli ${buyQty} Gratis ${freeQty}`;
+        result.hasPromo = true;
+
+        if (qty >= totalRequired) {
+          // Calculate how many "sets" of promo can be applied
+          const sets = Math.floor(qty / totalRequired);
+          const remainder = qty % totalRequired;
+
+          result.freeItems = sets * freeQty;
+          result.effectiveQty = qty - result.freeItems;
+          result.totalDiscount = result.freeItems * originalPrice;
+          result.promoApplied = true;
+        }
+
+        result.finalPricePerItem = originalPrice;
+        return result;
+      }
+
+      // Pattern 2: Buy X Discount Y% - "beli 4 diskon 10%", "buy 5 disc 20%", "b4d10"
+      const buyDiscPattern =
+        /(?:beli|buy|b)\s*(\d+)\s*(?:diskon|disc|d)\s*(\d+)\s*%?/i;
+      const buyDiscMatch = promoStr.match(buyDiscPattern);
+      if (buyDiscMatch) {
+        const minQty = parseInt(buyDiscMatch[1]);
+        const discPercent = parseInt(buyDiscMatch[2]);
+
+        result.promoType = "buyXdiscY";
+        result.promoLabel = `Beli ${minQty}+ Diskon ${discPercent}%`;
+        result.hasPromo = true;
+
+        if (qty >= minQty) {
+          result.discountPerItem = Math.round(
+            originalPrice * (discPercent / 100)
+          );
+          result.totalDiscount = result.discountPerItem * qty;
+          result.finalPricePerItem = originalPrice - result.discountPerItem;
+          result.promoApplied = true;
+        }
+
+        return result;
+      }
+
+      // Pattern 3: Min Qty Discount - "min 3 disc 15%", "min3d15", "min 5 diskon 20%"
+      const minDiscPattern =
+        /(?:min|minimal)\s*(\d+)\s*(?:diskon|disc|d)\s*(\d+)\s*%?/i;
+      const minDiscMatch = promoStr.match(minDiscPattern);
+      if (minDiscMatch) {
+        const minQty = parseInt(minDiscMatch[1]);
+        const discPercent = parseInt(minDiscMatch[2]);
+
+        result.promoType = "minQtyDisc";
+        result.promoLabel = `Min ${minQty} Disc ${discPercent}%`;
+        result.hasPromo = true;
+
+        if (qty >= minQty) {
+          result.discountPerItem = Math.round(
+            originalPrice * (discPercent / 100)
+          );
+          result.totalDiscount = result.discountPerItem * qty;
+          result.finalPricePerItem = originalPrice - result.discountPerItem;
+          result.promoApplied = true;
+        }
+
+        return result;
+      }
+
+      // Pattern 4: Simple percentage with % symbol - "50%", "20 %"
+      if (promoStr.includes("%")) {
+        const percent = parseFloat(promoStr.replace(/[^0-9.]/g, "")) || 0;
+        if (percent > 0) {
+          result.promoType = "percentage";
+          result.promoLabel = `Diskon ${percent}%`;
+          result.hasPromo = true;
+          result.discountPerItem = Math.round(originalPrice * (percent / 100));
+          result.totalDiscount = result.discountPerItem * qty;
+          result.finalPricePerItem = originalPrice - result.discountPerItem;
+          result.promoApplied = true;
+        }
+        return result;
+      }
+
+      // Pattern 5: Numeric value (percentage or fixed amount)
+      let numVal =
+        typeof promoVal === "number"
+          ? promoVal
+          : parseFloat(promoStr.replace(/[^0-9.,]/g, "")) || 0;
+
+      if (numVal > 0) {
+        // Google Sheets percentage format: 0.5 means 50%, 0.2 means 20%
+        if (numVal > 0 && numVal <= 1) {
+          // Google Sheets format: 0.5 = 50%
+          const percent = numVal * 100;
+          result.promoType = "percentage";
+          result.promoLabel = `Diskon ${percent}%`;
+          result.hasPromo = true;
+          result.discountPerItem = Math.round(originalPrice * numVal);
+          result.totalDiscount = result.discountPerItem * qty;
+          result.finalPricePerItem = originalPrice - result.discountPerItem;
+          result.promoApplied = true;
+        } else if (numVal > 1 && numVal <= 100) {
+          // Regular percentage: 50 = 50%
+          result.promoType = "percentage";
+          result.promoLabel = `Diskon ${numVal}%`;
+          result.hasPromo = true;
+          result.discountPerItem = Math.round(originalPrice * (numVal / 100));
+          result.totalDiscount = result.discountPerItem * qty;
+          result.finalPricePerItem = originalPrice - result.discountPerItem;
+          result.promoApplied = true;
+        } else {
+          // Fixed amount: 5000 = Rp 5.000 discount
+          result.promoType = "fixed";
+          result.promoLabel = `Potongan ${this.formatRupiah(numVal)}`;
+          result.hasPromo = true;
+          result.discountPerItem = numVal;
+          result.totalDiscount = numVal * qty;
+          result.finalPricePerItem = Math.max(0, originalPrice - numVal);
+          result.promoApplied = true;
+        }
+      }
+
+      return result;
+    },
+
     addToCart() {
       if (this.selectedProductIndex === "") return;
       const prod = this.products[this.selectedProductIndex];
@@ -737,9 +911,13 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
       const priceKey = keys.find((k) =>
         /harga|price|rp|jual|cost|nilai/i.test(k)
       );
+      // Detect promo/discount column
+      const promoKey = keys.find((k) =>
+        /promo|diskon|discount|potongan|sale|off|hemat/i.test(k)
+      );
 
       let name = "Unknown Product";
-      let price = 0;
+      let originalPrice = 0;
 
       if (nameKey) name = prod[nameKey];
       else {
@@ -749,21 +927,91 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
         if (stringVal) name = stringVal;
       }
 
-      if (priceKey) price = prod[priceKey];
+      if (priceKey) originalPrice = prod[priceKey];
       else {
         const numberVal = Object.values(prod).find(
           (v) => typeof v === "number"
         );
-        if (numberVal) price = numberVal;
+        if (numberVal) originalPrice = numberVal;
       }
 
       // Clean price if it's a string
-      if (typeof price === "string") {
-        price = parseInt(String(price).replace(/\D/g, "")) || 0;
+      if (typeof originalPrice === "string") {
+        originalPrice = parseInt(String(originalPrice).replace(/\D/g, "")) || 0;
       }
 
-      const qty = parseInt(this.qtyInput);
-      this.cart.push({ name, price, qty, subtotal: price * qty });
+      const qty = parseInt(this.qtyInput) || 1;
+
+      // Check if item already exists in cart (by name and originalPrice)
+      const existingIndex = this.cart.findIndex(
+        (item) => item.name === name && item.originalPrice === originalPrice
+      );
+
+      if (existingIndex !== -1) {
+        // Item exists, update quantity
+        const existingItem = this.cart[existingIndex];
+        const newQty = existingItem.qty + qty;
+
+        // Re-parse promo rule with new total quantity
+        const promoVal = promoKey ? prod[promoKey] : null;
+        const promo = this.parsePromoRule(promoVal, originalPrice, newQty);
+
+        // Calculate subtotal based on promo type
+        let subtotal = 0;
+        if (promo.promoType === "buyXgetY" && promo.promoApplied) {
+          subtotal = promo.effectiveQty * originalPrice;
+        } else if (promo.promoApplied) {
+          subtotal = promo.finalPricePerItem * newQty;
+        } else {
+          subtotal = originalPrice * newQty;
+        }
+
+        // Update existing cart item
+        this.cart[existingIndex] = {
+          ...existingItem,
+          qty: newQty,
+          price: promo.promoApplied ? promo.finalPricePerItem : originalPrice,
+          hasPromo: promo.hasPromo,
+          promoApplied: promo.promoApplied,
+          promoType: promo.promoType,
+          promoLabel: promo.promoLabel,
+          promoDiscount: promo.totalDiscount,
+          freeItems: promo.freeItems || 0,
+          effectiveQty: promo.effectiveQty || newQty,
+          subtotal: subtotal,
+        };
+      } else {
+        // New item, add to cart
+        // Parse promo rule
+        const promoVal = promoKey ? prod[promoKey] : null;
+        const promo = this.parsePromoRule(promoVal, originalPrice, qty);
+
+        // Calculate subtotal based on promo type
+        let subtotal = 0;
+        if (promo.promoType === "buyXgetY" && promo.promoApplied) {
+          subtotal = promo.effectiveQty * originalPrice;
+        } else if (promo.promoApplied) {
+          subtotal = promo.finalPricePerItem * qty;
+        } else {
+          subtotal = originalPrice * qty;
+        }
+
+        this.cart.push({
+          name,
+          originalPrice: originalPrice,
+          price: promo.promoApplied ? promo.finalPricePerItem : originalPrice,
+          hasPromo: promo.hasPromo,
+          promoApplied: promo.promoApplied,
+          promoType: promo.promoType,
+          promoLabel: promo.promoLabel,
+          promoDiscount: promo.totalDiscount,
+          freeItems: promo.freeItems || 0,
+          effectiveQty: promo.effectiveQty || qty,
+          qty,
+          subtotal: subtotal,
+        });
+      }
+
       this.qtyInput = 1;
       this.selectedProductIndex = "";
     },

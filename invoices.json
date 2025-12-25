@@ -38,5 +38,200 @@
       "to": "185370872438838@lid",
       "date": "2025-12-22T09:12:28.503Z"
     }
+  ],
+  "tim makreatif": [
+    {
+      "invoiceNote": "INV/061013",
+      "customerName": "Naufal Arhab",
+      "cart": [
+        {
+          "name": "pasir",
+          "originalPrice": 12000,
+          "promoDiscount": 36,
+          "price": 11964,
+          "hasPromo": true,
+          "qty": 2,
+          "subtotal": 23928
+        }
+      ],
+      "total": 23928,
+      "isPaid": true,
+      "shipping": null,
+      "id": "INV-1766587082246",
+      "status": "PAID",
+      "to": "185370872438838@lid",
+      "date": "2025-12-24T14:38:02.246Z"
+    },
+    {
+      "invoiceNote": "INV/706544",
+      "customerName": "+6285886693330",
+      "cart": [
+        {
+          "name": "batu",
+          "originalPrice": 10000,
+          "promoDiscount": 50,
+          "price": 9950,
+          "hasPromo": true,
+          "qty": 2,
+          "subtotal": 19900
+        }
+      ],
+      "total": 19900,
+      "isPaid": true,
+      "shipping": null,
+      "id": "INV-1766628723415",
+      "status": "PAID",
+      "to": "6285886693330@s.whatsapp.net",
+      "date": "2025-12-25T02:12:03.416Z"
+    },
+    {
+      "invoiceNote": "INV/295409",
+      "customerName": "+6285886693330",
+      "cart": [
+        {
+          "name": "semen",
+          "originalPrice": 10000,
+          "price": 8000,
+          "hasPromo": true,
+          "promoApplied": true,
+          "promoType": "percentage",
+          "promoLabel": "Diskon 20%",
+          "promoDiscount": 4000,
+          "freeItems": 0,
+          "effectiveQty": 2,
+          "qty": 2,
+          "subtotal": 16000
+        },
+        {
+          "name": "batu",
+          "originalPrice": 10000,
+          "price": 6000,
+          "hasPromo": true,
+          "promoApplied": true,
+          "promoType": "buyXdiscY",
+          "promoLabel": "Beli 2+ Diskon 40%",
+          "promoDiscount": 8000,
+          "freeItems": 0,
+          "effectiveQty": 2,
+          "qty": 2,
+          "subtotal": 12000
+        }
+      ],
+      "total": 28000,
+      "isPaid": false,
+      "shipping": null,
+      "id": "INV-1766633318208",
+      "status": "UNPAID",
+      "to": "6285886693330@s.whatsapp.net",
+      "date": "2025-12-25T03:28:38.208Z"
+    },
+    {
+      "invoiceNote": "INV/224475",
+      "customerName": "Naufal Arhab",
+      "cart": [
+        {
+          "name": "semen",
+          "originalPrice": 10000,
+          "price": 8000,
+          "hasPromo": true,
+          "promoApplied": true,
+          "promoType": "percentage",
+          "promoLabel": "Diskon 20%",
+          "promoDiscount": 2000,
+          "freeItems": 0,
+          "effectiveQty": 1,
+          "qty": 1,
+          "subtotal": 8000
+        }
+      ],
+      "total": 8000,
+      "isPaid": false,
+      "shipping": null,
+      "id": "INV-1766634229624",
+      "status": "UNPAID",
+      "to": "185370872438838@lid",
+      "date": "2025-12-25T03:43:49.624Z"
+    },
+    {
+      "invoiceNote": "INV/431924",
+      "customerName": "Naufal Arhab",
+      "cart": [
+        {
+          "name": "batu",
+          "originalPrice": 10000,
+          "price": 10000,
+          "hasPromo": true,
+          "promoApplied": false,
+          "promoType": "buyXdiscY",
+          "promoLabel": "Beli 2+ Diskon 40%",
+          "promoDiscount": 0,
+          "freeItems": 0,
+          "effectiveQty": 1,
+          "qty": 1,
+          "subtotal": 10000
+        }
+      ],
+      "total": 10000,
+      "isPaid": false,
+      "shipping": null,
+      "id": "INV-1766634435155",
+      "status": "UNPAID",
+      "to": "185370872438838@lid",
+      "date": "2025-12-25T03:47:15.155Z"
+    },
+    {
+      "invoiceNote": "INV/438157",
+      "customerName": "Naufal Arhab",
+      "cart": [
+        {
+          "name": "batu",
+          "originalPrice": 10000,
+          "price": 6000,
+          "hasPromo": true,
+          "promoApplied": true,
+          "promoType": "buyXdiscY",
+          "promoLabel": "Beli 2+ Diskon 40%",
+          "promoDiscount": 12000,
+          "freeItems": 0,
+          "effectiveQty": 3,
+          "qty": 3,
+          "subtotal": 18000
+        }
+      ],
+      "total": 18000,
+      "isPaid": false,
+      "shipping": null,
+      "id": "INV-1766634444362",
+      "status": "UNPAID",
+      "to": "185370872438838@lid",
+      "date": "2025-12-25T03:47:24.362Z"
+    },
+    {
+      "invoiceNote": "123",
+      "customerName": "Naufal Arhab",
+      "cart": [
+        {
+          "name": "batu",
+          "originalPrice": 10000,
+          "price": 6000,
+          "hasPromo": true,
+          "promoApplied": true,
+          "promoType": "buyXdiscY",
+          "promoLabel": "Beli 2+ Diskon 40%",
+          "promoDiscount": 12000,
+          "freeItems": 0,
+          "effectiveQty": 3,
+          "qty": 3,
+          "subtotal": 18000
+        }
+      ],
+      "total": 18000,
+      "isPaid": true,
+      "shipping": null,
+      "id": "INV-1766634500878",
+      "status": "PAID",
+      "to": "185370872438838@lid",
+      "date": "2025-12-25T03:48:20.878Z"
+    }
   ]
 }
