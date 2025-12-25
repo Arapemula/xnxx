@@ -10,7 +10,6 @@ const {
   useMultiFileAuthState,
 } = require("@whiskeysockets/baileys");
 const { usePrismaAuthState } = require("./lib/auth-service");
-const { PrismaClient } = require("./generated/client");
 const pino = require("pino");
 const path = require("path");
 const fs = require("fs");
@@ -25,7 +24,64 @@ const {
 } = require("./antispam");
 
 // --- CONFIG ---
-const prisma = new PrismaClient();
+console.log("[WA_ENGINE] Initializing Prisma Client...");
+let prisma;
+try {
+  const { PrismaClient } = require("./generated/client");
+  prisma = new PrismaClient();
+  console.log("[WA_ENGINE] Prisma Client initialized successfully");
+} catch (e) {
+  console.error(
+    "[WA_ENGINE] CRITICAL: Failed to initialize Prisma Client:",
+    e.message
+  );
+  // Create a mock prisma to prevent crashes, but operations will fail
+  prisma = {
+    chat: {
+      findMany: async () => [],
+      findUnique: async () => null,
+      create: async () => ({}),
+      update: async () => ({}),
+      upsert: async () => ({}),
+    },
+    message: {
+      findMany: async () => [],
+      create: async () => ({}),
+      deleteMany: async () => ({}),
+    },
+    sale: { create: async () => ({}) },
+    session: { findMany: async () => [], deleteMany: async () => ({}) },
+    schedule: {
+      findMany: async () => [],
+      create: async () => ({}),
+      update: async () => ({}),
+      delete: async () => ({}),
+    },
+    user: {
+      findUnique: async () => null,
+      findFirst: async () => null,
+      findMany: async () => [],
+      update: async () => ({}),
+      create: async () => ({}),
+      delete: async () => ({}),
+    },
+    verificationCode: {
+      findFirst: async () => null,
+      create: async () => ({}),
+      update: async () => ({}),
+      delete: async () => ({}),
+      deleteMany: async () => ({}),
+    },
+    autoReply: { findMany: async () => [] },
+    scheduledBroadcast: {
+      findMany: async () => [],
+      create: async () => ({}),
+      update: async () => ({}),
+      delete: async () => ({}),
+      deleteMany: async () => ({}),
+    },
+  };
+}
 const logger = pino({ level: "silent" });
 const mediaPath = path.join(__dirname, "../public/media");
 

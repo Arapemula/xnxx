@@ -1,10 +1,21 @@
 // src/lib/auth-service.js
 
-const { PrismaClient } = require("../generated/client");
 const { initAuthCreds, BufferJSON, proto } = require("@whiskeysockets/baileys");
 
 // Kita gunakan satu instance Prisma untuk seluruh aplikasi (Best Practice)
-const prisma = new PrismaClient();
+console.log("[AUTH-SERVICE] Initializing Prisma Client...");
+let prisma;
+try {
+  const { PrismaClient } = require("../generated/client");
+  prisma = new PrismaClient();
+  console.log("[AUTH-SERVICE] Prisma Client initialized successfully");
+} catch (e) {
+  console.error(
+    "[AUTH-SERVICE] CRITICAL: Failed to initialize Prisma Client:",
+    e.message
+  );
+  throw e; // Auth service MUST have database, so we throw
+}
 
 /**
  * Fungsi utama untuk menangani autentikasi via Database.
