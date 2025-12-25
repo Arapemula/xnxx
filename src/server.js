@@ -73,6 +73,9 @@ const {
   autoReplyStore,
   loadAutoReplies,
   aiProviderStatus, // AI Fallback status tracking
+  getPreferredProvider, // Get current preferred provider
+  setPreferredProvider, // Set preferred provider manually
+  AI_PROVIDERS, // List of all available providers
 } = require("./wa_engine");
 
 const app = express();
@@ -195,6 +198,48 @@ app.delete("/session/stop", async (req, res) => {
     res.json({ status: "success" });
   } catch (e) {
     res.status(500).json({ error: "Failed" });
+  }
+});
+
+// Force clear session auth (for stuck/corrupted sessions)
+app.delete("/session/force-clear/:sessionId", async (req, res) => {
+  const { sessionId } = req.params;
+
+  console.log(`[SESSION] Force clearing auth for: ${sessionId}`);
+
+  try {
+    // 1. Remove from memory
+    const session = sessions.get(sessionId);
+    if (session) {
+      try {
+        if (session.sock) {
+          session.sock.end(); // Gracefully close socket if exists
+        }
+      } catch (e) {
+        console.log("[SESSION] Socket already closed");
+      }
+      sessions.delete(sessionId);
+    }
+
+    // 2. Clear ALL auth data from database for this session
+    const deleted = await prisma.session.deleteMany({
+      where: { sessionId },
+    });
+
+    console.log(
+      `[SESSION] Cleared ${deleted.count} auth entries for ${sessionId}`
+    );
+
+    res.json({
+      status: "success",
+      message: `Session "${sessionId}" cleared. Please try connecting again.`,
+      clearedEntries: deleted.count,
+    });
+  } catch (e) {
+    console.error("[SESSION] Force clear error:", e);
+    res
+      .status(500)
+      .json({ error: "Failed to clear session", details: e.message });
   }
 });
 
@@ -2788,32 +2833,34 @@ app.get("/api/developer/ai-status", verifyDeveloperRole, (req, res) => {
     // Format status for frontend with calculated remaining cooldown
     const providerStatus = {};
 
-    ["groq", "sambanova", "gemini", "openrouter"].forEach((provider) => {
-      const status = aiProviderStatus[provider];
-      let remainingCooldown = 0;
-      let isAvailable = status?.available ?? true;
+    ["groq", "sambanova", "gemini", "openrouter", "puter"].forEach(
+      (provider) => {
+        const status = aiProviderStatus[provider];
+        let remainingCooldown = 0;
+        let isAvailable = status?.available ?? true;
 
-      if (!isAvailable && status?.retryAfter) {
-        remainingCooldown = Math.max(
-          0,
-          Math.ceil((status.retryAfter - now) / 1000)
-        );
-        // If cooldown expired, mark as available
-        if (remainingCooldown <= 0) {
-          isAvailable = true;
-          remainingCooldown = 0;
+        if (!isAvailable && status?.retryAfter) {
+          remainingCooldown = Math.max(
+            0,
+            Math.ceil((status.retryAfter - now) / 1000)
+          );
+          // If cooldown expired, mark as available
+          if (remainingCooldown <= 0) {
+            isAvailable = true;
+            remainingCooldown = 0;
+          }
         }
-      }
 
-      providerStatus[provider] = {
-        available: isAvailable,
-        lastError: status?.lastError || null,
-        remainingCooldownSeconds: remainingCooldown,
-        retryAt: status?.retryAfter
-          ? new Date(status.retryAfter).toISOString()
-          : null,
-      };
-    });
+        providerStatus[provider] = {
+          available: isAvailable,
+          lastError: status?.lastError || null,
+          remainingCooldownSeconds: remainingCooldown,
+          retryAt: status?.retryAfter
+            ? new Date(status.retryAfter).toISOString()
+            : null,
+        };
+      }
+    );
 
     res.json({
       status: "success",
@@ -2832,17 +2879,19 @@ app.post("/api/developer/ai-status/reset", verifyDeveloperRole, (req, res) => {
 
   if (
     !provider ||
-    !["groq", "sambanova", "gemini", "openrouter", "all"].includes(provider)
+    !["groq", "sambanova", "gemini", "openrouter", "puter", "all"].includes(
+      provider
+    )
   ) {
     return res.status(400).json({
       error:
-        "Invalid provider. Use: groq, sambanova, gemini, openrouter, or all",
+        "Invalid provider. Use: groq, sambanova, gemini, openrouter, puter, or all",
     });
   }
 
   try {
     if (provider === "all") {
-      ["groq", "sambanova", "gemini", "openrouter"].forEach((p) => {
+      ["groq", "sambanova", "gemini", "openrouter", "puter"].forEach((p) => {
         aiProviderStatus[p] = {
           available: true,
           lastError: null,
@@ -2867,6 +2916,60 @@ app.post("/api/developer/ai-status/reset", verifyDeveloperRole, (req, res) => {
   } catch (e) {
     console.error("Error resetting AI status:", e);
     res.status(500).json({ error: "Failed to reset AI status" });
+  }
+});
+
+// GET preferred AI provider
+app.get("/api/developer/ai-provider", verifyDeveloperRole, (req, res) => {
+  try {
+    const preferred = getPreferredProvider();
+    res.json({
+      status: "success",
+      data: {
+        preferredProvider: preferred || "auto",
+        availableProviders: AI_PROVIDERS,
+        description: preferred
+          ? `Currently using ${preferred.toUpperCase()} as primary provider`
+          : "Using automatic fallback order",
+      },
+    });
+  } catch (e) {
+    console.error("Error getting preferred provider:", e);
+    res.status(500).json({ error: "Failed to get preferred provider" });
+  }
+});
+
+// SET preferred AI provider
+app.post("/api/developer/ai-provider", verifyDeveloperRole, (req, res) => {
+  const { provider } = req.body;
+
+  if (provider === undefined) {
+    return res.status(400).json({
+      error:
+        "Provider is required. Use: auto, groq, sambanova, gemini, openrouter, or puter",
+    });
+  }
+
+  try {
+    const success = setPreferredProvider(provider);
+
+    if (!success) {
+      return res.status(400).json({
+        error: `Invalid provider "${provider}". Use: auto, groq, sambanova, gemini, openrouter, or puter`,
+      });
+    }
+
+    const newProvider = getPreferredProvider();
+    res.json({
+      status: "success",
+      message: newProvider
+        ? `AI provider set to ${newProvider.toUpperCase()}`
+        : "AI provider set to AUTO (fallback order)",
+      preferredProvider: newProvider || "auto",
+    });
+  } catch (e) {
+    console.error("Error setting preferred provider:", e);
+    res.status(500).json({ error: "Failed to set preferred provider" });
   }
 });
 

@@ -448,14 +448,86 @@
     "logs": []
   },
   "tim makreatif": {
-    "incoming": 18,
-    "outgoing": 46,
+    "incoming": 28,
+    "outgoing": 48,
     "newCustomers": 2,
-    "aiCount": 3,
+    "aiCount": 5,
     "mediaCount": 13,
     "invoiceIssued": 10,
     "invoicePaid": 0,
     "logs": [
+      {
+        "time": "2025-12-25T04:39:28.971Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:39:25.023Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:39:24.674Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:39:24.660Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:39:24.643Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:39:24.592Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:39:24.508Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:11:45.742Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-25T04:11:32.279Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-25T04:11:28.201Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-25T04:11:21.719Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-25T04:11:08.852Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
       {
         "time": "2025-12-25T03:48:31.566Z",
         "type": "INV",
@@ -509,83 +581,132 @@
         "type": "INV",
         "msg": "Tagihan",
         "user": ""
-      },
-      {
-        "time": "2025-12-25T03:28:40.387Z",
-        "type": "INV",
-        "msg": "Tagihan",
-        "user": "+6285886693330"
-      },
-      {
-        "time": "2025-12-25T02:12:06.066Z",
-        "type": "INV",
-        "msg": "Tagihan",
-        "user": "+6285886693330"
-      },
-      {
-        "time": "2025-12-24T14:38:06.358Z",
-        "type": "INV",
-        "msg": "Tagihan",
-        "user": ""
-      },
-      {
-        "time": "2025-12-24T14:09:46.087Z",
-        "type": "AI",
-        "msg": "Auto Reply",
-        "user": "Bot AI"
-      },
-      {
-        "time": "2025-12-24T14:09:35.115Z",
-        "type": "IN",
-        "msg": "Pesan Masuk",
-        "user": "Naufal Arhab"
-      },
-      {
-        "time": "2025-12-24T14:09:25.131Z",
-        "type": "AI",
-        "msg": "Auto Reply",
-        "user": "Bot AI"
-      },
-      {
-        "time": "2025-12-24T14:09:22.228Z",
-        "type": "IN",
-        "msg": "Pesan Masuk",
-        "user": "Naufal Arhab"
-      },
-      {
-        "time": "2025-12-24T14:09:12.640Z",
-        "type": "AI",
-        "msg": "Auto Reply",
-        "user": "Bot AI"
-      },
-      {
-        "time": "2025-12-24T14:09:09.224Z",
-        "type": "IN",
-        "msg": "Pesan Masuk",
-        "user": "Naufal Arhab"
-      },
-      {
-        "time": "2025-12-24T10:19:31.470Z",
-        "type": "IN",
-        "msg": "Pesan Masuk",
-        "user": "User"
-      },
-      {
-        "time": "2025-12-24T10:19:28.716Z",
-        "type": "IN",
-        "msg": "Pesan Masuk",
-        "user": "User"
-      },
-      {
-        "time": "2025-12-24T10:19:27.771Z",
-        "type": "IN",
-        "msg": "Pesan Masuk",
-        "user": "User"
       }
     ],
     "complaintCount": 1,
     "topComplaints": {
       "rusak": 1
     }
+  },
+  "dev_admin": {
+    "incoming": 13,
+    "outgoing": 5,
+    "newCustomers": 2,
+    "aiCount": 5,
+    "mediaCount": 0,
+    "invoiceIssued": 0,
+    "invoicePaid": 0,
+    "complaintCount": 0,
+    "topComplaints": {},
+    "logs": [
+      {
+        "time": "2025-12-25T04:17:06.545Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-25T04:17:03.586Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-25T04:16:52.279Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-25T04:16:49.419Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-25T04:16:42.541Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-25T04:16:38.604Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-25T04:15:37.406Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-25T04:15:33.817Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-25T04:15:12.056Z",
+        "type": "AI",
+        "msg": "Auto Reply",
+        "user": "Bot AI"
+      },
+      {
+        "time": "2025-12-25T04:15:08.123Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-25T04:14:57.485Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "Naufal Arhab"
+      },
+      {
+        "time": "2025-12-25T04:14:47.048Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:14:42.634Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:14:42.616Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:14:42.601Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:14:42.573Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:14:42.517Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      },
+      {
+        "time": "2025-12-25T04:14:42.483Z",
+        "type": "IN",
+        "msg": "Pesan Masuk",
+        "user": "User"
+      }
+    ]
   }
 }

@@ -32,6 +32,7 @@ const mediaPath = path.join(__dirname, "../public/media");
 // --- AI PROVIDERS SETUP ---
 const Groq = require("groq-sdk");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const Puter = require("@heyputer/puter.js").default;
 
 // Initialize AI Providers
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -45,10 +46,33 @@ const aiProviderStatus = {
   sambanova: { available: true, lastError: null, retryAfter: null },
   gemini: { available: true, lastError: null, retryAfter: null },
   openrouter: { available: true, lastError: null, retryAfter: null },
+  puter: { available: true, lastError: null, retryAfter: null },
 };
 
 // Provider priority order (will fallback in this order)
-const AI_PROVIDERS = ["groq", "sambanova", "gemini", "openrouter"];
+const AI_PROVIDERS = ["groq", "sambanova", "gemini", "openrouter", "puter"];
+
+// Manual provider selection (null = auto fallback, string = use specific provider first)
+let preferredProvider = null;
+
+// Getter and setter for preferred provider
+const getPreferredProvider = () => preferredProvider;
+const setPreferredProvider = (provider) => {
+  if (
+    provider === null ||
+    provider === "auto" ||
+    AI_PROVIDERS.includes(provider)
+  ) {
+    preferredProvider = provider === "auto" ? null : provider;
+    console.log(
+      `[AI CONFIG] Preferred provider set to: ${
+        preferredProvider || "AUTO (fallback)"
+      }`
+    );
+    return true;
+  }
+  return false;
+};
 
 // Reset provider status after cooldown period (5 minutes default)
 const RATE_LIMIT_COOLDOWN = 5 * 60 * 1000;
@@ -457,6 +481,28 @@ GUIDELINES:
     return response.data.choices[0]?.message?.content || "";
   };
 
+  const callPuter = async () => {
+    // Puter.js - Free AI with no API key required
+    const puter = new Puter();
+
+    // Build messages in Puter-compatible format
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...conversationHistory,
+    ];
+
+    // Use puter.ai.chat with free model
+    const response = await puter.ai.chat(messages, {
+      model: "claude-3-5-sonnet", // Best free model available on Puter
+      max_tokens: 300,
+    });
+
+    // Response can be string or object with text property
+    return typeof response === "string"
+      ? response
+      : response?.text || response?.message?.content || "";
+  };
+
   // Check if error is rate limit
   const isRateLimitError = (error) => {
     const msg = error?.message?.toLowerCase() || "";
@@ -471,7 +517,19 @@ GUIDELINES:
   };
 
   // Try providers with fallback
-  const providers = ["groq", "sambanova", "gemini"];
+  // If preferred provider is set, try it first, then fallback to others
+  let providers = ["groq", "sambanova", "gemini", "openrouter", "puter"];
+
+  if (preferredProvider && AI_PROVIDERS.includes(preferredProvider)) {
+    // Reorder: preferred first, then others in original order
+    providers = [
+      preferredProvider,
+      ...providers.filter((p) => p !== preferredProvider),
+    ];
+    console.log(
+      `[AI CONFIG] Using manual provider order: ${providers.join(" -> ")}`
+    );
+  }
 
   for (const provider of providers) {
     // Skip if provider is currently rate limited
@@ -499,6 +557,9 @@ GUIDELINES:
           break;
         case "openrouter":
           reply = await callOpenRouter();
+          break;
+        case "puter":
+          reply = await callPuter();
           break;
       }
 
@@ -1088,4 +1149,7 @@ module.exports = {
   autoReplyStore,
   loadAutoReplies,
   aiProviderStatus, // AI Fallback status tracking
+  getPreferredProvider, // Get current preferred provider
+  setPreferredProvider, // Set preferred provider manually
+  AI_PROVIDERS, // List of all available providers
 };

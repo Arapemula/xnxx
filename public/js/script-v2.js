@@ -2345,9 +2345,12 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
             data.hideCountdown?.toString() || "false"
           );
 
-          // Check if expired - BLOCK THE PAGE
+          // Check if expired - BLOCK THE PAGE or UNBLOCK if renewed
           if (data.isExpired && data.role === "USER") {
             this.isSubscriptionExpired = true;
+          } else {
+            // IMPORTANT: Reset flag if subscription was renewed/extended
+            this.isSubscriptionExpired = false;
           }
         }
       } catch (e) {
@@ -2362,6 +2365,9 @@ Kamu: "Halo Kak! 👋 Untuk barang itu ready stok siap kirim ya. Mau warna apa n
           this.userExpiry
         ) {
           this.isSubscriptionExpired = true;
+        } else {
+          // Reset if subscription seems valid from localStorage
+          this.isSubscriptionExpired = false;
         }
       }
     },
