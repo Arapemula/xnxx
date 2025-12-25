@@ -1,4 +1,8 @@
 // src/server.js
+console.log("[STARTUP] Starting server initialization...");
+console.log("[STARTUP] PORT:", process.env.PORT || 3000);
+console.log("[STARTUP] NODE_ENV:", process.env.NODE_ENV || "development");
+
 require("dotenv").config();
 
 // --- HACK: Hide annoying logs from dependencies ---
@@ -77,6 +81,8 @@ const {
   setPreferredProvider, // Set preferred provider manually
   AI_PROVIDERS, // List of all available providers
 } = require("./wa_engine");
+
+console.log("[STARTUP] All modules imported successfully");
 
 const app = express();
 const server = http.createServer(app);
