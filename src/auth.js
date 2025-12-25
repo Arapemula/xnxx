@@ -1,27 +1,35 @@
 // src/auth.js
 const express = require("express");
 const router = express.Router();
-const { PrismaClient } = require("./generated/client");
+const { initAuthCreds, BufferJSON, proto } = require("@whiskeysockets/baileys");
+
+// Kita gunakan satu instance Prisma untuk seluruh aplikasi (Best Practice)
+console.log("[AUTH-SERVICE] Initializing Prisma Client...");
+let prisma;
+try {
+  const { PrismaClient } = require("./generated/client");
+  prisma = new PrismaClient();
+  console.log("[AUTH-SERVICE] Prisma Client initialized successfully");
+} catch (e) {
+  console.error(
+    "[AUTH-SERVICE] CRITICAL: Failed to initialize Prisma Client:",
+    e.message
+  );
+  throw e; // Auth service MUST have database, so we throw
+}
+
 const bcrypt = require("bcryptjs");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
-const prisma = new PrismaClient();
-
-// Konfigurasi Email
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.SMTP_EMAIL || "email_palsu@gmail.com",
-    pass: process.env.SMTP_PASS || "password_palsu",
-  },
-});
+// Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Generate 6-digit verification code
 function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Send verification email
+// Send verification email using Resend
 async function sendVerificationEmail(email, code, type) {
   const subject =
     type === "REGISTER"
@@ -58,12 +66,19 @@ async function sendVerificationEmail(email, code, type) {
   `;
 
   try {
-    await transporter.sendMail({
-      from: `"NayooAI" <${process.env.SMTP_EMAIL}>`,
+    const { data, error } = await resend.emails.send({
+      from: "NayooAI <onboarding@resend.dev>",
       to: email,
       subject,
       html,
     });
+
+    if (error) {
+      console.error("Resend error:", error);
+      return false;
+    }
+
+    console.log("Email sent successfully:", data?.id);
     return true;
   } catch (e) {
     console.error("Email send error:", e);
