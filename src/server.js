@@ -121,16 +121,7 @@ function saveInvoices() {
   fs.writeFileSync(invoicesPath, JSON.stringify(invoicesStore, null, 2));
 }
 
-// --- HEALTHCHECK ENDPOINTS (Must be BEFORE other middlewares/routes) ---
-// Railway pings "/" to verify the server is up
-app.get("/", (req, res) => {
-  res.status(200).json({
-    status: "ok",
-    service: "NayooAI WhatsApp Bot",
-    timestamp: new Date().toISOString(),
-  });
-});
-
+// --- HEALTHCHECK ENDPOINT (Railway pings /health) ---
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "healthy",
