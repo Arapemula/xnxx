@@ -34,6 +34,7 @@ const axios = require("axios");
 const xlsx = require("xlsx");
 const PDFDocument = require("pdfkit");
 const cors = require("cors");
+const bcrypt = require("bcryptjs");
 const { jidNormalizedUser } = require("@whiskeysockets/baileys");
 
 // --- IMPORT ROUTER AUTH (LOGIN/REGISTER) ---
@@ -3380,10 +3381,46 @@ app.get("/api/developer/antispam/my-ip", (req, res) => {
   res.json({ status: "success", ip });
 });
 
+// --- SEED DEVELOPER ACCOUNT ---
+async function seedDeveloper() {
+  try {
+    const devEmail = "developer@nayoo.id";
+    const devPassword = "123123";
+    const devSessionId = "developer_main";
+
+    // Check if developer account exists
+    const existingDev = await prisma.user.findUnique({
+      where: { email: devEmail },
+    });
+
+    if (!existingDev) {
+      const hashedPassword = await bcrypt.hash(devPassword, 10);
+      await prisma.user.create({
+        data: {
+          email: devEmail,
+          password: hashedPassword,
+          waSessionId: devSessionId,
+          role: "DEVELOPER",
+          expiryDate: null, // Unlimited
+        },
+      });
+      console.log(`[SEED] Developer account created: ${devEmail}`);
+    } else {
+      console.log(`[SEED] Developer account already exists: ${devEmail}`);
+    }
+  } catch (e) {
+    console.error("[SEED] Error creating developer account:", e.message);
+  }
+}
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, "0.0.0.0", async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Environment: ${process.env.NODE_ENV || "development"}`);
+
+  // Seed developer account first
+  await seedDeveloper();
+
   await initActiveSessions(io);
 
   // Run cleanup on start
