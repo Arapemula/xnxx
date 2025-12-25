@@ -3370,7 +3370,7 @@ app.get("/api/developer/antispam/my-ip", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, async () => {
+server.listen(PORT, "0.0.0.0", async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Environment: ${process.env.NODE_ENV || "development"}`);
   await initActiveSessions(io);

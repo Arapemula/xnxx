@@ -4,7 +4,7 @@
   "description": "NayooAI WhatsApp CRM Bot with AI-powered auto-reply",
   "main": "src/server.js",
   "scripts": {
-    "start": "npx prisma generate && node src/server.js",
+    "start": "node src/server.js",
     "dev": "node src/server.js",
     "db:generate": "npx prisma generate",
     "db:push": "npx prisma db push",
