@@ -629,7 +629,6 @@ app.get("/templates/list/:sessionId", (req, res) => {
   const { sessionId } = req.params;
   const templates = sessionAIStore[sessionId]?.templates || [];
   res.json({ status: "success", data: templates });
-  res.json({ status: "success", data: templates });
 });
 
 // --- API AUTO REPLIES ---
